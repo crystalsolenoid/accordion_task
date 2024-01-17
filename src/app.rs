@@ -1,4 +1,4 @@
-use ratatui::widgets::{ListState};
+use ratatui::widgets::{TableState};
 
 /// Application.
 #[derive(Debug, Default)]
@@ -14,7 +14,7 @@ pub struct App {
 /// A list with a potentially-selected item
 #[derive(Debug, Default)]
 pub struct StatefulList<T> {
-    pub state: ListState,
+    pub state: TableState,
     pub items: Vec<T>,
 }
 
@@ -72,7 +72,7 @@ impl App {
 impl<T> StatefulList<T> {
     fn with_items(items: Vec<T>) -> StatefulList<T> {
         StatefulList {
-            state: ListState::default(),
+            state: TableState::default(),
             items,
         }
     }

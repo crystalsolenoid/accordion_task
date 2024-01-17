@@ -41,24 +41,10 @@ fn render_table(app: &mut App, f: &mut Frame) {
   f.render_stateful_widget(
     table,
     f.size(),
-    &mut TableState::default().with_selected(Some(0))
+    &mut app.tasks.state
   );
 }
 
 fn generate_task_row(task: &app::Task) -> Row {
   Row::new(vec!["[ ]", "Row12", "Row13"])
-}
-
-fn render_list(app: &mut App, f: &mut Frame) {
-  let items = ["Item 1", "Item 2", "Item 3"];
-  f.render_stateful_widget(
-  List::new(items)
-    .block(Block::default().title("Tasks").borders(Borders::ALL))
-    .style(Style::default().fg(Color::Yellow))
-    .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
-    .highlight_symbol(">> ")
-    .repeat_highlight_symbol(true)
-    .direction(ListDirection::TopToBottom),
-  f.size(), &mut app.tasks.state
-  );
 }
