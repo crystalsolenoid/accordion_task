@@ -1,5 +1,5 @@
 use ratatui::{
-  prelude::{Alignment, Frame, Constraint},
+  prelude::{*},
   style::{Color, Style, Modifier},
   widgets::{*},
 };
@@ -7,11 +7,20 @@ use ratatui::{
 use crate::app::{self, App};
 
 pub fn render(app: &mut App, f: &mut Frame) {
-//  render_list(app, f);
-  render_table(app, f);
+  let layout = Layout::new(
+    Direction::Vertical,
+    [Constraint::Length(105), Constraint::Min(0)],
+  )
+  .split(Rect::new(0, 0, 25, 25));
+  let layout = Layout::default()
+    .direction(Direction::Vertical)
+    .constraints([Constraint::Length(10), Constraint::Min(5)])
+    .split(f.size());
+  render_table(app, f, layout[0]);
+  render_table(app, f, layout[1]);
 }
 
-fn render_table(app: &mut App, f: &mut Frame) {
+fn render_table(app: &mut App, f: &mut Frame, area: Rect) {
   let rows = [
     generate_task_row(&app.tasks.items[0]),
     generate_task_row(&app.tasks.items[1]),
@@ -40,7 +49,7 @@ fn render_table(app: &mut App, f: &mut Frame) {
     .highlight_symbol(">> ");
   f.render_stateful_widget(
     table,
-    f.size(),
+    area,
     &mut app.tasks.state
   );
 }
