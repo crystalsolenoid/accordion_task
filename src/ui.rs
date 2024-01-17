@@ -7,20 +7,30 @@ use ratatui::{
 use crate::app::{self, App};
 
 pub fn render(app: &mut App, f: &mut Frame) {
-  let layout = Layout::new(
-    Direction::Vertical,
-    [Constraint::Length(105), Constraint::Min(0)],
-  )
-  .split(Rect::new(0, 0, 25, 25));
   let layout = Layout::default()
     .direction(Direction::Vertical)
-    .constraints([Constraint::Length(10), Constraint::Min(5)])
+    .constraints([Constraint::Length(5), Constraint::Min(5)])
     .split(f.size());
-  render_table(app, f, layout[0]);
+  render_timer(app, f, layout[0]);
   render_table(app, f, layout[1]);
 }
 
+fn render_timer(app: &mut App, f: &mut Frame, area: Rect) {
+  let block = standard_block("Timer");
+  let guage = Gauge::default()
+    .gauge_style(
+        Style::default()
+            .fg(Color::Yellow)
+            .bg(Color::Black)
+            .add_modifier(Modifier::BOLD),
+    )
+    .block(block)
+    .ratio(0.4);
+  f.render_widget(guage, area)
+}
+
 fn render_table(app: &mut App, f: &mut Frame, area: Rect) {
+  let block = standard_block("Routine");
   let rows = [
     generate_task_row(&app.tasks.items[0]),
     generate_task_row(&app.tasks.items[1]),
@@ -39,12 +49,7 @@ fn render_table(app: &mut App, f: &mut Frame, area: Rect) {
         .style(Style::new().add_modifier(Modifier::BOLD))
         .bottom_margin(1),
     )
-    .block(Block::default()
-      .title("Routine")
-      .title_alignment(Alignment::Center)
-      .borders(Borders::ALL)
-      .padding(Padding::new(2, 2, 1, 1))
-    )
+    .block(block)
     .highlight_style(Style::new().add_modifier(Modifier::REVERSED))
     .highlight_symbol(">> ");
   f.render_stateful_widget(
@@ -62,4 +67,13 @@ fn generate_task_row(task: &app::Task) -> Row {
   let title = format!("{}", task.title);
   let duration = format!("{}", task.dur);
   Row::new(vec![checkbox, title, duration])
+}
+
+fn standard_block<'a>(title: &'a str) -> Block<'a> {
+  Block::default()
+    .title(title)
+    .title_alignment(Alignment::Center)
+    .style(Style::new().fg(Color::Yellow))
+    .borders(Borders::ALL)
+    .padding(Padding::new(2, 2, 1, 1))
 }
