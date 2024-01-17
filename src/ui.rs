@@ -59,13 +59,32 @@ fn render_table(app: &mut App, f: &mut Frame, area: Rect) {
   );
 }
 
+fn format_duration(dur: chrono::Duration) -> String {
+  let h = dur.num_hours();
+  let m = dur.num_minutes();
+  let s = dur.num_seconds();
+  let h_str = match h {
+    0 => "".to_string(),
+    _ => format!("{}h ", h)
+  };
+  let m_str = match m {
+    0 => "".to_string(),
+    _ => format!("{}m ", m - 60 * h)
+  };
+  let s_str = match s {
+    0 => "".to_string(),
+    _ => format!("{}s", s - 60 * m - 60 * 60 * h)
+  };
+  format!("{}{}{}", h_str, m_str, s_str)
+}
+
 fn generate_task_row(task: &app::Task) -> Row {
   let checkbox = match task.complete {
     true => "[x]",
     false => "[ ]"
   }.to_string();
   let title = format!("{}", task.title);
-  let duration = format!("{}", task.dur);
+  let duration = format_duration(task.dur);
   Row::new(vec![checkbox, title, duration])
 }
 

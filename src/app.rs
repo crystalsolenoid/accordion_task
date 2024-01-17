@@ -1,5 +1,7 @@
 use ratatui::widgets::{TableState};
 
+use chrono::{Duration};
+
 /// Application.
 #[derive(Debug, Default)]
 pub struct App {
@@ -19,14 +21,14 @@ pub struct StatefulList<T> {
 }
 
 /// Task.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Task {
   /// title
   pub title: String,
   /// has the task been completed?
   pub complete: bool,
   /// duration
-  pub dur: u32,
+  pub dur: Duration,
 }
 
 impl App {
@@ -37,17 +39,17 @@ impl App {
     app.tasks.items.push( Task {
       title: "brush teeth".to_string(),
       complete: false,
-      dur: 180_000,
+      dur: Duration::seconds(180),
     });
     app.tasks.items.push( Task {
       title: "put on glasses".to_string(),
       complete: false,
-      dur: 60_000,
+      dur: Duration::seconds(60),
     });
     app.tasks.items.push( Task {
       title: "turn on music".to_string(),
       complete: false,
-      dur: 60_000,
+      dur: Duration::seconds(60),
     });
     app
   }
@@ -107,6 +109,16 @@ impl<T> StatefulList<T> {
 
     fn unselect(&mut self) {
         self.state.select(None);
+    }
+}
+
+impl Default for Task {
+    fn default() -> Self {
+        Self {
+            title: "Undefined".to_string(),
+            complete: false,
+            dur: Duration::minutes(1),
+        }
     }
 }
 
