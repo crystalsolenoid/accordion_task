@@ -26,7 +26,7 @@ fn render_table(app: &mut App, f: &mut Frame) {
     .column_spacing(1)
     .style(Style::new().fg(Color::Yellow))
     .header(
-      Row::new(vec!["", "Task", "Dur"])
+      Row::new(vec!["", "Task", "Duration"])
         .style(Style::new().add_modifier(Modifier::BOLD))
         .bottom_margin(1),
     )
@@ -46,5 +46,11 @@ fn render_table(app: &mut App, f: &mut Frame) {
 }
 
 fn generate_task_row(task: &app::Task) -> Row {
-  Row::new(vec!["[ ]", "Row12", "Row13"])
+  let checkbox = match task.complete {
+    true => "[x]",
+    false => "[ ]"
+  }.to_string();
+  let title = format!("{}", task.title);
+  let duration = format!("{}", task.dur);
+  Row::new(vec![checkbox, title, duration])
 }
