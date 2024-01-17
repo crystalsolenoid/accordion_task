@@ -38,6 +38,6 @@ pub fn render(app: &mut App, f: &mut Frame) {
     .highlight_symbol(">> ")
     .repeat_highlight_symbol(true)
     .direction(ListDirection::TopToBottom),
-  f.size(), &mut app.current_task
+  f.size(), &mut app.tasks.state
   )
 }

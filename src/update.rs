@@ -10,8 +10,8 @@ pub fn update(app: &mut App, key_event: KeyEvent) {
                 app.quit()
             }
         }
-        KeyCode::Right | KeyCode::Char('j') => app.increment_counter(),
-        KeyCode::Left | KeyCode::Char('k') => app.decrement_counter(),
+        KeyCode::Right | KeyCode::Char('j') => app.next_task(),
+        KeyCode::Left | KeyCode::Char('k') => app.prev_task(),
         _ => {}
     };
 }
