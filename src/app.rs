@@ -10,14 +10,14 @@ pub struct App {
     /// counter
     pub counter: i64,
     /// tasks
-    pub tasks: StatefulList<Task>,
+    pub tasks: StatefulList,
 }
 
 /// A list with a potentially-selected item
 #[derive(Debug, Default)]
-pub struct StatefulList<T> {
+pub struct StatefulList {
     pub state: TableState,
-    pub items: Vec<T>,
+    pub items: Vec<Task>,
 }
 
 /// Task.
@@ -62,6 +62,10 @@ impl App {
         self.should_quit = true;
     }
 
+    pub fn attempt_toggle(&mut self) {
+        self.tasks.toggle_current();
+    }
+
     pub fn next_task(&mut self) {
         self.tasks.next();
     }
@@ -71,12 +75,25 @@ impl App {
     }
 }
 
-impl<T> StatefulList<T> {
-    fn with_items(items: Vec<T>) -> StatefulList<T> {
+impl StatefulList {
+    fn with_items(items: Vec<Task>) -> StatefulList {
         StatefulList {
             state: TableState::default(),
             items,
         }
+    }
+
+    fn get_current(&mut self) -> Option<&mut Task> {
+        match self.state.selected() {
+            Some(i) => self.items.get_mut(i),
+            None => None,
+        }
+    }
+
+    fn toggle_current(&mut self) {
+        if let Some(i) = self.get_current() {
+            i.complete = !i.complete;
+        };
     }
 
     fn next(&mut self) {
