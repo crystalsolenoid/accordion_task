@@ -1,16 +1,16 @@
-use ratatui::widgets::{TableState};
+use ratatui::widgets::TableState;
 
-use chrono::{Duration};
+use chrono::Duration;
 
 /// Application.
 #[derive(Debug, Default)]
 pub struct App {
-  /// should the application exit?
-  pub should_quit: bool,
-  /// counter
-  pub counter: i64,
-  /// tasks
-  pub tasks: StatefulList<Task>,
+    /// should the application exit?
+    pub should_quit: bool,
+    /// counter
+    pub counter: i64,
+    /// tasks
+    pub tasks: StatefulList<Task>,
 }
 
 /// A list with a potentially-selected item
@@ -23,52 +23,52 @@ pub struct StatefulList<T> {
 /// Task.
 #[derive(Debug)]
 pub struct Task {
-  /// title
-  pub title: String,
-  /// has the task been completed?
-  pub complete: bool,
-  /// duration
-  pub dur: Duration,
+    /// title
+    pub title: String,
+    /// has the task been completed?
+    pub complete: bool,
+    /// duration
+    pub dur: Duration,
 }
 
 impl App {
-  /// Constructs a new instance of [`App`].
-  pub fn new() -> Self {
-    let mut app = Self::default();
-    app.tasks.state.select(Some(0));
-    app.tasks.items.push( Task {
-      title: "brush teeth".to_string(),
-      complete: false,
-      dur: Duration::seconds(180),
-    });
-    app.tasks.items.push( Task {
-      title: "put on glasses".to_string(),
-      complete: false,
-      dur: Duration::seconds(60),
-    });
-    app.tasks.items.push( Task {
-      title: "turn on music".to_string(),
-      complete: false,
-      dur: Duration::seconds(60),
-    });
-    app
-  }
+    /// Constructs a new instance of [`App`].
+    pub fn new() -> Self {
+        let mut app = Self::default();
+        app.tasks.state.select(Some(0));
+        app.tasks.items.push(Task {
+            title: "brush teeth".to_string(),
+            complete: false,
+            dur: Duration::seconds(180),
+        });
+        app.tasks.items.push(Task {
+            title: "put on glasses".to_string(),
+            complete: false,
+            dur: Duration::seconds(60),
+        });
+        app.tasks.items.push(Task {
+            title: "turn on music".to_string(),
+            complete: false,
+            dur: Duration::seconds(60),
+        });
+        app
+    }
 
-  /// Handles the tick event of the terminal.
-  pub fn tick(&self) {}
+    /// Handles the tick event of the terminal.
+    pub fn tick(&self) {}
 
-  /// Set should_quit to true to quit the application.
-  pub fn quit(&mut self) {
-    self.should_quit = true;
-  }
+    /// Set should_quit to true to quit the application.
+    pub fn quit(&mut self) {
+        self.should_quit = true;
+    }
 
-  pub fn next_task(&mut self) {
-    self.tasks.next();
-  }
+    pub fn next_task(&mut self) {
+        self.tasks.next();
+    }
 
-  pub fn prev_task(&mut self) {
-    self.tasks.previous();
-  }
+    pub fn prev_task(&mut self) {
+        self.tasks.previous();
+    }
 }
 
 impl<T> StatefulList<T> {
@@ -124,5 +124,5 @@ impl Default for Task {
 
 #[cfg(test)]
 mod tests {
-  use super::*;
+    use super::*;
 }
