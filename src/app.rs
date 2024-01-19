@@ -1,6 +1,6 @@
 use ratatui::widgets::TableState;
 
-use std::time::{Instant, Duration};
+use std::time::{Duration, Instant};
 
 /// Application.
 #[derive(Debug)]
@@ -120,7 +120,7 @@ impl StatefulList {
             match i.complete {
                 true => i.unset_complete(),
                 false => i.set_complete(),
-                };
+            };
         };
     }
 
@@ -211,7 +211,7 @@ impl Task {
 impl Default for Timer {
     fn default() -> Self {
         Self {
-            duration: Duration::from_secs(5*60),
+            duration: Duration::from_secs(5 * 60),
             start_time: Instant::now(),
             elapsed: Duration::ZERO,
             active: false,
@@ -241,7 +241,9 @@ impl Timer {
 
     fn get_remaining(&self) -> Duration {
         match self.active {
-            true => self.duration.saturating_sub(self.elapsed + (Instant::now() - self.start_time)),
+            true => self
+                .duration
+                .saturating_sub(self.elapsed + (Instant::now() - self.start_time)),
             false => self.duration.saturating_sub(self.elapsed),
         }
     }
