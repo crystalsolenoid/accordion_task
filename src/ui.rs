@@ -74,7 +74,7 @@ fn format_duration(dur: Duration) -> String {
         _ => format!("{}m ", m - 60 * h),
     };
     let s_str = match s {
-        0 => "".to_string(),
+        0 => "0s".to_string(),
         _ => format!("{}s", s - 60 * m - 60 * 60 * h),
     };
     format!("{}{}{}", h_str, m_str, s_str)
