@@ -119,8 +119,22 @@ impl StatefulList {
         if let Some(i) = self.get_current() {
             match i.complete {
                 true => i.unset_complete(),
-                false => i.set_complete(),
+                false => {
+                    i.set_complete();
+                    self.next_no_wrap();
+                }
             };
+        };
+    }
+
+    fn next_no_wrap(&mut self) {
+        let i = match self.state.selected() {
+            Some(i) => {
+                if i < self.items.len() - 1 {
+                    self.next()
+                }
+            }
+            None => (),
         };
     }
 
