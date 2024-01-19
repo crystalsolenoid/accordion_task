@@ -1,6 +1,6 @@
 use ratatui::widgets::TableState;
 
-use chrono::Duration;
+use std::time::Duration;
 
 /// Application.
 #[derive(Debug, Default)]
@@ -39,17 +39,17 @@ impl App {
         app.tasks.items.push(Task {
             title: "brush teeth".to_string(),
             complete: false,
-            dur: Duration::seconds(180),
+            dur: Duration::from_secs(180),
         });
         app.tasks.items.push(Task {
             title: "put on glasses".to_string(),
             complete: false,
-            dur: Duration::seconds(60),
+            dur: Duration::from_secs(60),
         });
         app.tasks.items.push(Task {
             title: "turn on music".to_string(),
             complete: false,
-            dur: Duration::seconds(60),
+            dur: Duration::from_secs(60),
         });
         app
     }
@@ -134,7 +134,7 @@ impl Default for Task {
         Self {
             title: "Undefined".to_string(),
             complete: false,
-            dur: Duration::minutes(1),
+            dur: Duration::from_secs(60),
         }
     }
 }

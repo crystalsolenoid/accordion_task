@@ -3,6 +3,7 @@ use ratatui::{
     style::{Color, Modifier, Style},
     widgets::*,
 };
+use std::time::Duration;
 
 use crate::app::{self, App};
 
@@ -55,10 +56,10 @@ fn render_table(app: &mut App, f: &mut Frame, area: Rect) {
     f.render_stateful_widget(table, area, &mut app.tasks.state);
 }
 
-fn format_duration(dur: chrono::Duration) -> String {
-    let h = dur.num_hours();
-    let m = dur.num_minutes();
-    let s = dur.num_seconds();
+fn format_duration(dur: Duration) -> String {
+    let s = dur.as_secs();
+    let m = s / 60;
+    let h = m / 60;
     let h_str = match h {
         0 => "".to_string(),
         _ => format!("{}h ", h),
