@@ -31,6 +31,8 @@ pub struct Task {
     pub complete: bool,
     /// duration
     pub dur: Duration,
+    /// time started
+    pub start_time: Instant,
 }
 
 impl App {
@@ -48,16 +50,19 @@ impl App {
             title: "brush teeth".to_string(),
             complete: false,
             dur: Duration::from_secs(180),
+            start_time: Instant::now(),
         });
         app.tasks.items.push(Task {
             title: "put on glasses".to_string(),
             complete: false,
             dur: Duration::from_secs(60),
+            start_time: Instant::now(),
         });
         app.tasks.items.push(Task {
             title: "turn on music".to_string(),
             complete: false,
             dur: Duration::from_secs(60),
+            start_time: Instant::now(),
         });
         app
     }
@@ -147,7 +152,14 @@ impl Default for Task {
             title: "Undefined".to_string(),
             complete: false,
             dur: Duration::from_secs(60),
+            start_time: Instant::now(),
         }
+    }
+}
+
+impl Task {
+    pub fn get_remaining_time(&self) -> Duration {
+        self.dur.saturating_sub(Instant::now() - self.start_time)
     }
 }
 

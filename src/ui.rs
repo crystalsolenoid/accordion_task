@@ -46,12 +46,13 @@ fn render_table(app: &mut App, f: &mut Frame, area: Rect) {
         Constraint::Length(5),
         Constraint::Length(25),
         Constraint::Length(15),
+        Constraint::Length(15),
     ];
     let table = Table::new(rows, widths)
         .column_spacing(1)
         .style(Style::new().fg(Color::Yellow))
         .header(
-            Row::new(vec!["", "Task", "Duration"])
+            Row::new(vec!["", "Task", "Duration", "Remaining"])
                 .style(Style::new().add_modifier(Modifier::BOLD))
                 .bottom_margin(1),
         )
@@ -88,7 +89,8 @@ fn generate_task_row(task: &app::Task) -> Row {
     .to_string();
     let title = format!("{}", task.title);
     let duration = format_duration(task.dur);
-    Row::new(vec![checkbox, title, duration])
+    let remaining = format_duration(task.get_remaining_time());
+    Row::new(vec![checkbox, title, duration, remaining])
 }
 
 fn standard_block<'a>(title: &'a str) -> Block<'a> {
