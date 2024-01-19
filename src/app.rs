@@ -33,6 +33,10 @@ pub struct Task {
     pub dur: Duration,
     /// time started
     pub start_time: Instant,
+    /// time elapsed while unpaused
+    pub elapsed: Duration,
+    /// is the timer running?
+    pub active: bool,
 }
 
 impl App {
@@ -51,18 +55,24 @@ impl App {
             complete: false,
             dur: Duration::from_secs(180),
             start_time: Instant::now(),
+            active: false,
+            elapsed: Duration::ZERO,
         });
         app.tasks.items.push(Task {
             title: "put on glasses".to_string(),
             complete: false,
             dur: Duration::from_secs(60),
             start_time: Instant::now(),
+            active: false,
+            elapsed: Duration::ZERO,
         });
         app.tasks.items.push(Task {
             title: "turn on music".to_string(),
             complete: false,
             dur: Duration::from_secs(60),
             start_time: Instant::now(),
+            active: false,
+            elapsed: Duration::ZERO,
         });
         app
     }
@@ -114,6 +124,9 @@ impl StatefulList {
     }
 
     fn next(&mut self) {
+        if let Some(i) = self.get_current() {
+            i.deselect();
+        }
         let i = match self.state.selected() {
             Some(i) => {
                 if i >= self.items.len() - 1 {
@@ -125,9 +138,15 @@ impl StatefulList {
             None => 0,
         };
         self.state.select(Some(i));
+        if let Some(i) = self.get_current() {
+            i.select();
+        }
     }
 
     fn previous(&mut self) {
+        if let Some(i) = self.get_current() {
+            i.deselect();
+        }
         let i = match self.state.selected() {
             Some(i) => {
                 if i == 0 {
@@ -139,9 +158,15 @@ impl StatefulList {
             None => 0,
         };
         self.state.select(Some(i));
+        if let Some(i) = self.get_current() {
+            i.select();
+        }
     }
 
     fn unselect(&mut self) {
+        if let Some(i) = self.get_current() {
+            i.deselect();
+        }
         self.state.select(None);
     }
 }
@@ -153,13 +178,30 @@ impl Default for Task {
             complete: false,
             dur: Duration::from_secs(60),
             start_time: Instant::now(),
+            active: false,
+            elapsed: Duration::ZERO,
         }
     }
 }
 
 impl Task {
     pub fn get_remaining_time(&self) -> Duration {
-        self.dur.saturating_sub(Instant::now() - self.start_time)
+        match self.active {
+            true => self.dur.saturating_sub(self.elapsed + (Instant::now() - self.start_time)),
+            false => self.dur.saturating_sub(self.elapsed),
+        }
+    }
+
+    fn select(&mut self) {
+        // Start timer
+        self.start_time = Instant::now();
+        self.active = true;
+    }
+
+    fn deselect(&mut self) {
+        // Pause timer
+        self.elapsed += Instant::now() - self.start_time;
+        self.active = false;
     }
 }
 
