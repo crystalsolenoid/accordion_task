@@ -1,9 +1,9 @@
 use ratatui::widgets::TableState;
 
-use std::time::Duration;
+use std::time::{Instant, Duration};
 
 /// Application.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct App {
     /// should the application exit?
     pub should_quit: bool,
@@ -11,6 +11,8 @@ pub struct App {
     pub counter: i64,
     /// tasks
     pub tasks: StatefulList,
+    /// routine start time
+    pub start_time: Instant,
 }
 
 /// A list with a potentially-selected item
@@ -34,7 +36,13 @@ pub struct Task {
 impl App {
     /// Constructs a new instance of [`App`].
     pub fn new() -> Self {
-        let mut app = Self::default();
+        let mut app = Self {
+            should_quit: false,
+            counter: 0,
+            tasks: StatefulList::default(),
+            start_time: Instant::now(),
+        };
+
         app.tasks.state.select(Some(0));
         app.tasks.items.push(Task {
             title: "brush teeth".to_string(),
@@ -56,6 +64,10 @@ impl App {
 
     /// Handles the tick event of the terminal.
     pub fn tick(&self) {}
+
+    pub fn get_time_elapsed(&self) -> Duration {
+        self.start_time.elapsed()
+    }
 
     /// Set should_quit to true to quit the application.
     pub fn quit(&mut self) {

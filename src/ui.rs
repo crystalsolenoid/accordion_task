@@ -31,7 +31,12 @@ fn render_timer(app: &mut App, f: &mut Frame, area: Rect) {
 }
 
 fn render_table(app: &mut App, f: &mut Frame, area: Rect) {
+    let elapsed = format_duration(
+        app.get_time_elapsed()
+    );
+
     let block = standard_block("Routine");
+    let block = standard_block(&elapsed);
     let rows = [
         generate_task_row(&app.tasks.items[0]),
         generate_task_row(&app.tasks.items[1]),
