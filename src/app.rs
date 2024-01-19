@@ -117,7 +117,10 @@ impl StatefulList {
 
     fn toggle_current(&mut self) {
         if let Some(i) = self.get_current() {
-            i.complete = !i.complete;
+            match i.complete {
+                true => i.unset_complete(),
+                false => i.set_complete(),
+                };
         };
     }
 
@@ -184,13 +187,23 @@ impl Task {
         self.timer.get_remaining()
     }
 
-    fn select(&mut self) {
-        // Start timer
+    fn set_complete(&mut self) {
+        self.complete = true;
+        self.timer.pause();
+    }
+
+    fn unset_complete(&mut self) {
+        self.complete = false;
         self.timer.start();
     }
 
+    fn select(&mut self) {
+        if !self.complete {
+            self.timer.start();
+        }
+    }
+
     fn deselect(&mut self) {
-        // Pause timer
         self.timer.pause();
     }
 }
@@ -220,8 +233,10 @@ impl Timer {
     }
 
     fn pause(&mut self) {
-        self.elapsed += Instant::now() - self.start_time;
-        self.active = false;
+        if self.active {
+            self.elapsed += Instant::now() - self.start_time;
+            self.active = false;
+        }
     }
 
     fn get_remaining(&self) -> Duration {
