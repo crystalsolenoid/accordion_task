@@ -11,8 +11,8 @@ pub struct App {
     pub counter: i64,
     /// tasks
     pub tasks: StatefulList,
-    /// routine start time
-    pub start_time: Instant,
+    /// routine timer
+    pub routine_timer: Timer,
 }
 
 /// A list with a potentially-selected item
@@ -29,8 +29,15 @@ pub struct Task {
     pub title: String,
     /// has the task been completed?
     pub complete: bool,
+    /// task-specific timer
+    pub timer: Timer,
+}
+
+/// Timer.
+#[derive(Debug)]
+pub struct Timer {
     /// duration
-    pub dur: Duration,
+    pub duration: Duration,
     /// time started
     pub start_time: Instant,
     /// time elapsed while unpaused
@@ -46,33 +53,24 @@ impl App {
             should_quit: false,
             counter: 0,
             tasks: StatefulList::default(),
-            start_time: Instant::now(),
+            routine_timer: Timer::default(),
         };
 
         app.tasks.state.select(Some(0));
         app.tasks.items.push(Task {
             title: "brush teeth".to_string(),
             complete: false,
-            dur: Duration::from_secs(180),
-            start_time: Instant::now(),
-            active: false,
-            elapsed: Duration::ZERO,
+            timer: Timer::from_secs(180),
         });
         app.tasks.items.push(Task {
             title: "put on glasses".to_string(),
             complete: false,
-            dur: Duration::from_secs(60),
-            start_time: Instant::now(),
-            active: false,
-            elapsed: Duration::ZERO,
+            timer: Timer::from_secs(60),
         });
         app.tasks.items.push(Task {
             title: "turn on music".to_string(),
             complete: false,
-            dur: Duration::from_secs(60),
-            start_time: Instant::now(),
-            active: false,
-            elapsed: Duration::ZERO,
+            timer: Timer::from_secs(60),
         });
         app
     }
@@ -81,7 +79,7 @@ impl App {
     pub fn tick(&self) {}
 
     pub fn get_time_elapsed(&self) -> Duration {
-        self.start_time.elapsed()
+        self.routine_timer.start_time.elapsed()
     }
 
     /// Set should_quit to true to quit the application.
@@ -176,32 +174,61 @@ impl Default for Task {
         Self {
             title: "Undefined".to_string(),
             complete: false,
-            dur: Duration::from_secs(60),
-            start_time: Instant::now(),
-            active: false,
-            elapsed: Duration::ZERO,
+            timer: Timer::from_secs(60),
         }
     }
 }
 
 impl Task {
     pub fn get_remaining_time(&self) -> Duration {
-        match self.active {
-            true => self.dur.saturating_sub(self.elapsed + (Instant::now() - self.start_time)),
-            false => self.dur.saturating_sub(self.elapsed),
-        }
+        self.timer.get_remaining()
     }
 
     fn select(&mut self) {
         // Start timer
-        self.start_time = Instant::now();
-        self.active = true;
+        self.timer.start();
     }
 
     fn deselect(&mut self) {
         // Pause timer
+        self.timer.pause();
+    }
+}
+
+impl Default for Timer {
+    fn default() -> Self {
+        Self {
+            duration: Duration::from_secs(5*60),
+            start_time: Instant::now(),
+            elapsed: Duration::ZERO,
+            active: false,
+        }
+    }
+}
+
+impl Timer {
+    fn from_secs(seconds: u64) -> Self {
+        Self {
+            duration: Duration::from_secs(seconds),
+            ..Self::default()
+        }
+    }
+
+    fn start(&mut self) {
+        self.start_time = Instant::now();
+        self.active = true;
+    }
+
+    fn pause(&mut self) {
         self.elapsed += Instant::now() - self.start_time;
         self.active = false;
+    }
+
+    fn get_remaining(&self) -> Duration {
+        match self.active {
+            true => self.duration.saturating_sub(self.elapsed + (Instant::now() - self.start_time)),
+            false => self.duration.saturating_sub(self.elapsed),
+        }
     }
 }
 

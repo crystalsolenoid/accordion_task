@@ -88,7 +88,7 @@ fn generate_task_row(task: &app::Task) -> Row {
     }
     .to_string();
     let title = format!("{}", task.title);
-    let duration = format_duration(task.dur);
+    let duration = format_duration(task.timer.duration);
     let remaining = format_duration(task.get_remaining_time());
     Row::new(vec![checkbox, title, duration, remaining])
 }
