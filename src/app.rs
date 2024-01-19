@@ -72,7 +72,15 @@ impl App {
             complete: false,
             timer: Timer::from_secs(60),
         });
+        app.start_routine();
         app
+    }
+
+    pub fn start_routine(&mut self) {
+        self.routine_timer.start();
+        if let Some(mut i) = self.tasks.get_current() {
+            i.timer.start();
+        }
     }
 
     /// Handles the tick event of the terminal.
