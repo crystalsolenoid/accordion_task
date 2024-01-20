@@ -51,12 +51,13 @@ pub struct Timer {
 impl App {
     /// Constructs a new instance of [`App`].
     pub fn new() -> Self {
+        let tasks = StatefulList::with_items(
+            parse_routine::read_csv().expect("Failed to load routine file"),
+        );
         let mut app = Self {
             should_quit: false,
             counter: 0,
-            tasks: StatefulList::with_items(
-                parse_routine::read_csv().expect("Failed to load routine file"),
-            ),
+            tasks,
             routine_timer: Timer::default(),
         };
 
@@ -78,6 +79,10 @@ impl App {
 
     pub fn get_time_elapsed(&self) -> Duration {
         self.routine_timer.start_time.elapsed()
+    }
+
+    pub fn get_percentage_elapsed(&self) -> f64 {
+        self.routine_timer.get_percentage()
     }
 
     /// Set should_quit to true to quit the application.
@@ -265,6 +270,10 @@ impl Timer {
                 .saturating_sub(self.elapsed + (Instant::now() - self.start_time)),
             false => self.duration.saturating_sub(self.elapsed),
         }
+    }
+
+    fn get_percentage(&self) -> f64 {
+        self.get_remaining().as_secs() as f64 / self.duration.as_secs() as f64
     }
 }
 

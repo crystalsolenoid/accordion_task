@@ -36,11 +36,7 @@ pub fn read_csv() -> Result<Vec<Task>, Box<dyn Error>> {
 pub fn parse_task(record: StringRecord) -> Task {
     Task {
         title: record.get(0).expect("Missing CSV field.").to_string(),
-        ..Task::from_secs(
-            parse_duration(record
-                .get(1)
-                .expect("Missing CSV field."))
-        )
+        ..Task::from_secs(parse_duration(record.get(1).expect("Missing CSV field.")))
     }
 }
 
@@ -55,15 +51,15 @@ fn parse_duration(raw: &str) -> u64 {
             'h' => {
                 hours = u64::from_str(&number_accum).unwrap();
                 number_accum = String::new();
-            },
+            }
             'm' => {
                 minutes = u64::from_str(&number_accum).unwrap();
                 number_accum = String::new();
-            },
+            }
             's' => {
                 seconds = u64::from_str(&number_accum).unwrap();
                 number_accum = String::new();
-            },
+            }
             ' ' => (),
             _ => number_accum.push(g),
         }

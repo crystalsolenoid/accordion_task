@@ -26,7 +26,7 @@ fn render_timer(app: &mut App, f: &mut Frame, area: Rect) {
                 .add_modifier(Modifier::BOLD),
         )
         .block(block)
-        .ratio(0.4);
+        .ratio(app.get_percentage_elapsed());
     f.render_widget(guage, area)
 }
 
