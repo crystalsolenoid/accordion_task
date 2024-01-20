@@ -55,7 +55,7 @@ impl App {
             should_quit: false,
             counter: 0,
             tasks: StatefulList::with_items(
-                parse_routine::read_csv().expect("Failed to read or parse CSV."),
+                parse_routine::read_csv().expect("Failed to load routine file"),
             ),
             routine_timer: Timer::default(),
         };
