@@ -8,12 +8,40 @@ use std::time::Duration;
 use crate::app::{self, App};
 
 pub fn render(app: &mut App, f: &mut Frame) {
-    let layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Length(5), Constraint::Min(5)])
-        .split(f.size());
+    let layout = generate_layout(f);
     render_timer(app, f, layout[0]);
     render_table(app, f, layout[1]);
+    render_debug(app, f, layout[2]);
+}
+
+fn generate_layout(f: &Frame) -> [Rect; 3] {
+    let width = f.size().width;
+    let height = f.size().height;
+    let header_height = 5;
+    let footer_height = 15;
+    let split1 = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Length(header_height), Constraint::Min(header_height)])
+        .split(f.size());
+    let header = split1[0];
+    let split2 = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Max(width - header_height - footer_height), Constraint::Min(footer_height)])
+        .split(split1[1]);
+    let body = split2[0];
+    let footer = split2[1];
+    [header, body, footer]
+}
+
+fn render_debug(app: &App, f: &mut Frame, area: Rect) {
+    let block = standard_block("Debug");
+    let text = vec![
+        "Hello World".into(),
+    ];
+    let para = Paragraph::new(text)
+        .style(Style::new().fg(Color::Yellow))
+        .block(block);
+    f.render_widget(para, area);
 }
 
 fn render_timer(app: &mut App, f: &mut Frame, area: Rect) {
