@@ -1,5 +1,7 @@
 use ratatui::widgets::TableState;
 
+mod parse_routine;
+
 use std::time::{Duration, Instant};
 
 /// Application.
@@ -52,27 +54,15 @@ impl App {
         let mut app = Self {
             should_quit: false,
             counter: 0,
-            tasks: StatefulList::default(),
+            tasks: StatefulList::with_items(
+                parse_routine::read_csv().expect("Failed to read or parse CSV."),
+            ),
             routine_timer: Timer::default(),
         };
 
         app.tasks.state.select(Some(0));
-        app.tasks.items.push(Task {
-            title: "brush teeth".to_string(),
-            complete: false,
-            timer: Timer::from_secs(180),
-        });
-        app.tasks.items.push(Task {
-            title: "put on glasses".to_string(),
-            complete: false,
-            timer: Timer::from_secs(60),
-        });
-        app.tasks.items.push(Task {
-            title: "turn on music".to_string(),
-            complete: false,
-            timer: Timer::from_secs(60),
-        });
         app.start_routine();
+
         app
     }
 
@@ -205,6 +195,13 @@ impl Default for Task {
 }
 
 impl Task {
+    pub fn from_secs(seconds: u64) -> Self {
+        Self {
+            timer: Timer::from_secs(seconds),
+            ..Self::default()
+        }
+    }
+
     pub fn get_remaining_time(&self) -> Duration {
         self.timer.get_remaining()
     }

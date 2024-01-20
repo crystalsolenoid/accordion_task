@@ -35,11 +35,12 @@ fn render_table(app: &mut App, f: &mut Frame, area: Rect) {
 
     let block = standard_block("Routine");
     let block = standard_block(&elapsed);
-    let rows = [
-        generate_task_row(&app.tasks.items[0]),
-        generate_task_row(&app.tasks.items[1]),
-        generate_task_row(&app.tasks.items[2]),
-    ];
+    let rows: Vec<Row> = app
+        .tasks
+        .items
+        .iter()
+        .map(|i| generate_task_row(i))
+        .collect();
     let widths = [
         Constraint::Length(5),
         Constraint::Length(25),
