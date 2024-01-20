@@ -34,7 +34,6 @@ fn render_table(app: &mut App, f: &mut Frame, area: Rect) {
     let elapsed = format_duration(app.get_time_elapsed());
 
     let block = standard_block("Routine");
-    let block = standard_block(&elapsed);
     let rows: Vec<Row> = app
         .tasks
         .items
