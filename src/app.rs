@@ -41,6 +41,7 @@ pub struct Task {
 pub struct Timer {
     /// duration
     pub duration: Duration,
+    pub original_duration: Duration,
     /// time started
     pub start_instant: Instant,
     pub start_time: DateTime<Local>,
@@ -139,7 +140,22 @@ impl App {
     }
 
     /// Handles the tick event of the terminal.
-    pub fn tick(&self) {}
+    pub fn tick(&mut self) {
+        // shrink if needed
+        match self.get_time_balance() {
+            SignedDuration::DEFICIT(deficit) => {
+                let ratio: f64 = self.routine_timer.get_remaining().as_secs() as f64
+                    / self.get_total_remaining().as_secs() as f64;
+                for mut task in &mut self.tasks.items {
+                    if !task.complete {
+                        task.timer.shrink_duration(ratio);
+                    }
+                }
+            }
+            SignedDuration::SURPLUS(_) => (),
+            SignedDuration::ZERO => (),
+        }
+    }
 
     pub fn get_time_elapsed(&self) -> Duration {
         self.routine_timer.start_instant.elapsed()
@@ -300,6 +316,7 @@ impl Default for Timer {
     fn default() -> Self {
         Self {
             duration: Duration::from_secs(5 * 60),
+            original_duration: Duration::from_secs(5 * 60),
             start_instant: Instant::now(),
             start_time: Local::now(),
             elapsed: Duration::ZERO,
@@ -312,6 +329,7 @@ impl Timer {
     fn from_secs(seconds: u64) -> Self {
         Self {
             duration: Duration::from_secs(seconds),
+            original_duration: Duration::from_secs(seconds),
             ..Self::default()
         }
     }
@@ -319,8 +337,13 @@ impl Timer {
     fn from_duration(duration: Duration) -> Self {
         Self {
             duration,
+            original_duration: duration,
             ..Self::default()
         }
+    }
+
+    fn shrink_duration(&mut self, ratio: f64) {
+        self.duration = self.duration.mul_f64(ratio);
     }
 
     fn start(&mut self) {
