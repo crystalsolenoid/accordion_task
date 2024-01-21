@@ -48,6 +48,12 @@ pub struct Timer {
     pub active: bool,
 }
 
+pub enum SignedDuration {
+    SURPLUS(Duration),
+    DEFICIT(Duration),
+    ZERO,
+}
+
 impl App {
     /// Constructs a new instance of [`App`].
     pub fn new() -> Self {
@@ -68,6 +74,34 @@ impl App {
         app
     }
 
+    pub fn get_time_balance(&self) -> SignedDuration {
+        // Report the amount ahead of or behind schedule
+        // based on the routine timer and task timers.
+        // To avoid timing noise, consider all durations
+        // less than 1 second long to be SignedDuration::ZERO.
+        // Because of this quirk, be careful using this
+        // function for cumulative operations.
+        let remaining = self.routine_timer.get_remaining();
+        let to_do = self.get_total_remaining();
+        if to_do > remaining {
+            let difference = to_do - remaining;
+            if difference.as_secs() > 0 {
+                SignedDuration::DEFICIT(difference)
+            } else {
+                SignedDuration::ZERO
+            }
+        } else if to_do < remaining {
+            let difference = remaining - to_do;
+            if difference.as_secs() > 0 {
+                SignedDuration::SURPLUS(difference)
+            } else {
+                SignedDuration::ZERO
+            }
+        } else {
+            SignedDuration::ZERO
+        }
+    }
+
     pub fn get_total_remaining(&self) -> Duration {
         self.tasks
             .items
@@ -75,6 +109,25 @@ impl App {
             .filter(|task| !task.complete)
             .map(|task| task.timer.get_remaining())
             .sum()
+    }
+
+    pub fn get_unused_time(&self) -> Duration {
+        self.tasks
+            .items
+            .iter()
+            .filter(|task| task.complete)
+            .map(|task| task.timer.get_remaining())
+            .sum()
+    }
+
+    pub fn get_start_time(&self) -> Instant {
+        // TODO: Instant is the wrong type to use here
+        self.routine_timer.start_time
+    }
+
+    pub fn get_projected_end_time(&self) -> Instant {
+        // TODO: Instant is the wrong type to use here
+        Instant::now() + self.get_total_remaining()
     }
 
     pub fn start_routine(&mut self) {
