@@ -21,12 +21,18 @@ fn generate_layout(f: &Frame) -> [Rect; 3] {
     let footer_height = 15;
     let split1 = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(header_height), Constraint::Min(header_height)])
+        .constraints([
+            Constraint::Length(header_height),
+            Constraint::Min(header_height),
+        ])
         .split(f.size());
     let header = split1[0];
     let split2 = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Max(width - header_height - footer_height), Constraint::Min(footer_height)])
+        .constraints([
+            Constraint::Max(width - header_height - footer_height),
+            Constraint::Min(footer_height),
+        ])
         .split(split1[1]);
     let body = split2[0];
     let footer = split2[1];
@@ -35,9 +41,11 @@ fn generate_layout(f: &Frame) -> [Rect; 3] {
 
 fn render_debug(app: &App, f: &mut Frame, area: Rect) {
     let block = standard_block("Debug");
-    let text = vec![
-        "Hello World".into(),
-    ];
+    let text = vec![format!(
+        "get_total_remaining() \t{}",
+        format_duration(app.get_total_remaining())
+    )
+    .into()];
     let para = Paragraph::new(text)
         .style(Style::new().fg(Color::Yellow))
         .block(block);

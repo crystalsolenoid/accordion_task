@@ -60,11 +60,21 @@ impl App {
             tasks,
             routine_timer: Timer::default(),
         };
+        app.routine_timer = Timer::from_duration(app.get_total_remaining());
 
         app.tasks.state.select(Some(0));
         app.start_routine();
 
         app
+    }
+
+    pub fn get_total_remaining(&self) -> Duration {
+        self.tasks
+            .items
+            .iter()
+            .filter(|task| !task.complete)
+            .map(|task| task.timer.get_remaining())
+            .sum()
     }
 
     pub fn start_routine(&mut self) {
@@ -247,6 +257,13 @@ impl Timer {
     fn from_secs(seconds: u64) -> Self {
         Self {
             duration: Duration::from_secs(seconds),
+            ..Self::default()
+        }
+    }
+
+    fn from_duration(duration: Duration) -> Self {
+        Self {
+            duration,
             ..Self::default()
         }
     }
