@@ -2,6 +2,7 @@ use ratatui::widgets::TableState;
 
 mod parse_routine;
 
+use chrono::{DateTime, Local, Timelike};
 use std::time::{Duration, Instant};
 
 /// Application.
@@ -41,7 +42,8 @@ pub struct Timer {
     /// duration
     pub duration: Duration,
     /// time started
-    pub start_time: Instant,
+    pub start_instant: Instant,
+    pub start_time: DateTime<Local>,
     /// time elapsed while unpaused
     pub elapsed: Duration,
     /// is the timer running?
@@ -120,14 +122,13 @@ impl App {
             .sum()
     }
 
-    pub fn get_start_time(&self) -> Instant {
-        // TODO: Instant is the wrong type to use here
+    pub fn get_start_time(&self) -> DateTime<Local> {
         self.routine_timer.start_time
     }
 
-    pub fn get_projected_end_time(&self) -> Instant {
+    pub fn get_projected_end_time(&self) -> DateTime<Local> {
         // TODO: Instant is the wrong type to use here
-        Instant::now() + self.get_total_remaining()
+        Local::now() + self.get_total_remaining()
     }
 
     pub fn start_routine(&mut self) {
@@ -141,7 +142,7 @@ impl App {
     pub fn tick(&self) {}
 
     pub fn get_time_elapsed(&self) -> Duration {
-        self.routine_timer.start_time.elapsed()
+        self.routine_timer.start_instant.elapsed()
     }
 
     pub fn get_percentage_elapsed(&self) -> f64 {
@@ -299,7 +300,8 @@ impl Default for Timer {
     fn default() -> Self {
         Self {
             duration: Duration::from_secs(5 * 60),
-            start_time: Instant::now(),
+            start_instant: Instant::now(),
+            start_time: Local::now(),
             elapsed: Duration::ZERO,
             active: false,
         }
@@ -322,13 +324,13 @@ impl Timer {
     }
 
     fn start(&mut self) {
-        self.start_time = Instant::now();
+        self.start_instant = Instant::now();
         self.active = true;
     }
 
     fn pause(&mut self) {
         if self.active {
-            self.elapsed += Instant::now() - self.start_time;
+            self.elapsed += Instant::now() - self.start_instant;
             self.active = false;
         }
     }
@@ -337,7 +339,7 @@ impl Timer {
         match self.active {
             true => self
                 .duration
-                .saturating_sub(self.elapsed + (Instant::now() - self.start_time)),
+                .saturating_sub(self.elapsed + (Instant::now() - self.start_instant)),
             false => self.duration.saturating_sub(self.elapsed),
         }
     }

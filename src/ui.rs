@@ -57,8 +57,12 @@ fn render_debug(app: &App, f: &mut Frame, area: Rect) {
             format_signed_duration(app.get_time_balance())
         )
         .into(),
-        format!("start time \t{:?}", app.get_start_time()).into(),
-        format!("projected end time \t{:?}", app.get_projected_end_time()).into(),
+        format!("start time \t{}", app.get_start_time().format("%l:%M%P")).into(),
+        format!(
+            "projected end time \t{}",
+            app.get_projected_end_time().format("%l:%M%P")
+        )
+        .into(),
     ];
     let para = Paragraph::new(text)
         .style(Style::new().fg(Color::Yellow))
