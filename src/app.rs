@@ -114,6 +114,15 @@ impl App {
             .sum()
     }
 
+    pub fn get_total_duration(&self) -> Duration {
+        self.tasks
+            .items
+            .iter()
+            .filter(|task| !task.complete)
+            .map(|task| task.timer.original_duration)
+            .sum()
+    }
+
     pub fn get_unused_time(&self) -> Duration {
         self.tasks
             .items
@@ -141,19 +150,23 @@ impl App {
 
     /// Handles the tick event of the terminal.
     pub fn tick(&mut self) {
-        // shrink if needed
+        // shrink or stretch to time available
+        let todo = self.get_total_duration().as_secs() as f64;
+        let remaining = self.routine_timer.get_remaining().as_secs() as f64;
         match self.get_time_balance() {
-            SignedDuration::DEFICIT(deficit) => {
-                let ratio: f64 = self.routine_timer.get_remaining().as_secs() as f64
-                    / self.get_total_remaining().as_secs() as f64;
+            SignedDuration::ZERO => (),
+            _ => {
+                let ratio = match remaining / todo {
+                    ..=0.0 => 0.0,
+                    1.0.. => 1.0,
+                    r => r,
+                };
                 for mut task in &mut self.tasks.items {
                     if !task.complete {
-                        task.timer.shrink_duration(ratio);
+                        task.timer.adjust_duration(ratio);
                     }
                 }
             }
-            SignedDuration::SURPLUS(_) => (),
-            SignedDuration::ZERO => (),
         }
     }
 
@@ -344,6 +357,10 @@ impl Timer {
 
     fn shrink_duration(&mut self, ratio: f64) {
         self.duration = self.duration.mul_f64(ratio);
+    }
+
+    fn adjust_duration(&mut self, ratio: f64) {
+        self.duration = self.original_duration.mul_f64(ratio);
     }
 
     fn start(&mut self) {
