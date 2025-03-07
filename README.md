@@ -20,6 +20,7 @@ cargo run examples/test
 
 - Press `enter` to check off (or uncheck) the selected task. Checking a task off will move on to the next task.
 - Press `j` and `k` to go up and down. This allows tasks to be completed out of order, if life happens.
+- Press `d` to toggle the debug panel.
 - Press `q` or `esc` to quit.
 
 ## Planned Features

@@ -10,6 +10,7 @@ use std::time::{Duration, Instant};
 pub struct App {
     /// should the application exit?
     pub should_quit: bool,
+    pub debug: bool,
     /// counter
     pub counter: i64,
     /// tasks
@@ -65,6 +66,7 @@ impl App {
         );
         let mut app = Self {
             should_quit: false,
+            debug: false,
             counter: 0,
             tasks,
             routine_timer: Timer::default(),
@@ -181,6 +183,10 @@ impl App {
     /// Set should_quit to true to quit the application.
     pub fn quit(&mut self) {
         self.should_quit = true;
+    }
+
+    pub fn toggle_debug(&mut self) {
+        self.debug = !self.debug;
     }
 
     pub fn attempt_toggle(&mut self) {

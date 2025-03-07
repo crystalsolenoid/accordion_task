@@ -13,6 +13,7 @@ pub fn update(app: &mut App, key_event: KeyEvent) {
         KeyCode::Right | KeyCode::Char('j') => app.next_task(),
         KeyCode::Left | KeyCode::Char('k') => app.prev_task(),
         KeyCode::Enter => app.attempt_toggle(),
+        KeyCode::Char('d') => app.toggle_debug(),
         _ => {}
     };
 }

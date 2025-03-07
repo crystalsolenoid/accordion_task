@@ -8,17 +8,22 @@ use std::time::Duration;
 use crate::app::{self, App, SignedDuration};
 
 pub fn render(app: &mut App, f: &mut Frame) {
-    let layout = generate_layout(f);
+    let layout = generate_layout(app, f);
     render_timer(app, f, layout[0]);
     render_table(app, f, layout[1]);
-    render_debug(app, f, layout[2]);
+    if app.debug {
+        render_debug(app, f, layout[2]);
+    }
 }
 
-fn generate_layout(f: &Frame) -> [Rect; 3] {
+fn generate_layout(app: &App, f: &Frame) -> [Rect; 3] {
     let width = f.size().width;
     let height = f.size().height;
     let header_height = 5;
-    let footer_height = 15;
+    let footer_height = match app.debug {
+        true => 15,
+        false => 0,
+    };
     let split1 = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
