@@ -123,27 +123,21 @@ impl App {
     }
 
     pub fn get_total_duration(&self) -> Duration {
-        todo!();
-        /*
         self.tasks
-            .items
+            .tasks
             .iter()
             .filter(|task| !task.complete)
-            .map(|task| task.timer.original_duration)
+            .map(|task| task.duration)
             .sum()
-        */
     }
 
     pub fn get_unused_time(&self) -> Duration {
-        todo!();
-        /*
         self.tasks
-            .items
+            .tasks
             .iter()
             .filter(|task| task.complete)
-            .map(|task| task.timer.get_remaining())
+            .map(|task| task.remaining())
             .sum()
-        */
     }
 
     pub fn get_start_time(&self) -> DateTime<Local> {
