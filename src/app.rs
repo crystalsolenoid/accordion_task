@@ -215,11 +215,31 @@ impl App {
     }
 
     pub fn next_task(&mut self) {
-        self.tasks.next();
+        // TODO update version of ratatui
+//        self.task_widget_state.select_next();
+        if let Some(i) = self.task_widget_state.selected() {
+            let j = if i >= self.tasks.tasks.len() - 1 {
+                0
+            } else {
+                i + 1
+            };
+            self.task_widget_state.select(Some(j));
+            self.tasks.active = self.task_widget_state.selected();
+        }
     }
 
     pub fn prev_task(&mut self) {
-        self.tasks.previous();
+        // TODO update version of ratatui
+//        self.task_widget_state.select_previous();
+        if let Some(i) = self.task_widget_state.selected() {
+            let j = if i == 0 {
+                self.tasks.tasks.len() - 1
+            } else {
+                i - 1
+            };
+            self.task_widget_state.select(Some(j));
+            self.tasks.active = self.task_widget_state.selected();
+        }
     }
 }
 
