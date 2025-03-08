@@ -212,6 +212,7 @@ impl App {
 
     pub fn attempt_toggle(&mut self) {
         self.tasks.toggle_current();
+        self.task_widget_state.select(self.tasks.active);
     }
 
     pub fn next_task(&mut self) {

@@ -65,16 +65,24 @@ impl StaticTaskList {
 
     pub fn toggle_current(&mut self) {
         if let Some(i) = self.get_current() {
-            todo!();
-            /*
             match i.complete {
-                true => i.unset_complete(),
+                true => i.complete = false,
                 false => {
-                    i.set_complete();
+                    i.complete = true;
                     self.next_no_wrap();
                 }
             };
-            */
+        };
+    }
+
+    pub fn next_no_wrap(&mut self) {
+        let i = match self.active {
+            Some(i) => {
+                if i < self.tasks.len() - 1 {
+                    self.next()
+                }
+            }
+            None => (),
         };
     }
 
