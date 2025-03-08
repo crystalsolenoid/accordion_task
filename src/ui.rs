@@ -5,7 +5,7 @@ use ratatui::{
 };
 use std::time::Duration;
 
-use crate::app::{self, App, SignedDuration};
+use crate::app::{self, App, static_task::StaticTask, SignedDuration};
 
 pub fn render(app: &mut App, f: &mut Frame) {
     let layout = generate_layout(app, f);
@@ -95,7 +95,7 @@ fn render_table(app: &mut App, f: &mut Frame, area: Rect) {
     let block = standard_block("Routine");
     let rows: Vec<Row> = app
         .tasks
-        .items
+        .tasks
         .iter()
         .map(|i| generate_task_row(i))
         .collect();
@@ -116,7 +116,7 @@ fn render_table(app: &mut App, f: &mut Frame, area: Rect) {
         .block(block)
         .highlight_style(Style::new().add_modifier(Modifier::REVERSED))
         .highlight_symbol(">> ");
-    f.render_stateful_widget(table, area, &mut app.tasks.state);
+    f.render_stateful_widget(table, area, &mut app.task_widget_state);
 }
 
 fn format_signed_duration(signed_dur: SignedDuration) -> String {
@@ -146,15 +146,15 @@ fn format_duration(dur: Duration) -> String {
     format!("{}{}{}", h_str, m_str, s_str)
 }
 
-fn generate_task_row(task: &app::Task) -> Row {
+fn generate_task_row(task: &StaticTask) -> Row {
     let checkbox = match task.complete {
         true => "[x]",
         false => "[ ]",
     }
     .to_string();
-    let title = format!("{}", task.title);
-    let duration = format_duration(task.timer.duration);
-    let remaining = format_duration(task.get_remaining_time());
+    let title = format!("{}", task.name);
+    let duration = format_duration(task.duration);
+    let remaining = format_duration(task.remaining());
     Row::new(vec![checkbox, title, duration, remaining])
 }
 

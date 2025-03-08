@@ -1,6 +1,9 @@
 use ratatui::widgets::TableState;
 
 mod parse_routine;
+pub mod static_task;
+
+use static_task::{StaticTaskList, StaticTask};
 
 use chrono::{DateTime, Local, Timelike};
 use std::time::{Duration, Instant};
@@ -13,17 +16,20 @@ pub struct App {
     pub debug: bool,
     /// counter
     pub counter: i64,
-    /// tasks
-    pub tasks: StatefulList,
+    /// task display widget
+    pub task_widget_state: TableState,
+    /// task internal list
+    pub tasks: StaticTaskList,
     /// routine timer
     pub routine_timer: Timer,
+    pub last_tick: Instant,
 }
 
 /// A list with a potentially-selected item
 #[derive(Debug, Default)]
-pub struct StatefulList {
+pub struct StatefulList<'a> {
     pub state: TableState,
-    pub items: Vec<Task>,
+    pub items: Vec<&'a StaticTask>,
 }
 
 /// Task.
@@ -60,20 +66,20 @@ pub enum SignedDuration {
 
 impl App {
     /// Constructs a new instance of [`App`].
-    pub fn new() -> Self {
-        let tasks = StatefulList::with_items(
-            parse_routine::read_csv().expect("Failed to load routine file"),
-        );
+    pub fn new() -> App {
+        let tasks = StaticTaskList::with_tasks(parse_routine::read_csv().expect("Failed to load routine file"));
         let mut app = Self {
             should_quit: false,
             debug: false,
             counter: 0,
             tasks,
+            task_widget_state: TableState::default(),
             routine_timer: Timer::default(),
+            last_tick: Instant::now(),
         };
         app.routine_timer = Timer::from_duration(app.get_total_remaining());
 
-        app.tasks.state.select(Some(0));
+        app.task_widget_state.select(app.tasks.active);
         app.start_routine();
 
         app
@@ -109,29 +115,35 @@ impl App {
 
     pub fn get_total_remaining(&self) -> Duration {
         self.tasks
-            .items
+            .tasks
             .iter()
             .filter(|task| !task.complete)
-            .map(|task| task.timer.get_remaining())
+            .map(|task| task.remaining())
             .sum()
     }
 
     pub fn get_total_duration(&self) -> Duration {
+        todo!();
+        /*
         self.tasks
             .items
             .iter()
             .filter(|task| !task.complete)
             .map(|task| task.timer.original_duration)
             .sum()
+        */
     }
 
     pub fn get_unused_time(&self) -> Duration {
+        todo!();
+        /*
         self.tasks
             .items
             .iter()
             .filter(|task| task.complete)
             .map(|task| task.timer.get_remaining())
             .sum()
+        */
     }
 
     pub fn get_start_time(&self) -> DateTime<Local> {
@@ -139,19 +151,26 @@ impl App {
     }
 
     pub fn get_projected_end_time(&self) -> DateTime<Local> {
-        // TODO: Instant is the wrong type to use here
         Local::now() + self.get_total_remaining()
     }
 
     pub fn start_routine(&mut self) {
         self.routine_timer.start();
+        /*
         if let Some(mut i) = self.tasks.get_current() {
             i.timer.start();
         }
+        */
     }
 
     /// Handles the tick event of the terminal.
     pub fn tick(&mut self) {
+        let this_tick = Instant::now();
+        let delta = this_tick - self.last_tick;
+        self.last_tick = this_tick;
+
+        self.tasks.elapse(delta);
+        /*
         // shrink or stretch to time available
         let todo = self.get_total_duration().as_secs() as f64;
         let remaining = self.routine_timer.get_remaining().as_secs() as f64;
@@ -170,6 +189,8 @@ impl App {
                 }
             }
         }
+        */
+        // TODO
     }
 
     pub fn get_time_elapsed(&self) -> Duration {
@@ -202,15 +223,16 @@ impl App {
     }
 }
 
-impl StatefulList {
-    fn with_items(items: Vec<Task>) -> StatefulList {
+impl StatefulList<'_> {
+    fn with_items<'a>(items: Vec<&'a StaticTask>) -> StatefulList<'a> {
         StatefulList {
             state: TableState::default(),
             items,
         }
     }
 
-    fn get_current(&mut self) -> Option<&mut Task> {
+    /*
+    fn get_current(&mut self) -> Option<&mut StaticTask> {
         match self.state.selected() {
             Some(i) => self.items.get_mut(i),
             None => None,
@@ -286,6 +308,7 @@ impl StatefulList {
         }
         self.state.select(None);
     }
+    */
 }
 
 impl Default for Task {
