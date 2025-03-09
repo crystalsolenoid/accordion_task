@@ -1,15 +1,17 @@
 use std::time::Duration;
+use std::cmp::max;
 
 #[derive(Debug)]
 pub struct StaticTask {
     /// How much time has already been spent on the task?
     pub elapsed: Duration,
     /// What was the original duration specified for the task?
-    pub duration: Duration,
+    pub original_duration: Duration,
     /// Is the task completed?
     pub complete: bool,
     /// Name
     pub name: String,
+    pub shrink_ratio: f64,
 }
 
 impl StaticTask {
@@ -17,13 +19,18 @@ impl StaticTask {
         Self {
             name: name.to_owned(),
             elapsed: Duration::ZERO,
-            duration: Duration::new(duration, 0),
+            original_duration: Duration::new(duration, 0),
+            shrink_ratio: 1.0,
             complete: false,
         }
     }
 
+    pub fn duration(&self) -> Duration {
+        max(self.original_duration.mul_f64(self.shrink_ratio), self.elapsed)
+    }
+
     pub fn remaining(&self) -> Duration {
-        self.duration.saturating_sub(self.elapsed)
+        self.duration().saturating_sub(self.elapsed)
     }
 
     pub fn elapse(&mut self, duration: Duration) {
@@ -100,7 +107,7 @@ impl StaticTaskList {
     }
 
     pub fn duration(&self) -> Duration {
-        self.tasks.iter().map(|task| task.duration).sum()
+        self.tasks.iter().map(|task| task.duration()).sum()
     }
 
     pub fn elapsed(&self) -> Duration {
@@ -109,14 +116,140 @@ impl StaticTaskList {
 
     pub fn elapse(&mut self, duration: Duration) {
         if let Some(i) = self.active {
+            let old_duration = self.tasks[i].duration();
             self.tasks[i].elapse(duration);
-        }
+            let new_duration = self.tasks[i].duration();
+            if new_duration > old_duration {
+                let overtime = new_duration - old_duration;
+                let inactive_undone_duration = self.tasks.iter()
+                    .enumerate()
+                    .filter(|(j, task)| match (j, task.complete) {
+                        (&j, _) if j == i => false,
+                        (_, false) => true,
+                        (_, true) => false,
+                    })
+                    .map(|(_, task)| task.duration())
+                    .sum();
+                // TODO use one iterator for both tasks
+                let shrink_ratio = overtime.div_duration_f64(inactive_undone_duration);
+                self.tasks.iter_mut()
+                    .enumerate()
+                    .filter(|(j, task)| match (j, task.complete) {
+                        (&j, _) if j == i => false,
+                        (_, false) => true,
+                        (_, true) => false,
+                    })
+                    .for_each(|(_, task)| task.shrink_ratio *= (1.0 - shrink_ratio));
+                // TODO I'm not sure yet if this works for subsequent elapse calls
+            }
+        } // TODO else
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // TODO test about calculating duration for a whole list when something's completed
+
+    #[test]
+    fn grow_back() {
+        // tasks grow back to their original size if possible
+        // when a task is completed ahead of schedule
+        let mut list = StaticTaskList::default();
+        list.tasks.push(StaticTask::new("a", 120));
+        list.tasks.push(StaticTask::new("b", 80));
+        list.tasks.push(StaticTask::new("c", 60));
+        list.active = Some(0);
+
+        list.elapse(Duration::new(140, 0));
+        list.toggle_current();
+        list.toggle_current();
+
+        assert_eq!(list.tasks[2].duration(), Duration::new(60, 0));
+    }
+
+    #[test]
+    fn steady_list_long() {
+        let mut list = StaticTaskList::default();
+        list.tasks.push(StaticTask::new("a", 120));
+        list.tasks.push(StaticTask::new("b", 80));
+        list.tasks.push(StaticTask::new("c", 10));
+        list.tasks.push(StaticTask::new("d", 60));
+        list.active = Some(0);
+
+        let old_duration = list.duration();
+
+        list.elapse(Duration::new(121, 0));
+        list.elapse(Duration::new(10, 0));
+
+        assert_eq!(list.duration(), old_duration);
+    }
+
+    #[test]
+    fn steady_list_twice() {
+        let mut list = StaticTaskList::default();
+        list.tasks.push(StaticTask::new("a", 120));
+        list.tasks.push(StaticTask::new("b", 60));
+        list.active = Some(0);
+
+        let old_duration = list.duration();
+
+        list.elapse(Duration::new(121, 0));
+        list.elapse(Duration::new(10, 0));
+
+        assert_eq!(list.duration(), old_duration);
+    }
+
+    #[test]
+    fn duration_grows() {
+        let mut list = StaticTaskList::default();
+        list.tasks.push(StaticTask::new("a", 120));
+        list.tasks.push(StaticTask::new("b", 60));
+        list.active = Some(0);
+
+        list.elapse(Duration::new(121, 0));
+
+        assert_eq!(list.tasks[0].duration(), list.tasks[0].elapsed);
+    }
+
+    #[test]
+    fn steady_list() {
+        let mut list = StaticTaskList::default();
+        list.tasks.push(StaticTask::new("a", 120));
+        list.tasks.push(StaticTask::new("b", 60));
+        list.active = Some(0);
+
+        let old_duration = list.duration();
+
+        list.elapse(Duration::new(121, 0));
+
+        assert_eq!(list.duration(), old_duration);
+    }
+    
+    #[test]
+    fn contract_task() {
+        let mut list = StaticTaskList::default();
+        list.tasks.push(StaticTask::new("a", 120));
+        list.tasks.push(StaticTask::new("b", 60));
+        list.active = Some(0);
+
+        list.elapse(Duration::new(121, 0));
+
+        assert_eq!(list.tasks[1].duration(), Duration::new(59, 0));
+    }
+    
+    #[test]
+    fn no_overflow() {
+        let mut list = StaticTaskList::default();
+        list.tasks.push(StaticTask::new("a", 120));
+        list.tasks.push(StaticTask::new("b", 60));
+        list.active = Some(0);
+
+        list.elapse(Duration::new(121, 0));
+
+        assert_eq!(list.tasks[0].remaining(), Duration::ZERO);
+    }
 
     #[test]
     fn step_time_list() {

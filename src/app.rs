@@ -127,7 +127,7 @@ impl App {
             .tasks
             .iter()
             .filter(|task| !task.complete)
-            .map(|task| task.duration)
+            .map(|task| task.duration())
             .sum()
     }
 
