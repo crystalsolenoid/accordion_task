@@ -70,12 +70,28 @@ impl StaticTaskList {
         }
     }
 
+    fn distribute_excess(&mut self) {
+        if let Some(i) = self.active {
+            let excess = self.tasks[i].remaining();
+            let deficit: Duration = self.tasks.iter()
+                .filter(|task| !task.complete)
+                .map(|task| task.original_duration - task.duration())
+                .sum();
+            dbg!(excess);
+            dbg!(deficit);
+            if (deficit > Duration::ZERO) & (excess > Duration::ZERO) {
+                dbg!("grow!");
+            }
+        }
+    }
+
     pub fn toggle_current(&mut self) {
         if let Some(i) = self.get_current() {
             match i.complete {
                 true => i.complete = false,
                 false => {
                     i.complete = true;
+                    self.distribute_excess();
                     self.next_no_wrap();
                 }
             };
@@ -114,6 +130,19 @@ impl StaticTaskList {
         self.tasks.iter().map(|task| task.elapsed).sum()
     }
 
+    pub fn calc_shrink_ratio(&self, active: usize, delta: Duration) -> f64 {
+        let inactive_undone_duration = self.tasks.iter()
+            .enumerate()
+            .filter(|(j, task)| match (j, task.complete) {
+                (&j, _) if j == active => false,
+                (_, false) => true,
+                (_, true) => false,
+            })
+            .map(|(_, task)| task.duration())
+            .sum();
+            delta.div_duration_f64(inactive_undone_duration)
+    }
+
     pub fn elapse(&mut self, duration: Duration) {
         if let Some(i) = self.active {
             let old_duration = self.tasks[i].duration();
@@ -121,17 +150,8 @@ impl StaticTaskList {
             let new_duration = self.tasks[i].duration();
             if new_duration > old_duration {
                 let overtime = new_duration - old_duration;
-                let inactive_undone_duration = self.tasks.iter()
-                    .enumerate()
-                    .filter(|(j, task)| match (j, task.complete) {
-                        (&j, _) if j == i => false,
-                        (_, false) => true,
-                        (_, true) => false,
-                    })
-                    .map(|(_, task)| task.duration())
-                    .sum();
+                let shrink_ratio = self.calc_shrink_ratio(i, overtime);
                 // TODO use one iterator for both tasks
-                let shrink_ratio = overtime.div_duration_f64(inactive_undone_duration);
                 self.tasks.iter_mut()
                     .enumerate()
                     .filter(|(j, task)| match (j, task.complete) {
@@ -151,6 +171,25 @@ mod tests {
     use super::*;
 
     // TODO test about calculating duration for a whole list when something's completed
+    // TODO dont crash when time elapsed exceeds total planned routine duration
+
+    #[test]
+    fn dont_shrink_ahead_of_schedule() {
+        // tasks grow back to their original size if possible
+        // when a task is completed ahead of schedule
+        let mut list = StaticTaskList::default();
+        list.tasks.push(StaticTask::new("a", 120));
+        list.tasks.push(StaticTask::new("b", 80));
+        list.tasks.push(StaticTask::new("c", 60));
+        list.active = Some(0);
+
+        list.elapse(Duration::new(10, 0));
+        list.toggle_current();
+        list.elapse(Duration::new(100, 0));
+        list.toggle_current();
+
+        assert_eq!(list.tasks[2].duration(), Duration::new(60, 0));
+    }
 
     #[test]
     fn grow_back() {

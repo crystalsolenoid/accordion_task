@@ -1,6 +1,7 @@
 use ratatui::widgets::TableState;
 
 mod parse_routine;
+mod flex;
 pub mod static_task;
 
 use static_task::{StaticTaskList, StaticTask};
