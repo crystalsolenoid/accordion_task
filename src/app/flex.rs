@@ -51,8 +51,9 @@ pub trait Flex<T> where T:
         dbg!(ratio);
         Ok(self.get_items().iter()
             .map(|item| {
-                let item_wiggle = self.max_size() - self.min_size();
-                self.min_size() + item_wiggle * ratio
+                let item_wiggle = item.max_size() - item.min_size();
+                dbg!(item_wiggle);
+                item.min_size() + item_wiggle * ratio
             })
             .collect())
     }
@@ -114,5 +115,29 @@ mod tests {
         let result = list.flex(9999.0);
 
         assert_eq!(Ok(vec![10.4, 5.3, 8.4]), result);
+    }
+
+    #[test]
+    fn no_minimum() {
+        let list: List = vec![(0.0, 10.0), (0.0, 4.0), (0.0, 8.0)].into();
+        let result = list.flex(11.0);
+
+        assert_eq!(Ok(vec![5.0, 2.0, 4.0]), result);
+    }
+
+    #[test]
+    fn has_minimum() {
+        let list: List = vec![(10.0, 10.0), (0.0, 4.0), (0.0, 8.0)].into();
+        let result = list.flex(16.0);
+
+        assert_eq!(Ok(vec![10.0, 2.0, 4.0]), result);
+    }
+
+    #[test]
+    fn not_enough_space() {
+        let list: List = vec![(10.0, 10.0), (0.0, 4.0), (0.0, 8.0)].into();
+        let result = list.flex(10.0);
+
+        assert_eq!(Ok(vec![10.0, 0.0, 0.0]), result);
     }
 }
