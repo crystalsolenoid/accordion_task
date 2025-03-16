@@ -77,8 +77,7 @@ pub struct StaticTaskList {
 impl StaticTaskList {
     pub fn with_tasks<'a>(tasks: Vec<StaticTask>) -> Self {
         let len = tasks.len();
-        let original_max = tasks.iter().fold(Duration::ZERO, |acc, t| dbg!(acc + t.original_duration));
-        dbg!(original_max);
+        let original_max = tasks.iter().fold(Duration::ZERO, |acc, t| acc + t.original_duration);
         Self {
             tasks,
             active: match len {
@@ -102,13 +101,10 @@ impl StaticTaskList {
     }
 
     fn update_flex(&mut self) {
-        dbg!(self.max_size());
-        dbg!(self.original_max);
         let times = self.flex(self.original_max)
             .expect("todo");
         times.iter().zip(self.tasks.iter_mut())
             .for_each(|(&time, task)| {
-                dbg!(time);
                 task.duration = time;
             });
     }

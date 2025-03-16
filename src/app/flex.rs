@@ -29,11 +29,6 @@ pub trait Flex {
     fn flex(&self, size: Duration) -> Result<Vec<Duration>, Duration> {
         let wiggle_room = size.saturating_sub(self.min_size());
         let shrinkable = self.max_size().saturating_sub(self.min_size());
-        dbg!(shrinkable);
-        dbg!(self.min_size());
-        dbg!(self.max_size());
-        dbg!(size);
-        dbg!(wiggle_room);
         if size < self.min_size() {
             // TODO better way to fail?
             return Err(self.min_size());
@@ -42,11 +37,9 @@ pub trait Flex {
             return Ok(self.max_sizes());
         }
         let ratio = wiggle_room.div_duration_f64(shrinkable);
-        dbg!(ratio);
         Ok(self.get_items().iter()
             .map(|item| {
                 let item_wiggle = item.max_size().saturating_sub(item.min_size());
-                dbg!(item_wiggle);
                 item.min_size() + item_wiggle.mul_f64(ratio)
             })
             .collect())
