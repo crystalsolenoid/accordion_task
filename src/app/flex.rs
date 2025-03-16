@@ -1,59 +1,53 @@
-pub trait FlexItem<T> {
+use std::time::Duration;
+
+pub trait FlexItem {
     // original duration, for example
-    fn max_size(&self) -> T;
+    fn max_size(&self) -> Duration;
     // time elapsed, for example
-    fn min_size(&self) -> T;
+    fn min_size(&self) -> Duration;
 }
 
-pub trait Flex<T> where T:
-    std::ops::Add<Output = T>
-    + std::ops::Sub<Output = T>
-    + std::ops::Div<Output = T>
-    + std::ops::Mul<Output = T>
-    + std::cmp::PartialOrd
-    + std::marker::Copy
-    + std::fmt::Debug
-    {
-    const ZERO: T;
+pub trait Flex {
+    fn get_items(&self) -> &Vec<impl FlexItem>;
 
-    fn get_items(&self) -> &Vec<impl FlexItem<T>>;
-
-    fn min_size(&self) -> T {
+    fn min_size(&self) -> Duration {
         self.get_items().iter()
-            .fold(Self::ZERO, |acc, x| acc + x.min_size())
+            .fold(Duration::ZERO, |acc, x| acc + x.min_size())
     }
 
-    fn max_size(&self) -> T {
+    fn max_size(&self) -> Duration {
         self.get_items().iter()
-            .fold(Self::ZERO, |acc, x| acc + x.max_size())
+            .fold(Duration::ZERO, |acc, x| acc + x.max_size())
     }
 
-    fn max_sizes(&self) -> Vec<T> {
+    fn max_sizes(&self) -> Vec<Duration> {
         self.get_items().iter()
             .map(|item| item.max_size())
             .collect()
     }
 
-    fn flex(&self, size: T) -> Result<Vec<T>, T> {
+    fn flex(&self, size: Duration) -> Result<Vec<Duration>, Duration> {
+        let wiggle_room = size.saturating_sub(self.min_size());
+        let shrinkable = self.max_size().saturating_sub(self.min_size());
+        dbg!(shrinkable);
+        dbg!(self.min_size());
+        dbg!(self.max_size());
+        dbg!(size);
+        dbg!(wiggle_room);
         if size < self.min_size() {
             // TODO better way to fail?
-            todo!();
             return Err(self.min_size());
         }
         if size > self.max_size() {
             return Ok(self.max_sizes());
         }
-        let wiggle_room = size - self.min_size();
-        dbg!(wiggle_room);
-        let shrinkable = self.max_size() - self.min_size();
-        dbg!(shrinkable);
-        let ratio = wiggle_room / shrinkable;
+        let ratio = wiggle_room.div_duration_f64(shrinkable);
         dbg!(ratio);
         Ok(self.get_items().iter()
             .map(|item| {
-                let item_wiggle = item.max_size() - item.min_size();
+                let item_wiggle = item.max_size().saturating_sub(item.min_size());
                 dbg!(item_wiggle);
-                item.min_size() + item_wiggle * ratio
+                item.min_size() + item_wiggle.mul_f64(ratio)
             })
             .collect())
     }
@@ -64,24 +58,24 @@ mod tests {
     use super::*;
 
     struct Amount {
-        max: f32,
-        min: f32,
+        max: Duration,
+        min: Duration,
     }
 
-    impl From<(f32, f32)> for Amount {
-        fn from(item: (f32, f32)) -> Self {
+    impl From<(f64, f64)> for Amount {
+        fn from(item: (f64, f64)) -> Self {
             Amount {
-                min: item.0,
-                max: item.1,
+                min: Duration::try_from_secs_f64(item.0).unwrap(),
+                max: Duration::try_from_secs_f64(item.1).unwrap(),
             }
         }
     }
 
-    impl FlexItem<f32> for Amount {
-        fn max_size(&self) -> f32 {
+    impl FlexItem for Amount {
+        fn max_size(&self) -> Duration {
             self.max
         }
-        fn min_size(&self) -> f32 {
+        fn min_size(&self) -> Duration {
             self.min
         }
     }
@@ -90,8 +84,8 @@ mod tests {
         items: Vec<Amount>,
     }
 
-    impl From<Vec<(f32, f32)>> for List {
-        fn from(item: Vec<(f32, f32)>) -> Self {
+    impl From<Vec<(f64, f64)>> for List {
+        fn from(item: Vec<(f64, f64)>) -> Self {
             let items = item.iter()
                 .map(|&tuple| Amount::from(tuple))
                 .collect();
@@ -101,43 +95,58 @@ mod tests {
         }
     }
 
-    impl Flex<f32> for List {
-        const ZERO: f32 = 0.0;
-
+    impl Flex for List {
         fn get_items(&self) -> &Vec<Amount> {
             &self.items
         }
     }
 
+    fn to_durations(l: Vec<f64>) -> Vec<Duration> {
+        l.iter().map(|&f| Duration::try_from_secs_f64(f).expect("failed to convert to Duration")).collect()
+    }
+
     #[test]
     fn plenty_of_space() {
         let list: List = vec![(0.0, 10.4), (4.3, 5.3), (2.0, 8.4)].into();
-        let result = list.flex(9999.0);
+        let result = list.flex(Duration::try_from_secs_f64(9999.0).unwrap());
 
-        assert_eq!(Ok(vec![10.4, 5.3, 8.4]), result);
+        let target = to_durations(vec![10.4, 5.3, 8.4]);
+        assert_eq!(Ok(target), result);
     }
 
     #[test]
     fn no_minimum() {
         let list: List = vec![(0.0, 10.0), (0.0, 4.0), (0.0, 8.0)].into();
-        let result = list.flex(11.0);
+        let result = list.flex(Duration::try_from_secs_f64(11.0).unwrap());
 
-        assert_eq!(Ok(vec![5.0, 2.0, 4.0]), result);
+        let target = to_durations(vec![5.0, 2.0, 4.0]);
+        assert_eq!(Ok(target), result);
     }
 
     #[test]
     fn has_minimum() {
         let list: List = vec![(10.0, 10.0), (0.0, 4.0), (0.0, 8.0)].into();
-        let result = list.flex(16.0);
+        let result = list.flex(Duration::try_from_secs_f64(16.0).unwrap());
 
-        assert_eq!(Ok(vec![10.0, 2.0, 4.0]), result);
+        let target = to_durations(vec![10.0, 2.0, 4.0]);
+        assert_eq!(Ok(target), result);
     }
 
     #[test]
     fn not_enough_space() {
         let list: List = vec![(10.0, 10.0), (0.0, 4.0), (0.0, 8.0)].into();
-        let result = list.flex(10.0);
+        let result = list.flex(Duration::try_from_secs_f64(10.0).unwrap());
 
-        assert_eq!(Ok(vec![10.0, 0.0, 0.0]), result);
+        let target = to_durations(vec![10.0, 0.0, 0.0]);
+        assert_eq!(Ok(target), result);
+    }
+
+    #[test]
+    fn min_over_max() {
+        let list: List = vec![(11.0, 10.0), (0.0, 4.0)].into();
+        let result = list.flex(Duration::try_from_secs_f64(12.0).unwrap());
+
+        let target = to_durations(vec![11.0, 0.0]);
+        assert_eq!(Ok(target), result);
     }
 }
