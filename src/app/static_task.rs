@@ -52,7 +52,7 @@ impl StaticTask {
     }
 
     pub fn remaining(&self) -> Duration {
-        self.duration()//.saturating_sub(self.elapsed)
+        self.duration().saturating_sub(self.elapsed)
     }
 
     pub fn elapse(&mut self, duration: Duration) {

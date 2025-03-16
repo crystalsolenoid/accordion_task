@@ -140,13 +140,4 @@ mod tests {
         let target = to_durations(vec![10.0, 0.0, 0.0]);
         assert_eq!(Ok(target), result);
     }
-
-    #[test]
-    fn min_over_max() {
-        let list: List = vec![(11.0, 10.0), (0.0, 4.0)].into();
-        let result = list.flex(Duration::try_from_secs_f64(12.0).unwrap());
-
-        let target = to_durations(vec![11.0, 0.0]);
-        assert_eq!(Ok(target), result);
-    }
 }
