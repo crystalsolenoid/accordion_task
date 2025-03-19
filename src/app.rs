@@ -1,12 +1,13 @@
 use ratatui::widgets::TableState;
 
-mod parse_routine;
 mod flex;
+mod parse_routine;
 pub mod static_task;
 
-use static_task::{StaticTaskList, StaticTask};
+use static_task::{StaticTask, StaticTaskList};
 
-use chrono::{DateTime, Local, Timelike};
+use chrono::{DateTime, Local};
+use std::cmp::Ordering;
 use std::time::{Duration, Instant};
 
 /// Application.
@@ -24,24 +25,6 @@ pub struct App {
     /// routine timer
     pub routine_timer: Timer,
     pub last_tick: Instant,
-}
-
-/// A list with a potentially-selected item
-#[derive(Debug, Default)]
-pub struct StatefulList<'a> {
-    pub state: TableState,
-    pub items: Vec<&'a StaticTask>,
-}
-
-/// Task.
-#[derive(Debug)]
-pub struct Task {
-    /// title
-    pub title: String,
-    /// has the task been completed?
-    pub complete: bool,
-    /// task-specific timer
-    pub timer: Timer,
 }
 
 /// Timer.
@@ -68,7 +51,9 @@ pub enum SignedDuration {
 impl App {
     /// Constructs a new instance of [`App`].
     pub fn new() -> App {
-        let tasks = StaticTaskList::with_tasks(parse_routine::read_csv().expect("Failed to load routine file"));
+        let tasks = StaticTaskList::with_tasks(
+            parse_routine::read_csv().expect("Failed to load routine file"),
+        );
         let mut app = Self {
             should_quit: false,
             debug: false,
@@ -89,56 +74,49 @@ impl App {
     pub fn get_time_balance(&self) -> SignedDuration {
         // Report the amount ahead of or behind schedule
         // based on the routine timer and task timers.
-        // To avoid timing noise, consider all durations
-        // less than 1 second long to be SignedDuration::ZERO.
-        // Because of this quirk, be careful using this
-        // function for cumulative operations.
         let remaining = self.routine_timer.get_remaining();
         let to_do = self.get_total_remaining();
-        if to_do > remaining {
-            let difference = to_do - remaining;
-            if difference.as_secs() > 0 {
-                SignedDuration::DEFICIT(difference)
-            } else {
-                SignedDuration::ZERO
-            }
-        } else if to_do < remaining {
-            let difference = remaining - to_do;
-            if difference.as_secs() > 0 {
-                SignedDuration::SURPLUS(difference)
-            } else {
-                SignedDuration::ZERO
-            }
-        } else {
-            SignedDuration::ZERO
+        match to_do.cmp(&remaining) {
+            Ordering::Greater => SignedDuration::DEFICIT(to_do - remaining),
+            Ordering::Less => SignedDuration::SURPLUS(remaining - to_do),
+            Ordering::Equal => SignedDuration::ZERO,
         }
     }
 
     pub fn get_total_remaining(&self) -> Duration {
+        self.tasks.remaining()
+        /*
         self.tasks
             .tasks
             .iter()
             .filter(|task| !task.complete)
             .map(|task| task.remaining())
             .sum()
+        */
     }
 
     pub fn get_total_duration(&self) -> Duration {
+        self.tasks.duration()
+        /*
         self.tasks
             .tasks
             .iter()
             .filter(|task| !task.complete)
-            .map(|task| task.duration())
+            .map(|task| task.duration)
             .sum()
+        */
     }
 
     pub fn get_unused_time(&self) -> Duration {
-        self.tasks
-            .tasks
-            .iter()
-            .filter(|task| task.complete)
-            .map(|task| task.remaining())
-            .sum()
+        todo!() //remove this function?
+                /*
+                self.tasks
+                    .tasks
+                    .iter()
+                    .filter(|task| task.complete)
+                    .map(|task| task.remaining())
+                    .sum()
+                */
     }
 
     pub fn get_start_time(&self) -> DateTime<Local> {
@@ -165,27 +143,6 @@ impl App {
         self.last_tick = this_tick;
 
         self.tasks.elapse(delta);
-        /*
-        // shrink or stretch to time available
-        let todo = self.get_total_duration().as_secs() as f64;
-        let remaining = self.routine_timer.get_remaining().as_secs() as f64;
-        match self.get_time_balance() {
-            SignedDuration::ZERO => (),
-            _ => {
-                let ratio = match remaining / todo {
-                    ..=0.0 => 0.0,
-                    1.0.. => 1.0,
-                    r => r,
-                };
-                for mut task in &mut self.tasks.items {
-                    if !task.complete {
-                        task.timer.adjust_duration(ratio);
-                    }
-                }
-            }
-        }
-        */
-        // TODO
     }
 
     pub fn get_time_elapsed(&self) -> Duration {
@@ -212,7 +169,7 @@ impl App {
 
     pub fn next_task(&mut self) {
         // TODO update version of ratatui
-//        self.task_widget_state.select_next();
+        //        self.task_widget_state.select_next();
         if let Some(i) = self.task_widget_state.selected() {
             let j = if i >= self.tasks.tasks.len() - 1 {
                 0
@@ -226,7 +183,7 @@ impl App {
 
     pub fn prev_task(&mut self) {
         // TODO update version of ratatui
-//        self.task_widget_state.select_previous();
+        //        self.task_widget_state.select_previous();
         if let Some(i) = self.task_widget_state.selected() {
             let j = if i == 0 {
                 self.tasks.tasks.len() - 1
@@ -239,134 +196,9 @@ impl App {
     }
 }
 
-impl StatefulList<'_> {
-    fn with_items<'a>(items: Vec<&'a StaticTask>) -> StatefulList<'a> {
-        StatefulList {
-            state: TableState::default(),
-            items,
-        }
-    }
-
-    /*
-    fn get_current(&mut self) -> Option<&mut StaticTask> {
-        match self.state.selected() {
-            Some(i) => self.items.get_mut(i),
-            None => None,
-        }
-    }
-
-    fn toggle_current(&mut self) {
-        if let Some(i) = self.get_current() {
-            match i.complete {
-                true => i.unset_complete(),
-                false => {
-                    i.set_complete();
-                    self.next_no_wrap();
-                }
-            };
-        };
-    }
-
-    fn next_no_wrap(&mut self) {
-        let i = match self.state.selected() {
-            Some(i) => {
-                if i < self.items.len() - 1 {
-                    self.next()
-                }
-            }
-            None => (),
-        };
-    }
-
-    fn next(&mut self) {
-        if let Some(i) = self.get_current() {
-            i.deselect();
-        }
-        let i = match self.state.selected() {
-            Some(i) => {
-                if i >= self.items.len() - 1 {
-                    0
-                } else {
-                    i + 1
-                }
-            }
-            None => 0,
-        };
-        self.state.select(Some(i));
-        if let Some(i) = self.get_current() {
-            i.select();
-        }
-    }
-
-    fn previous(&mut self) {
-        if let Some(i) = self.get_current() {
-            i.deselect();
-        }
-        let i = match self.state.selected() {
-            Some(i) => {
-                if i == 0 {
-                    self.items.len() - 1
-                } else {
-                    i - 1
-                }
-            }
-            None => 0,
-        };
-        self.state.select(Some(i));
-        if let Some(i) = self.get_current() {
-            i.select();
-        }
-    }
-
-    fn unselect(&mut self) {
-        if let Some(i) = self.get_current() {
-            i.deselect();
-        }
-        self.state.select(None);
-    }
-    */
-}
-
-impl Default for Task {
+impl Default for App {
     fn default() -> Self {
-        Self {
-            title: "Undefined".to_string(),
-            complete: false,
-            timer: Timer::from_secs(60),
-        }
-    }
-}
-
-impl Task {
-    pub fn from_secs(seconds: u64) -> Self {
-        Self {
-            timer: Timer::from_secs(seconds),
-            ..Self::default()
-        }
-    }
-
-    pub fn get_remaining_time(&self) -> Duration {
-        self.timer.get_remaining()
-    }
-
-    fn set_complete(&mut self) {
-        self.complete = true;
-        self.timer.pause();
-    }
-
-    fn unset_complete(&mut self) {
-        self.complete = false;
-        self.timer.start();
-    }
-
-    fn select(&mut self) {
-        if !self.complete {
-            self.timer.start();
-        }
-    }
-
-    fn deselect(&mut self) {
-        self.timer.pause();
+        Self::new()
     }
 }
 
@@ -400,24 +232,9 @@ impl Timer {
         }
     }
 
-    fn shrink_duration(&mut self, ratio: f64) {
-        self.duration = self.duration.mul_f64(ratio);
-    }
-
-    fn adjust_duration(&mut self, ratio: f64) {
-        self.duration = self.original_duration.mul_f64(ratio);
-    }
-
     fn start(&mut self) {
         self.start_instant = Instant::now();
         self.active = true;
-    }
-
-    fn pause(&mut self) {
-        if self.active {
-            self.elapsed += Instant::now() - self.start_instant;
-            self.active = false;
-        }
     }
 
     fn get_remaining(&self) -> Duration {
@@ -437,4 +254,5 @@ impl Timer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // TODO
 }

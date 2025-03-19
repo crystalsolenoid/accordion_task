@@ -11,17 +11,20 @@ pub trait Flex {
     fn get_items(&self) -> &Vec<impl FlexItem>;
 
     fn min_size(&self) -> Duration {
-        self.get_items().iter()
+        self.get_items()
+            .iter()
             .fold(Duration::ZERO, |acc, x| acc + x.min_size())
     }
 
     fn max_size(&self) -> Duration {
-        self.get_items().iter()
+        self.get_items()
+            .iter()
             .fold(Duration::ZERO, |acc, x| acc + x.max_size())
     }
 
     fn max_sizes(&self) -> Vec<Duration> {
-        self.get_items().iter()
+        self.get_items()
+            .iter()
             .map(|item| item.max_size())
             .collect()
     }
@@ -37,7 +40,9 @@ pub trait Flex {
             return Ok(self.max_sizes());
         }
         let ratio = wiggle_room.div_duration_f64(shrinkable);
-        Ok(self.get_items().iter()
+        Ok(self
+            .get_items()
+            .iter()
             .map(|item| {
                 let item_wiggle = item.max_size().saturating_sub(item.min_size());
                 item.min_size() + item_wiggle.mul_f64(ratio)
@@ -79,12 +84,8 @@ mod tests {
 
     impl From<Vec<(f64, f64)>> for List {
         fn from(item: Vec<(f64, f64)>) -> Self {
-            let items = item.iter()
-                .map(|&tuple| Amount::from(tuple))
-                .collect();
-            Self {
-                items
-            }
+            let items = item.iter().map(|&tuple| Amount::from(tuple)).collect();
+            Self { items }
         }
     }
 
@@ -95,7 +96,9 @@ mod tests {
     }
 
     fn to_durations(l: Vec<f64>) -> Vec<Duration> {
-        l.iter().map(|&f| Duration::try_from_secs_f64(f).expect("failed to convert to Duration")).collect()
+        l.iter()
+            .map(|&f| Duration::try_from_secs_f64(f).expect("failed to convert to Duration"))
+            .collect()
     }
 
     #[test]

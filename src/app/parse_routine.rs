@@ -1,5 +1,5 @@
 use csv::{StringRecord, Trim};
-use std::{env, error::Error, ffi::OsString, fs::File, process, str::FromStr};
+use std::{env, error::Error, ffi::OsString, fs::File, str::FromStr};
 
 use super::static_task::StaticTask;
 
@@ -34,12 +34,14 @@ pub fn read_csv() -> Result<Vec<StaticTask>, Box<dyn Error>> {
 }
 
 pub fn parse_task(record: StringRecord) -> StaticTask {
-    StaticTask::new(record.get(0).expect("Missing CSV field."),
-        parse_duration(record.get(1).expect("Missing CSV field.")))
+    StaticTask::new(
+        record.get(0).expect("Missing CSV field."),
+        parse_duration(record.get(1).expect("Missing CSV field.")),
+    )
 }
 
+/// Returns the number of seconds.
 fn parse_duration(raw: &str) -> u64 {
-    /// Returns the number of seconds.
     let mut number_accum = String::new();
     let mut hours = 0;
     let mut minutes = 0;

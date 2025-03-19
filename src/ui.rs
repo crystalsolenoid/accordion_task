@@ -5,7 +5,7 @@ use ratatui::{
 };
 use std::time::Duration;
 
-use crate::app::{self, App, static_task::StaticTask, SignedDuration};
+use crate::app::{static_task::StaticTask, App, SignedDuration};
 
 pub fn render(app: &mut App, f: &mut Frame) {
     let layout = generate_layout(app, f);
@@ -152,13 +152,13 @@ fn generate_task_row(task: &StaticTask) -> Row {
         false => "[ ]",
     }
     .to_string();
-    let title = format!("{}", task.name);
-    let duration = format_duration(task.duration());
+    let title = task.name.to_string();
+    let duration = format_duration(task.duration);
     let remaining = format_duration(task.remaining());
     Row::new(vec![checkbox, title, duration, remaining])
 }
 
-fn standard_block<'a>(title: &'a str) -> Block<'a> {
+fn standard_block(title: &str) -> Block<'_> {
     Block::default()
         .title(title)
         .title_alignment(Alignment::Center)
