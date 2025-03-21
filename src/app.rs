@@ -142,6 +142,7 @@ impl App {
         let delta = this_tick - self.last_tick;
         self.last_tick = this_tick;
 
+        cli_log::debug!("Tick");
         self.tasks.elapse(delta);
     }
 
@@ -168,8 +169,12 @@ impl App {
     }
 
     pub fn next_task(&mut self) {
+        cli_log::debug!("Next task");
         // TODO update version of ratatui
         //        self.task_widget_state.select_next();
+        self.task_widget_state.select_next();
+        self.tasks.active = self.task_widget_state.selected();
+        /*
         if let Some(i) = self.task_widget_state.selected() {
             let j = if i >= self.tasks.tasks.len() - 1 {
                 0
@@ -179,6 +184,7 @@ impl App {
             self.task_widget_state.select(Some(j));
             self.tasks.active = self.task_widget_state.selected();
         }
+        */
     }
 
     pub fn prev_task(&mut self) {

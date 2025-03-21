@@ -116,7 +116,9 @@ fn render_table(app: &mut App, f: &mut Frame, area: Rect) {
         .block(block)
         .highlight_style(Style::new().add_modifier(Modifier::REVERSED))
         .highlight_symbol(">> ");
+    cli_log::debug!("Pre-render selected {:?}", app.task_widget_state.selected());
     f.render_stateful_widget(table, area, &mut app.task_widget_state);
+    cli_log::debug!("Post-render selected {:?}", app.task_widget_state.selected());
 }
 
 fn format_signed_duration(signed_dur: SignedDuration) -> String {

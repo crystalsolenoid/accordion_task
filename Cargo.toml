@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 chrono = "0.4.31"
+cli-log = "2.1.0"
 color-eyre = "0.6.2"
 crossterm = "0.27.0"
 csv = "1.3.0"
