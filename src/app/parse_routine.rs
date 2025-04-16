@@ -1,9 +1,9 @@
 use csv::{StringRecord, Trim};
 use std::{env, error::Error, ffi::OsString, fs::File, str::FromStr};
 
-use super::static_task::StaticTask;
+use super::static_task::Task;
 
-fn run() -> Result<Vec<StaticTask>, Box<dyn Error>> {
+fn run() -> Result<Vec<Task>, Box<dyn Error>> {
     let file_path = get_first_arg()?;
     let file = File::open(file_path)?;
     // Build the CSV reader and iterate over each record.
@@ -12,7 +12,7 @@ fn run() -> Result<Vec<StaticTask>, Box<dyn Error>> {
         .trim(Trim::All)
         .comment(Some(b'#'))
         .from_reader(file);
-    let mut tasks = Vec::<StaticTask>::new();
+    let mut tasks = Vec::<Task>::new();
     for result in rdr.records() {
         // The iterator yields Result<StringRecord, Error>, so we check the
         // error here.
@@ -29,12 +29,18 @@ fn get_first_arg() -> Result<OsString, Box<dyn Error>> {
     }
 }
 
-pub fn read_csv() -> Result<Vec<StaticTask>, Box<dyn Error>> {
+pub fn get_routine_name() -> Result<String, Box<dyn Error>> {
+    let osstr = get_first_arg()?;
+    let string = osstr.into_string().expect("TODO");
+    Ok(string)
+}
+
+pub fn read_csv() -> Result<Vec<Task>, Box<dyn Error>> {
     run()
 }
 
-pub fn parse_task(record: StringRecord) -> StaticTask {
-    StaticTask::new(
+pub fn parse_task(record: StringRecord) -> Task {
+    Task::new(
         record.get(0).expect("Missing CSV field."),
         parse_duration(record.get(1).expect("Missing CSV field.")),
     )

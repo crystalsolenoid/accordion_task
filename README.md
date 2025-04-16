@@ -28,9 +28,11 @@ cargo run examples/test
 - [ ] Shrink the duration of each remaining task when behind schedule.
 - [ ] Display how much the routine is behind or ahead of schedule.
 - [ ] Allow running a routine with a target end time.
+- [ ] Allow the marking of a task as skipped but not completed, so that its duration contracts without disturbing statistics.
 - [ ] Show a progress bar with relative durations and progress of each task. (Maybe with [tui-widget-list](https://github.com/preiter93/tui-widget-list)?)
 - [ ] Generate log files for each routine session with data about the time taken and order of tasks.
 - [ ] Allow pausing (but the main routine timer still has to run: I can't freeze time for you in real life!)
+- [ ] Record mode: record a routine and save it and the observed timings to a routine file.
 - [ ] Maybe someday: allow subtasks.
 
 I am making this mostly for myself. I am prioritizing what I need. But I would like to share too, so I am planning on eventually working on things like configuration.

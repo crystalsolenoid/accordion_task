@@ -4,7 +4,7 @@ use std::time::Duration;
 use super::flex::{Flex, FlexItem};
 
 #[derive(Debug)]
-pub struct StaticTask {
+pub struct Task {
     /// How much time has already been spent on the task?
     pub elapsed: Duration,
     /// What was the original duration specified for the task?
@@ -17,7 +17,7 @@ pub struct StaticTask {
     pub duration: Duration,
 }
 
-impl FlexItem for StaticTask {
+impl FlexItem for Task {
     fn min_size(&self) -> Duration {
         self.elapsed
     }
@@ -29,13 +29,13 @@ impl FlexItem for StaticTask {
     }
 }
 
-impl Flex for StaticTaskList {
+impl Flex for Routine {
     fn get_items(&self) -> &Vec<impl FlexItem> {
         &self.tasks
     }
 }
 
-impl StaticTask {
+impl Task {
     pub fn new(name: &str, duration: u64) -> Self {
         Self {
             name: name.to_owned(),
@@ -56,9 +56,9 @@ impl StaticTask {
 }
 
 #[derive(Default, Debug)]
-pub struct StaticTaskList {
+pub struct Routine {
     /// An ordered list of the tasks.
-    pub tasks: Vec<StaticTask>,
+    pub tasks: Vec<Task>,
     /// The active task, if any.
     /// TODO this should probably eventually use an ID number.
     pub active: Option<usize>,
@@ -67,8 +67,8 @@ pub struct StaticTaskList {
     pub original_max: Duration,
 }
 
-impl StaticTaskList {
-    pub fn with_tasks(tasks: Vec<StaticTask>) -> Self {
+impl Routine {
+    pub fn with_tasks(tasks: Vec<Task>) -> Self {
         let len = tasks.len();
         let original_max = tasks
             .iter()
@@ -83,12 +83,12 @@ impl StaticTaskList {
         }
     }
 
-    pub fn push(&mut self, task: StaticTask) {
+    pub fn push(&mut self, task: Task) {
         self.original_max += task.original_duration;
         self.tasks.push(task);
     }
 
-    pub fn get_current(&mut self) -> Option<&mut StaticTask> {
+    pub fn get_current(&mut self) -> Option<&mut Task> {
         match self.active {
             Some(i) => self.tasks.get_mut(i),
             None => None,
@@ -169,10 +169,10 @@ mod tests {
     fn dont_shrink_ahead_of_schedule() {
         // tasks grow back to their original size if possible
         // when a task is completed ahead of schedule
-        let mut list = StaticTaskList::default();
-        list.push(StaticTask::new("a", 120));
-        list.push(StaticTask::new("b", 80));
-        list.push(StaticTask::new("c", 60));
+        let mut list = Routine::default();
+        list.push(Task::new("a", 120));
+        list.push(Task::new("b", 80));
+        list.push(Task::new("c", 60));
         list.active = Some(0);
 
         list.elapse(Duration::new(10, 0));
@@ -187,10 +187,10 @@ mod tests {
     fn grow_back() {
         // tasks grow back to their original size if possible
         // when a task is completed ahead of schedule
-        let mut list = StaticTaskList::default();
-        list.push(StaticTask::new("a", 120));
-        list.push(StaticTask::new("b", 80));
-        list.push(StaticTask::new("c", 60));
+        let mut list = Routine::default();
+        list.push(Task::new("a", 120));
+        list.push(Task::new("b", 80));
+        list.push(Task::new("c", 60));
         list.active = Some(0);
 
         list.elapse(Duration::new(140, 0));
@@ -202,11 +202,11 @@ mod tests {
 
     #[test]
     fn steady_list_long() {
-        let mut list = StaticTaskList::default();
-        list.push(StaticTask::new("a", 120));
-        list.push(StaticTask::new("b", 80));
-        list.push(StaticTask::new("c", 10));
-        list.push(StaticTask::new("d", 60));
+        let mut list = Routine::default();
+        list.push(Task::new("a", 120));
+        list.push(Task::new("b", 80));
+        list.push(Task::new("c", 10));
+        list.push(Task::new("d", 60));
         list.active = Some(0);
 
         let old_duration = list.duration();
@@ -219,9 +219,9 @@ mod tests {
 
     #[test]
     fn steady_list_twice() {
-        let mut list = StaticTaskList::default();
-        list.push(StaticTask::new("a", 120));
-        list.push(StaticTask::new("b", 60));
+        let mut list = Routine::default();
+        list.push(Task::new("a", 120));
+        list.push(Task::new("b", 60));
         list.active = Some(0);
 
         let old_duration = list.duration();
@@ -234,9 +234,9 @@ mod tests {
 
     #[test]
     fn duration_grows() {
-        let mut list = StaticTaskList::default();
-        list.push(StaticTask::new("a", 120));
-        list.push(StaticTask::new("b", 60));
+        let mut list = Routine::default();
+        list.push(Task::new("a", 120));
+        list.push(Task::new("b", 60));
         list.active = Some(0);
 
         list.elapse(Duration::new(121, 0));
@@ -246,9 +246,9 @@ mod tests {
 
     #[test]
     fn steady_list() {
-        let mut list = StaticTaskList::default();
-        list.push(StaticTask::new("a", 120));
-        list.push(StaticTask::new("b", 60));
+        let mut list = Routine::default();
+        list.push(Task::new("a", 120));
+        list.push(Task::new("b", 60));
         list.active = Some(0);
 
         let old_duration = list.duration();
@@ -260,9 +260,9 @@ mod tests {
 
     #[test]
     fn contract_task() {
-        let mut list = StaticTaskList::default();
-        list.push(StaticTask::new("a", 120));
-        list.push(StaticTask::new("b", 60));
+        let mut list = Routine::default();
+        list.push(Task::new("a", 120));
+        list.push(Task::new("b", 60));
         list.active = Some(0);
 
         list.elapse(Duration::new(121, 0));
@@ -272,9 +272,9 @@ mod tests {
 
     #[test]
     fn no_overflow() {
-        let mut list = StaticTaskList::default();
-        list.push(StaticTask::new("a", 120));
-        list.push(StaticTask::new("b", 60));
+        let mut list = Routine::default();
+        list.push(Task::new("a", 120));
+        list.push(Task::new("b", 60));
         list.active = Some(0);
 
         list.elapse(Duration::new(121, 0));
@@ -284,9 +284,9 @@ mod tests {
 
     #[test]
     fn step_time_list() {
-        let mut list = StaticTaskList::default();
-        list.push(StaticTask::new("a", 120));
-        list.push(StaticTask::new("b", 60));
+        let mut list = Routine::default();
+        list.push(Task::new("a", 120));
+        list.push(Task::new("b", 60));
         list.active = Some(0);
 
         list.elapse(Duration::new(1, 0));
@@ -296,7 +296,7 @@ mod tests {
 
     #[test]
     fn step_time() {
-        let mut task = StaticTask::new("a", 60);
+        let mut task = Task::new("a", 60);
         task.elapse(Duration::new(10, 0));
         task.elapse(Duration::new(5, 0));
 
@@ -305,9 +305,9 @@ mod tests {
 
     #[test]
     fn total_time_elapsed() {
-        let mut list = StaticTaskList::default();
-        list.push(StaticTask::new("a", 120));
-        list.push(StaticTask::new("b", 60));
+        let mut list = Routine::default();
+        list.push(Task::new("a", 120));
+        list.push(Task::new("b", 60));
 
         list.tasks[0].elapse(Duration::new(10, 0));
         list.tasks[1].elapse(Duration::new(70, 0));
@@ -317,9 +317,9 @@ mod tests {
 
     #[test]
     fn total_duration() {
-        let mut list = StaticTaskList::default();
-        list.push(StaticTask::new("a", 120));
-        list.push(StaticTask::new("b", 60));
+        let mut list = Routine::default();
+        list.push(Task::new("a", 120));
+        list.push(Task::new("b", 60));
 
         assert_eq!(list.duration(), Duration::new(180, 0))
     }

@@ -3,8 +3,10 @@ use ratatui::widgets::TableState;
 mod flex;
 mod parse_routine;
 pub mod static_task;
+mod logging;
 
-use static_task::{StaticTask, StaticTaskList};
+use static_task::{Routine, Task};
+use logging::{RoutineLogger, LogElement};
 
 use chrono::{DateTime, Local};
 use std::cmp::Ordering;
@@ -21,10 +23,11 @@ pub struct App {
     /// task display widget
     pub task_widget_state: TableState,
     /// task internal list
-    pub tasks: StaticTaskList,
+    pub tasks: Routine,
     /// routine timer
     pub routine_timer: Timer,
     pub last_tick: Instant,
+    logger: RoutineLogger,
 }
 
 /// Timer.
@@ -51,12 +54,15 @@ pub enum SignedDuration {
 impl App {
     /// Constructs a new instance of [`App`].
     pub fn new() -> App {
-        let tasks = StaticTaskList::with_tasks(
+        let routine_name = parse_routine::get_routine_name().expect("Failed to load routine file");
+        let tasks = Routine::with_tasks(
             parse_routine::read_csv().expect("Failed to load routine file"),
         );
+        let logger = RoutineLogger::new(&tasks, &Local::now(), routine_name);
         let mut app = Self {
             should_quit: false,
             debug: false,
+            logger,
             counter: 0,
             tasks,
             task_widget_state: TableState::default(),
@@ -129,11 +135,6 @@ impl App {
 
     pub fn start_routine(&mut self) {
         self.routine_timer.start();
-        /*
-        if let Some(mut i) = self.tasks.get_current() {
-            i.timer.start();
-        }
-        */
     }
 
     /// Handles the tick event of the terminal.
@@ -144,6 +145,9 @@ impl App {
 
         cli_log::debug!("Tick");
         self.tasks.elapse(delta);
+        if let Some(t) = self.tasks.get_current() {
+            self.logger.log(LogElement::elapsed(&t, delta));
+        }
     }
 
     pub fn get_time_elapsed(&self) -> Duration {
@@ -156,6 +160,7 @@ impl App {
 
     /// Set should_quit to true to quit the application.
     pub fn quit(&mut self) {
+        self.logger.finish();
         self.should_quit = true;
     }
 
@@ -164,6 +169,9 @@ impl App {
     }
 
     pub fn attempt_toggle(&mut self) {
+        if let Some(task) = self.tasks.get_current() {
+            self.logger.log(LogElement::completed(&task));
+        }
         self.tasks.toggle_current();
         self.task_widget_state.select(self.tasks.active);
     }

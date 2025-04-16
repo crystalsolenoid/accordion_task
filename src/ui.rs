@@ -5,7 +5,7 @@ use ratatui::{
 };
 use std::time::Duration;
 
-use crate::app::{static_task::StaticTask, App, SignedDuration};
+use crate::app::{static_task::Task, App, SignedDuration};
 
 pub fn render(app: &mut App, f: &mut Frame) {
     let layout = generate_layout(app, f);
@@ -129,7 +129,8 @@ fn format_signed_duration(signed_dur: SignedDuration) -> String {
     }
 }
 
-fn format_duration(dur: Duration) -> String {
+// TODO move to utility module
+pub fn format_duration(dur: Duration) -> String {
     let s = dur.as_secs();
     let m = s / 60;
     let h = m / 60;
@@ -148,7 +149,7 @@ fn format_duration(dur: Duration) -> String {
     format!("{}{}{}", h_str, m_str, s_str)
 }
 
-fn generate_task_row(task: &StaticTask) -> Row {
+fn generate_task_row(task: &Task) -> Row {
     let checkbox = match task.complete {
         true => "[x]",
         false => "[ ]",
