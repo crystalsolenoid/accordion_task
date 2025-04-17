@@ -4,13 +4,20 @@ use std::time::Duration;
 use super::flex::{Flex, FlexItem};
 
 #[derive(Debug)]
+pub enum CompletionStatus {
+    NotYet,
+    Done,
+    Skipped,
+}
+
+#[derive(Debug)]
 pub struct Task {
     /// How much time has already been spent on the task?
     pub elapsed: Duration,
     /// What was the original duration specified for the task?
     pub original_duration: Duration,
     /// Is the task completed?
-    pub complete: bool,
+    pub status: CompletionStatus,
     /// Name
     pub name: String,
     /// Current duration that may be shrunk
@@ -22,9 +29,9 @@ impl FlexItem for Task {
         self.elapsed
     }
     fn max_size(&self) -> Duration {
-        match self.complete {
-            false => max(self.elapsed, self.original_duration),
-            true => self.elapsed,
+        match self.status {
+            CompletionStatus::NotYet => max(self.elapsed, self.original_duration),
+            _ => self.elapsed,
         }
     }
 }
@@ -42,7 +49,7 @@ impl Task {
             elapsed: Duration::ZERO,
             original_duration: Duration::new(duration, 0),
             duration: Duration::new(duration, 0),
-            complete: false,
+            status: CompletionStatus::NotYet,
         }
     }
 
@@ -107,13 +114,28 @@ impl Routine {
 
     pub fn toggle_current(&mut self) {
         if let Some(i) = self.get_current() {
-            match i.complete {
-                true => i.complete = false,
-                false => {
-                    i.complete = true;
+            match i.status {
+                CompletionStatus::Done => i.status = CompletionStatus::NotYet,
+                CompletionStatus::NotYet => {
+                    i.status = CompletionStatus::Done;
                     self.update_flex();
                     self.next_no_wrap();
                 }
+                CompletionStatus::Skipped => todo!(),
+            };
+        };
+    }
+
+    pub fn skip_current(&mut self) {
+        if let Some(i) = self.get_current() {
+            match i.status {
+                CompletionStatus::Skipped => i.status = CompletionStatus::NotYet,
+                CompletionStatus::NotYet => {
+                    i.status = CompletionStatus::Skipped;
+                    self.update_flex();
+                    self.next_no_wrap();
+                }
+                CompletionStatus::Done => (),
             };
         };
     }

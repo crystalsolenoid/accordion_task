@@ -176,6 +176,16 @@ impl App {
         self.task_widget_state.select(self.tasks.active);
     }
 
+    pub fn attempt_skip(&mut self) {
+        if let Some(task) = self.tasks.get_current() {
+            // TODO for this and complete log, make sure unmarking them generates the correct log
+            // entry
+            self.logger.log(LogElement::skipped(&task));
+        }
+        self.tasks.skip_current();
+        self.task_widget_state.select(self.tasks.active);
+    }
+
     pub fn next_task(&mut self) {
         cli_log::debug!("Next task");
         // TODO update version of ratatui

@@ -6,6 +6,7 @@ use ratatui::{
 use std::time::Duration;
 
 use crate::app::{static_task::Task, App, SignedDuration};
+use crate::app::static_task::CompletionStatus;
 
 pub fn render(app: &mut App, f: &mut Frame) {
     let layout = generate_layout(app, f);
@@ -150,9 +151,10 @@ pub fn format_duration(dur: Duration) -> String {
 }
 
 fn generate_task_row(task: &Task) -> Row {
-    let checkbox = match task.complete {
-        true => "[x]",
-        false => "[ ]",
+    let checkbox = match task.status {
+        CompletionStatus::Done => "[x]",
+        CompletionStatus::NotYet => "[ ]",
+        CompletionStatus::Skipped => "[-]",
     }
     .to_string();
     let title = task.name.to_string();
