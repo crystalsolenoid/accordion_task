@@ -19,6 +19,7 @@ cargo run examples/test
 ## Controls
 
 - Press `enter` to check off (or uncheck) the selected task. Checking a task off will move on to the next task.
+- Press `s` to skip (or unskip) the selected task. This will add its budgeted time back to the pool without claiming it was completed.
 - Press `j` and `k` to go up and down. This allows tasks to be completed out of order, if life happens.
 - Press `d` to toggle the debug panel.
 - Press `q` or `esc` to quit.
