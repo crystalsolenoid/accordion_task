@@ -83,8 +83,8 @@ impl LogElement {
             }
             LogEvent::Complete(true) => "completed".to_string(),
             LogEvent::Complete(false) => "uncompleted".to_string(),
-            // skip not yet implemented in app logic
-            LogEvent::Skip(_) => "skip".to_string(),
+            LogEvent::Skip(true) => "skipped".to_string(),
+            LogEvent::Skip(false) => "unskipped".to_string(),
         };
 //        let filename = format!("{}-{}", routine_name, start_time.format("%FT%T"));
 
@@ -121,12 +121,12 @@ pub struct RoutineLogger {
 }
 
 impl RoutineLogger {
-    pub fn new(routine: &Routine, start_time: &DateTime<Local>, routine_name: String) -> RoutineLogger {
+    pub fn new(_routine: &Routine, start_time: &DateTime<Local>, routine_name: String) -> RoutineLogger {
         let filename = format!("{}-{}", routine_name, start_time.format("%FT%T"));
         let file = File::create(filename).expect("failed to create file");
         let file = BufWriter::new(file);
 
-        let mut logger = RoutineLogger {
+        let logger = RoutineLogger {
             file,
             event_buffer: vec![],
         };

@@ -3,11 +3,17 @@ use std::time::Duration;
 
 use super::flex::{Flex, FlexItem};
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum CompletionStatus {
     NotYet,
     Done,
     Skipped,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum ToggleFailure {
+    NoSelection,
+    NoDoneToSkip,
 }
 
 #[derive(Debug)]
@@ -112,32 +118,48 @@ impl Routine {
             });
     }
 
-    pub fn toggle_current(&mut self) {
+    pub fn toggle_current(&mut self) -> Result<CompletionStatus, ToggleFailure> {
         if let Some(i) = self.get_current() {
             match i.status {
-                CompletionStatus::Done => i.status = CompletionStatus::NotYet,
+                CompletionStatus::Done => {
+                    i.status = CompletionStatus::NotYet;
+                    Ok(CompletionStatus::NotYet)
+                }
                 CompletionStatus::NotYet => {
                     i.status = CompletionStatus::Done;
                     self.update_flex();
-                    self.next_no_wrap();
+                    Ok(CompletionStatus::Done)
                 }
-                CompletionStatus::Skipped => todo!(),
-            };
-        };
+                CompletionStatus::Skipped => {
+                    i.status = CompletionStatus::Done;
+                    Ok(CompletionStatus::Done)
+                }
+            }
+        } else {
+            Err(ToggleFailure::NoSelection)
+        }
     }
 
-    pub fn skip_current(&mut self) {
+    pub fn skip_current(&mut self) -> Result<CompletionStatus, ToggleFailure> {
         if let Some(i) = self.get_current() {
             match i.status {
-                CompletionStatus::Skipped => i.status = CompletionStatus::NotYet,
+                CompletionStatus::Skipped => {
+                    i.status = CompletionStatus::NotYet;
+                    Ok(CompletionStatus::NotYet)
+                }
                 CompletionStatus::NotYet => {
                     i.status = CompletionStatus::Skipped;
                     self.update_flex();
-                    self.next_no_wrap();
+                    //self.next_no_wrap();
+                    Ok(CompletionStatus::Skipped)
                 }
-                CompletionStatus::Done => (),
-            };
-        };
+                CompletionStatus::Done => {
+                    Err(ToggleFailure::NoDoneToSkip)
+                }
+            }
+        } else {
+            Err(ToggleFailure::NoSelection)
+        }
     }
 
     pub fn next_no_wrap(&mut self) {

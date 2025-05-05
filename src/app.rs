@@ -1,12 +1,12 @@
-use ratatui::widgets::TableState;
-
 mod flex;
 mod parse_routine;
 pub mod static_task;
 mod logging;
+mod list_pointer;
 
-use static_task::{Routine, Task};
+use static_task::{Routine, Task, CompletionStatus};
 use logging::{RoutineLogger, LogElement};
+use list_pointer::ListPointer;
 
 use chrono::{DateTime, Local};
 use std::cmp::Ordering;
@@ -21,7 +21,7 @@ pub struct App {
     /// counter
     pub counter: i64,
     /// task display widget
-    pub task_widget_state: TableState,
+    pub task_widget_state: ListPointer,
     /// task internal list
     pub tasks: Routine,
     /// routine timer
@@ -58,6 +58,7 @@ impl App {
         let tasks = Routine::with_tasks(
             parse_routine::read_csv().expect("Failed to load routine file"),
         );
+        let length = tasks.tasks.len();
         let logger = RoutineLogger::new(&tasks, &Local::now(), routine_name);
         let mut app = Self {
             should_quit: false,
@@ -65,13 +66,13 @@ impl App {
             logger,
             counter: 0,
             tasks,
-            task_widget_state: TableState::default(),
+            task_widget_state: ListPointer::new(length),
             routine_timer: Timer::default(),
             last_tick: Instant::now(),
         };
         app.routine_timer = Timer::from_duration(app.get_total_remaining());
 
-        app.task_widget_state.select(app.tasks.active);
+        app.task_widget_state.select(app.tasks.active).unwrap();
         app.start_routine();
 
         app
@@ -91,38 +92,10 @@ impl App {
 
     pub fn get_total_remaining(&self) -> Duration {
         self.tasks.remaining()
-        /*
-        self.tasks
-            .tasks
-            .iter()
-            .filter(|task| !task.complete)
-            .map(|task| task.remaining())
-            .sum()
-        */
     }
 
     pub fn get_total_duration(&self) -> Duration {
         self.tasks.duration()
-        /*
-        self.tasks
-            .tasks
-            .iter()
-            .filter(|task| !task.complete)
-            .map(|task| task.duration)
-            .sum()
-        */
-    }
-
-    pub fn get_unused_time(&self) -> Duration {
-        todo!() //remove this function?
-                /*
-                self.tasks
-                    .tasks
-                    .iter()
-                    .filter(|task| task.complete)
-                    .map(|task| task.remaining())
-                    .sum()
-                */
     }
 
     pub fn get_start_time(&self) -> DateTime<Local> {
@@ -169,54 +142,49 @@ impl App {
     }
 
     pub fn attempt_toggle(&mut self) {
-        if let Some(task) = self.tasks.get_current() {
-            self.logger.log(LogElement::completed(&task));
-        }
-        self.tasks.toggle_current();
-        self.task_widget_state.select(self.tasks.active);
+        match self.tasks.toggle_current() {
+            Ok(CompletionStatus::Done) => {
+                let task = self.tasks.get_current().expect("this should always exist here");
+                self.logger.log(LogElement::completed(&task));
+                let _ = self.task_widget_state.try_next();
+                self.tasks.active = self.task_widget_state.selected();
+            }
+            Ok(CompletionStatus::NotYet) => {
+                let task = self.tasks.get_current().expect("this should always exist here");
+                self.logger.log(LogElement::uncompleted(&task));
+            }
+            Err(_) => (),
+            Ok(CompletionStatus::Skipped) => panic!("this should never happen?"),
+        };
     }
 
     pub fn attempt_skip(&mut self) {
-        if let Some(task) = self.tasks.get_current() {
-            // TODO for this and complete log, make sure unmarking them generates the correct log
-            // entry
-            self.logger.log(LogElement::skipped(&task));
-        }
-        self.tasks.skip_current();
-        self.task_widget_state.select(self.tasks.active);
+        match self.tasks.skip_current() {
+            Ok(CompletionStatus::Skipped) => {
+                let task = self.tasks.get_current().expect("this should always exist here");
+                self.logger.log(LogElement::skipped(&task));
+                let _ = self.task_widget_state.try_next();
+                self.tasks.active = self.task_widget_state.selected();
+            }
+            Ok(CompletionStatus::NotYet) => {
+                let task = self.tasks.get_current().expect("this should always exist here");
+                self.logger.log(LogElement::unskipped(&task));
+            }
+            Err(_) => (),
+            Ok(CompletionStatus::Done) => panic!("this should never happen?"),
+        };
     }
 
     pub fn next_task(&mut self) {
-        cli_log::debug!("Next task");
-        // TODO update version of ratatui
-        //        self.task_widget_state.select_next();
-        self.task_widget_state.select_next();
+        let _ = self.task_widget_state.try_next();
         self.tasks.active = self.task_widget_state.selected();
-        /*
-        if let Some(i) = self.task_widget_state.selected() {
-            let j = if i >= self.tasks.tasks.len() - 1 {
-                0
-            } else {
-                i + 1
-            };
-            self.task_widget_state.select(Some(j));
-            self.tasks.active = self.task_widget_state.selected();
-        }
-        */
     }
 
     pub fn prev_task(&mut self) {
         // TODO update version of ratatui
         //        self.task_widget_state.select_previous();
-        if let Some(i) = self.task_widget_state.selected() {
-            let j = if i == 0 {
-                self.tasks.tasks.len() - 1
-            } else {
-                i - 1
-            };
-            self.task_widget_state.select(Some(j));
-            self.tasks.active = self.task_widget_state.selected();
-        }
+        let _ = self.task_widget_state.try_prev();
+        self.tasks.active = self.task_widget_state.selected();
     }
 }
 
@@ -240,14 +208,6 @@ impl Default for Timer {
 }
 
 impl Timer {
-    fn from_secs(seconds: u64) -> Self {
-        Self {
-            duration: Duration::from_secs(seconds),
-            original_duration: Duration::from_secs(seconds),
-            ..Self::default()
-        }
-    }
-
     fn from_duration(duration: Duration) -> Self {
         Self {
             duration,

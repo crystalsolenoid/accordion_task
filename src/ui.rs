@@ -5,7 +5,7 @@ use ratatui::{
 };
 use std::time::Duration;
 
-use crate::app::{static_task::Task, App, SignedDuration};
+use crate::app::{static_task::Task, App};
 use crate::app::static_task::CompletionStatus;
 
 pub fn render(app: &mut App, f: &mut Frame) {
@@ -18,8 +18,7 @@ pub fn render(app: &mut App, f: &mut Frame) {
 }
 
 fn generate_layout(app: &App, f: &Frame) -> [Rect; 3] {
-    let width = f.size().width;
-    let height = f.size().height;
+    let width = f.area().width;
     let header_height = 5;
     let footer_height = match app.debug {
         true => 15,
@@ -31,7 +30,7 @@ fn generate_layout(app: &App, f: &Frame) -> [Rect; 3] {
             Constraint::Length(header_height),
             Constraint::Min(header_height),
         ])
-        .split(f.size());
+        .split(f.area());
     let header = split1[0];
     let split2 = Layout::default()
         .direction(Direction::Vertical)
@@ -48,21 +47,6 @@ fn generate_layout(app: &App, f: &Frame) -> [Rect; 3] {
 fn render_debug(app: &App, f: &mut Frame, area: Rect) {
     let block = standard_block("Debug");
     let text = vec![
-        format!(
-            "get_total_remaining() \t{}",
-            format_duration(app.get_total_remaining())
-        )
-        .into(),
-        format!(
-            "get_unused_time() \t{}",
-            format_duration(app.get_unused_time())
-        )
-        .into(),
-        format!(
-            "get_time_balance() \t{}",
-            format_signed_duration(app.get_time_balance())
-        )
-        .into(),
         format!("start time \t{}", app.get_start_time().format("%l:%M%P")).into(),
         format!(
             "projected end time \t{}",
@@ -91,8 +75,6 @@ fn render_timer(app: &mut App, f: &mut Frame, area: Rect) {
 }
 
 fn render_table(app: &mut App, f: &mut Frame, area: Rect) {
-    let elapsed = format_duration(app.get_time_elapsed());
-
     let block = standard_block("Routine");
     let rows: Vec<Row> = app
         .tasks
@@ -115,19 +97,10 @@ fn render_table(app: &mut App, f: &mut Frame, area: Rect) {
                 .bottom_margin(1),
         )
         .block(block)
-        .highlight_style(Style::new().add_modifier(Modifier::REVERSED))
+        .row_highlight_style(Style::new().add_modifier(Modifier::REVERSED))
         .highlight_symbol(">> ");
-    cli_log::debug!("Pre-render selected {:?}", app.task_widget_state.selected());
-    f.render_stateful_widget(table, area, &mut app.task_widget_state);
-    cli_log::debug!("Post-render selected {:?}", app.task_widget_state.selected());
-}
-
-fn format_signed_duration(signed_dur: SignedDuration) -> String {
-    match signed_dur {
-        SignedDuration::DEFICIT(dur) => format!("{} behind schedule", format_duration(dur)),
-        SignedDuration::SURPLUS(dur) => format!("{} ahead of schedule", format_duration(dur)),
-        SignedDuration::ZERO => "0s".to_string(),
-    }
+    let mut state: TableState = app.task_widget_state.into();
+    f.render_stateful_widget(table, area, &mut state);
 }
 
 // TODO move to utility module
