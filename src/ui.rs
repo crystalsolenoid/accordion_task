@@ -5,8 +5,8 @@ use ratatui::{
 };
 use std::time::Duration;
 
-use crate::app::{static_task::Task, App};
 use crate::app::static_task::CompletionStatus;
+use crate::app::{static_task::Task, App};
 
 pub fn render(app: &mut App, f: &mut Frame) {
     let layout = generate_layout(app, f);

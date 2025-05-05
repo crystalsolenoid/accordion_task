@@ -24,18 +24,18 @@
 // this keeps the lines more human-readable
 //
 // routine name | date-time started | duration
-// 
+//
 // include on-the-fly routine refinement notes
 // or maybe allow a way to add a task on the fly
 // and mark it as a task you want added into the
 // routine for real
 
-use std::fs::File;
-use std::io::{Write, BufWriter};
 use chrono::{DateTime, Local};
+use std::fs::File;
+use std::io::{BufWriter, Write};
 use std::time::Duration;
 
-use crate::app::{Task, Routine};
+use crate::app::{Routine, Task};
 
 #[derive(Debug, Copy, Clone)]
 enum LogEvent {
@@ -52,7 +52,7 @@ pub struct LogElement {
 }
 
 impl LogElement {
-    fn new (task: &Task, event: LogEvent) -> LogElement {
+    fn new(task: &Task, event: LogEvent) -> LogElement {
         LogElement {
             time: Local::now(),
             task_name: task.name.clone(), //TODO dont clone? unsure
@@ -66,9 +66,15 @@ impl LogElement {
         // task
         if self.task_name == next.task_name {
             match (self.event, next.event) {
-                (LogEvent::Elapsed(a), LogEvent::Elapsed(b)) => (Self {event: LogEvent::Elapsed(a + b), ..self}, None),
+                (LogEvent::Elapsed(a), LogEvent::Elapsed(b)) => (
+                    Self {
+                        event: LogEvent::Elapsed(a + b),
+                        ..self
+                    },
+                    None,
+                ),
                 (_, _) => (self, Some(next)),
-        }
+            }
         } else {
             (self, Some(next))
         }
@@ -86,9 +92,9 @@ impl LogElement {
             LogEvent::Skip(true) => "skipped".to_string(),
             LogEvent::Skip(false) => "unskipped".to_string(),
         };
-//        let filename = format!("{}-{}", routine_name, start_time.format("%FT%T"));
+        //        let filename = format!("{}-{}", routine_name, start_time.format("%FT%T"));
 
-        write!(file, "{time} \t{name} \t{message:} \n").unwrap();
+        writeln!(file, "{time} \t{name} \t{message:}").unwrap();
 
         // 7:36pm   brush teeth 2m30s
     }
@@ -121,16 +127,19 @@ pub struct RoutineLogger {
 }
 
 impl RoutineLogger {
-    pub fn new(_routine: &Routine, start_time: &DateTime<Local>, routine_name: String) -> RoutineLogger {
+    pub fn new(
+        _routine: &Routine,
+        start_time: &DateTime<Local>,
+        routine_name: String,
+    ) -> RoutineLogger {
         let filename = format!("{}-{}", routine_name, start_time.format("%FT%T"));
         let file = File::create(filename).expect("failed to create file");
         let file = BufWriter::new(file);
 
-        let logger = RoutineLogger {
+        RoutineLogger {
             file,
             event_buffer: vec![],
-        };
-        logger
+        }
     }
 
     pub fn log(&mut self, event: LogElement) {
@@ -142,8 +151,7 @@ impl RoutineLogger {
             } else {
                 self.event_buffer.push(a);
             }
-        }
-        else {
+        } else {
             self.event_buffer.push(event);
         }
     }

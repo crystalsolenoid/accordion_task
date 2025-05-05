@@ -153,9 +153,7 @@ impl Routine {
                     //self.next_no_wrap();
                     Ok(CompletionStatus::Skipped)
                 }
-                CompletionStatus::Done => {
-                    Err(ToggleFailure::NoDoneToSkip)
-                }
+                CompletionStatus::Done => Err(ToggleFailure::NoDoneToSkip),
             }
         } else {
             Err(ToggleFailure::NoSelection)

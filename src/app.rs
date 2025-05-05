@@ -1,12 +1,12 @@
 mod flex;
+mod list_pointer;
+mod logging;
 mod parse_routine;
 pub mod static_task;
-mod logging;
-mod list_pointer;
 
-use static_task::{Routine, Task, CompletionStatus};
-use logging::{RoutineLogger, LogElement};
 use list_pointer::ListPointer;
+use logging::{LogElement, RoutineLogger};
+use static_task::{CompletionStatus, Routine, Task};
 
 use chrono::{DateTime, Local};
 use std::cmp::Ordering;
@@ -55,9 +55,8 @@ impl App {
     /// Constructs a new instance of [`App`].
     pub fn new() -> App {
         let routine_name = parse_routine::get_routine_name().expect("Failed to load routine file");
-        let tasks = Routine::with_tasks(
-            parse_routine::read_csv().expect("Failed to load routine file"),
-        );
+        let tasks =
+            Routine::with_tasks(parse_routine::read_csv().expect("Failed to load routine file"));
         let length = tasks.tasks.len();
         let logger = RoutineLogger::new(&tasks, &Local::now(), routine_name);
         let mut app = Self {
@@ -119,7 +118,7 @@ impl App {
         cli_log::debug!("Tick");
         self.tasks.elapse(delta);
         if let Some(t) = self.tasks.get_current() {
-            self.logger.log(LogElement::elapsed(&t, delta));
+            self.logger.log(LogElement::elapsed(t, delta));
         }
     }
 
@@ -144,14 +143,20 @@ impl App {
     pub fn attempt_toggle(&mut self) {
         match self.tasks.toggle_current() {
             Ok(CompletionStatus::Done) => {
-                let task = self.tasks.get_current().expect("this should always exist here");
-                self.logger.log(LogElement::completed(&task));
+                let task = self
+                    .tasks
+                    .get_current()
+                    .expect("this should always exist here");
+                self.logger.log(LogElement::completed(task));
                 let _ = self.task_widget_state.try_next();
                 self.tasks.active = self.task_widget_state.selected();
             }
             Ok(CompletionStatus::NotYet) => {
-                let task = self.tasks.get_current().expect("this should always exist here");
-                self.logger.log(LogElement::uncompleted(&task));
+                let task = self
+                    .tasks
+                    .get_current()
+                    .expect("this should always exist here");
+                self.logger.log(LogElement::uncompleted(task));
             }
             Err(_) => (),
             Ok(CompletionStatus::Skipped) => panic!("this should never happen?"),
@@ -161,14 +166,20 @@ impl App {
     pub fn attempt_skip(&mut self) {
         match self.tasks.skip_current() {
             Ok(CompletionStatus::Skipped) => {
-                let task = self.tasks.get_current().expect("this should always exist here");
-                self.logger.log(LogElement::skipped(&task));
+                let task = self
+                    .tasks
+                    .get_current()
+                    .expect("this should always exist here");
+                self.logger.log(LogElement::skipped(task));
                 let _ = self.task_widget_state.try_next();
                 self.tasks.active = self.task_widget_state.selected();
             }
             Ok(CompletionStatus::NotYet) => {
-                let task = self.tasks.get_current().expect("this should always exist here");
-                self.logger.log(LogElement::unskipped(&task));
+                let task = self
+                    .tasks
+                    .get_current()
+                    .expect("this should always exist here");
+                self.logger.log(LogElement::unskipped(task));
             }
             Err(_) => (),
             Ok(CompletionStatus::Done) => panic!("this should never happen?"),

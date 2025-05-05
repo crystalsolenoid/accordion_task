@@ -3,7 +3,7 @@ use ratatui::widgets::{ListState, TableState};
 #[derive(Debug)]
 pub enum ScrollError {
     EndOfList,
-    EmptyList
+    EmptyList,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -63,7 +63,7 @@ impl ListPointer {
 
     pub fn try_prev(&mut self) -> Result<(), ScrollError> {
         if let Some(i) = self.selected {
-            if i <= 0 {
+            if i == 0 {
                 Err(ScrollError::EndOfList)
             } else {
                 self.selected = Some(i - 1);
@@ -80,7 +80,7 @@ impl ListPointer {
         if let Some(i) = self.selected {
             self.selected = Some(i + 1);
         }
-            self.length += 1;
+        self.length += 1;
     }
 
     /// Announces to the pointer that an item has been added anywhere AFTER the pointer. Does
@@ -90,19 +90,19 @@ impl ListPointer {
     }
 }
 
-impl Into<ListState> for ListPointer {
-    fn into(self) -> ListState {
+impl From<ListPointer> for ListState {
+    fn from(val: ListPointer) -> Self {
         ListState::default()
-            .with_offset(self.offset)
-            .with_selected(self.selected)
+            .with_offset(val.offset)
+            .with_selected(val.selected)
     }
 }
 
-impl Into<TableState> for ListPointer {
-    fn into(self) -> TableState {
+impl From<ListPointer> for TableState {
+    fn from(val: ListPointer) -> Self {
         TableState::default()
-            .with_offset(self.offset)
-            .with_selected(self.selected)
+            .with_offset(val.offset)
+            .with_selected(val.selected)
     }
 }
 
