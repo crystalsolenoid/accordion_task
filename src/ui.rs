@@ -9,12 +9,40 @@ use crate::app::static_task::CompletionStatus;
 use crate::app::{static_task::Task, App};
 
 pub fn render(app: &mut App, f: &mut Frame) {
-    let layout = generate_layout(app, f);
-    render_timer(app, f, layout[0]);
-    render_table(app, f, layout[1]);
-    if app.debug {
-        render_debug(app, f, layout[2]);
+    match app.help_menu {
+        true => render_help_menu(app, f),
+        false => {
+            let layout = generate_layout(app, f);
+            render_timer(app, f, layout[0]);
+            render_table(app, f, layout[1]);
+            if app.debug {
+                render_debug(app, f, layout[2]);
+            }
+        }
     }
+}
+
+fn render_help_menu(app: &mut App, f: &mut Frame) {
+    let block = standard_block("Help");
+    let para = help_paragraph()
+        .style(Style::new().fg(Color::Yellow))
+        .block(block);
+    f.render_widget(para, f.area());
+}
+
+fn help_paragraph() -> Paragraph<'static> {
+    // TODO add scroll
+    let text = "Enter : Complete
+S : Skip
+
+J, K : Navigation
+
+? : Help Menu
+D : Debug Panel
+
+Q, Esc : Quit Accordion Task
+";
+    Paragraph::new(text).wrap(Wrap { trim: true })
 }
 
 fn generate_layout(app: &App, f: &Frame) -> [Rect; 3] {

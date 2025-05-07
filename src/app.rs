@@ -18,6 +18,7 @@ pub struct App {
     /// should the application exit?
     pub should_quit: bool,
     pub debug: bool,
+    pub help_menu: bool,
     /// counter
     pub counter: i64,
     /// task display widget
@@ -62,6 +63,7 @@ impl App {
         let mut app = Self {
             should_quit: false,
             debug: false,
+            help_menu: false,
             logger,
             counter: 0,
             tasks,
@@ -138,6 +140,10 @@ impl App {
 
     pub fn toggle_debug(&mut self) {
         self.debug = !self.debug;
+    }
+
+    pub fn toggle_help(&mut self) {
+        self.help_menu = !self.help_menu;
     }
 
     pub fn attempt_toggle(&mut self) {

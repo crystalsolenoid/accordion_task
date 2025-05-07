@@ -14,6 +14,7 @@ pub fn update(app: &mut App, key_event: KeyEvent) {
         KeyCode::Left | KeyCode::Char('k') => app.prev_task(),
         KeyCode::Enter => app.attempt_toggle(),
         KeyCode::Char('s') => app.attempt_skip(),
+        KeyCode::Char('?') => app.toggle_help(),
         KeyCode::Char('d') => app.toggle_debug(),
         _ => {}
     };
