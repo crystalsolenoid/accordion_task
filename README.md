@@ -16,6 +16,18 @@ cargo run examples/test
 
 ...or make your own CSV routine file using `examples/test` as a template.
 
+### Custom Deadline
+
+By default, the deadline is set to the time you would complete all the tasks in the routine by if you took exactly as much time as specified in the routine CSV file.
+
+It is possible to specify a deadline instead with a command flag:
+
+```
+cargo run examples/test -d 13:45
+```
+
+The deadline is assumed to be for today, unless the time has already past upon starting. If so, it is assumed to be for tomorrow.
+
 ## Controls
 
 - Press `enter` to check off (or uncheck) the selected task. Checking a task off will move on to the next task.
@@ -26,12 +38,12 @@ cargo run examples/test
 
 ## Planned Features
 
-- [ ] Shrink the duration of each remaining task when behind schedule.
+- [x] Shrink the duration of each remaining task when behind schedule.
 - [ ] Display how much the routine is behind or ahead of schedule.
-- [ ] Allow running a routine with a target end time.
-- [ ] Allow the marking of a task as skipped but not completed, so that its duration contracts without disturbing statistics.
+- [x] Allow running a routine with a target end time.
+- [x] Allow the marking of a task as skipped but not completed, so that its duration contracts without disturbing statistics.
 - [ ] Show a progress bar with relative durations and progress of each task. (Maybe with [tui-widget-list](https://github.com/preiter93/tui-widget-list)?)
-- [ ] Generate log files for each routine session with data about the time taken and order of tasks.
+- [x] Generate log files for each routine session with data about the time taken and order of tasks.
 - [ ] Allow pausing (but the main routine timer still has to run: I can't freeze time for you in real life!)
 - [ ] Record mode: record a routine and save it and the observed timings to a routine file.
 - [ ] Maybe someday: allow subtasks.

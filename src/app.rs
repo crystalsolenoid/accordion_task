@@ -4,12 +4,12 @@ mod logging;
 mod parse_routine;
 pub mod static_task;
 
+use crate::cli::Cli;
 use list_pointer::ListPointer;
 use logging::{LogElement, RoutineLogger};
 use static_task::{CompletionStatus, Routine, Task};
 
-use chrono::{DateTime, Local};
-use std::cmp::Ordering;
+use chrono::{DateTime, Days, Local, MappedLocalTime};
 use std::time::{Duration, Instant};
 
 /// Application.
@@ -26,41 +26,21 @@ pub struct App {
     /// task internal list
     pub tasks: Routine,
     /// routine timer
-    pub routine_timer: Timer,
     pub last_tick: Instant,
     logger: RoutineLogger,
-}
-
-/// Timer.
-#[derive(Debug)]
-pub struct Timer {
-    /// duration
-    pub duration: Duration,
-    pub original_duration: Duration,
-    /// time started
-    pub start_instant: Instant,
     pub start_time: DateTime<Local>,
-    /// time elapsed while unpaused
-    pub elapsed: Duration,
-    /// is the timer running?
-    pub active: bool,
-}
-
-pub enum SignedDuration {
-    SURPLUS(Duration),
-    DEFICIT(Duration),
-    ZERO,
 }
 
 impl App {
     /// Constructs a new instance of [`App`].
-    pub fn new() -> App {
-        let routine_name = parse_routine::get_routine_name().expect("Failed to load routine file");
+    pub fn new(cli: Cli) -> App {
+        let routine_name = cli.routine_path;
         let tasks =
             Routine::with_tasks(parse_routine::read_csv().expect("Failed to load routine file"));
         let length = tasks.tasks.len();
         let logger = RoutineLogger::new(&tasks, &Local::now(), routine_name);
         let mut app = Self {
+            start_time: Local::now(),
             should_quit: false,
             debug: false,
             help_menu: false,
@@ -68,27 +48,34 @@ impl App {
             counter: 0,
             tasks,
             task_widget_state: ListPointer::new(length),
-            routine_timer: Timer::default(),
             last_tick: Instant::now(),
         };
-        app.routine_timer = Timer::from_duration(app.get_total_remaining());
+
+        let now = Local::now();
+        if let Some(deadline) = cli.deadline {
+            // TODO handle DST
+            let today_deadline = match now.with_time(deadline) {
+                MappedLocalTime::Single(t) => t,
+                _ => todo!(), // Risks crash around DST change
+            };
+            let deadline = if today_deadline < now {
+                let tomorrow = match now.checked_add_days(Days::new(1)) {
+                    Some(t) => t,
+                    None => todo!(), // Risks DST crash
+                };
+                match tomorrow.with_time(deadline) {
+                    MappedLocalTime::Single(t) => t,
+                    _ => todo!(), // Risks crash around DST change
+                }
+            } else {
+                today_deadline
+            };
+            app.tasks.set_deadline(deadline);
+        };
 
         app.task_widget_state.select(app.tasks.active).unwrap();
-        app.start_routine();
 
         app
-    }
-
-    pub fn get_time_balance(&self) -> SignedDuration {
-        // Report the amount ahead of or behind schedule
-        // based on the routine timer and task timers.
-        let remaining = self.routine_timer.get_remaining();
-        let to_do = self.get_total_remaining();
-        match to_do.cmp(&remaining) {
-            Ordering::Greater => SignedDuration::DEFICIT(to_do - remaining),
-            Ordering::Less => SignedDuration::SURPLUS(remaining - to_do),
-            Ordering::Equal => SignedDuration::ZERO,
-        }
     }
 
     pub fn get_total_remaining(&self) -> Duration {
@@ -100,15 +87,11 @@ impl App {
     }
 
     pub fn get_start_time(&self) -> DateTime<Local> {
-        self.routine_timer.start_time
+        self.start_time
     }
 
     pub fn get_projected_end_time(&self) -> DateTime<Local> {
         Local::now() + self.get_total_remaining()
-    }
-
-    pub fn start_routine(&mut self) {
-        self.routine_timer.start();
     }
 
     /// Handles the tick event of the terminal.
@@ -125,11 +108,16 @@ impl App {
     }
 
     pub fn get_time_elapsed(&self) -> Duration {
-        self.routine_timer.start_instant.elapsed()
+        self.tasks.elapsed()
     }
 
     pub fn get_percentage_elapsed(&self) -> f64 {
-        self.routine_timer.get_percentage()
+        //0.5 // TODO
+        1.0 - self
+            .tasks
+            .elapsed()
+            .div_duration_f64(self.tasks.elapsed() + self.tasks.remaining())
+        // self.routine_timer.get_percentage()
     }
 
     /// Set should_quit to true to quit the application.
@@ -202,53 +190,6 @@ impl App {
         //        self.task_widget_state.select_previous();
         let _ = self.task_widget_state.try_prev();
         self.tasks.active = self.task_widget_state.selected();
-    }
-}
-
-impl Default for App {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl Default for Timer {
-    fn default() -> Self {
-        Self {
-            duration: Duration::from_secs(5 * 60),
-            original_duration: Duration::from_secs(5 * 60),
-            start_instant: Instant::now(),
-            start_time: Local::now(),
-            elapsed: Duration::ZERO,
-            active: false,
-        }
-    }
-}
-
-impl Timer {
-    fn from_duration(duration: Duration) -> Self {
-        Self {
-            duration,
-            original_duration: duration,
-            ..Self::default()
-        }
-    }
-
-    fn start(&mut self) {
-        self.start_instant = Instant::now();
-        self.active = true;
-    }
-
-    fn get_remaining(&self) -> Duration {
-        match self.active {
-            true => self
-                .duration
-                .saturating_sub(self.elapsed + (Instant::now() - self.start_instant)),
-            false => self.duration.saturating_sub(self.elapsed),
-        }
-    }
-
-    fn get_percentage(&self) -> f64 {
-        self.get_remaining().as_secs() as f64 / self.duration.as_secs() as f64
     }
 }
 

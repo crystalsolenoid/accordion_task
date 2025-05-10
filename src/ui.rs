@@ -1,5 +1,6 @@
 use ratatui::{
-    prelude::*,
+    layout::Flex,
+    prelude::{Constraint::*, *},
     style::{Color, Modifier, Style},
     widgets::*,
 };
@@ -10,7 +11,7 @@ use crate::app::{static_task::Task, App};
 
 pub fn render(app: &mut App, f: &mut Frame) {
     match app.help_menu {
-        true => render_help_menu(app, f),
+        true => render_help_menu(f),
         false => {
             let layout = generate_layout(app, f);
             render_timer(app, f, layout[0]);
@@ -22,7 +23,7 @@ pub fn render(app: &mut App, f: &mut Frame) {
     }
 }
 
-fn render_help_menu(app: &mut App, f: &mut Frame) {
+fn render_help_menu(f: &mut Frame) {
     let block = standard_block("Help");
     let para = help_paragraph()
         .style(Style::new().fg(Color::Yellow))
@@ -89,7 +90,12 @@ fn render_debug(app: &App, f: &mut Frame, area: Rect) {
 }
 
 fn render_timer(app: &mut App, f: &mut Frame, area: Rect) {
+    let layout = Layout::horizontal([Max(7), Fill(1), Max(7)]).flex(Flex::Start);
     let block = standard_block("Timer");
+    let inner = block.inner(area);
+
+    let [a, b, c] = layout.areas(inner);
+
     let guage = Gauge::default()
         .gauge_style(
             Style::default()
@@ -97,9 +103,18 @@ fn render_timer(app: &mut App, f: &mut Frame, area: Rect) {
                 .bg(Color::Black)
                 .add_modifier(Modifier::BOLD),
         )
-        .block(block)
         .ratio(app.get_percentage_elapsed());
-    f.render_widget(guage, area)
+    f.render_widget(guage, b);
+
+    let start_time = format!("{}", app.get_start_time().format("%l:%M"));
+    let start_time = Paragraph::new(start_time).block(Block::new().padding(Padding::horizontal(1)));
+    f.render_widget(start_time, a);
+
+    let end_time = format!("{}", app.get_projected_end_time().format("%l:%M"));
+    let end_time = Paragraph::new(end_time).block(Block::new().padding(Padding::horizontal(1)));
+    f.render_widget(end_time, c);
+
+    f.render_widget(block, area);
 }
 
 fn render_table(app: &mut App, f: &mut Frame, area: Rect) {

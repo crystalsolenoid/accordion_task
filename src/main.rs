@@ -13,7 +13,12 @@ pub mod tui;
 /// Application updater.
 pub mod update;
 
+/// Command line interface parser.
+pub mod cli;
+
 use app::App;
+use clap::Parser;
+use cli::Cli;
 use color_eyre::Result;
 use event::{Event, EventHandler};
 use ratatui::{backend::CrosstermBackend, Terminal};
@@ -22,8 +27,11 @@ use update::update;
 
 fn main() -> Result<()> {
     cli_log::init_cli_log!();
+
+    let cli = Cli::parse();
+
     // Create an application.
-    let mut app = App::new();
+    let mut app = App::new(cli);
 
     // Initialize the terminal user interface.
     let backend = CrosstermBackend::new(std::io::stderr());

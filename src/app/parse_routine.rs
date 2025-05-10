@@ -29,12 +29,6 @@ fn get_first_arg() -> Result<OsString, Box<dyn Error>> {
     }
 }
 
-pub fn get_routine_name() -> Result<String, Box<dyn Error>> {
-    let osstr = get_first_arg()?;
-    let string = osstr.into_string().expect("TODO");
-    Ok(string)
-}
-
 pub fn read_csv() -> Result<Vec<Task>, Box<dyn Error>> {
     run()
 }

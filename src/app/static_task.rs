@@ -1,6 +1,8 @@
 use std::cmp::max;
 use std::time::Duration;
 
+use chrono::{DateTime, Local};
+
 use super::flex::{Flex, FlexItem};
 
 #[derive(Debug, Copy, Clone)]
@@ -68,6 +70,15 @@ impl Task {
     }
 }
 
+// for testing, methods that use this timing should not query the current time but accept it as a
+// value
+#[derive(Default, Debug, Copy, Clone)]
+enum TimeMode {
+    #[default]
+    ExpectedEnd,
+    FixedEnd(DateTime<Local>),
+}
+
 #[derive(Default, Debug)]
 pub struct Routine {
     /// An ordered list of the tasks.
@@ -75,9 +86,10 @@ pub struct Routine {
     /// The active task, if any.
     /// TODO this should probably eventually use an ID number.
     pub active: Option<usize>,
-    /// The original scheduled length of the list,
-    /// which is used to know what to flex to.
-    pub original_max: Duration,
+    /// Amount of time to try to fit tasks into.
+    pub flex_goal: Duration,
+    /// Timing Mode
+    mode: TimeMode,
 }
 
 impl Routine {
@@ -92,12 +104,34 @@ impl Routine {
                 0 => None,
                 _ => Some(0),
             },
-            original_max,
+            flex_goal: original_max,
+            mode: TimeMode::ExpectedEnd,
         }
     }
 
+    fn sync_goal(&mut self, now: DateTime<Local>) {
+        // TODO make this robust to timing glitches
+        match self.mode {
+            TimeMode::ExpectedEnd => (),
+            TimeMode::FixedEnd(deadline) => {
+                // TODO handle past due case
+                let time_left = (deadline - now).to_std().expect("handle negative");
+                let time_spent = self.elapsed();
+                self.flex_goal = time_spent + time_left;
+                self.update_flex();
+            }
+        }
+    }
+
+    pub fn set_deadline(&mut self, deadline: DateTime<Local>) {
+        self.mode = TimeMode::FixedEnd(deadline);
+        // TODO put timing call in app module
+        self.sync_goal(Local::now());
+    }
+
     pub fn push(&mut self, task: Task) {
-        self.original_max += task.original_duration;
+        // TODO flex goal only shouls change witj an iption set
+        self.flex_goal += task.original_duration;
         self.tasks.push(task);
     }
 
@@ -109,7 +143,9 @@ impl Routine {
     }
 
     fn update_flex(&mut self) {
-        let times = self.flex(self.original_max).expect("todo");
+        let times = self
+            .flex(self.flex_goal)
+            .unwrap_or(vec![Duration::ZERO; self.tasks.len()]);
         times
             .iter()
             .zip(self.tasks.iter_mut())
