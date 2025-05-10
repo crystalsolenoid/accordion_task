@@ -50,7 +50,7 @@ The deadline is assumed to be for today, unless the time has already past upon s
 
 I am making this mostly for myself. I am prioritizing what I need. But I would like to share too, so I am planning on eventually working on things like configuration.
 
-- [ ] Add an on-screen help widget with control reminders.
+- [x] Add an on-screen help widget with control reminders.
 - [ ] Add better error messages and prevent panics and weird little edge cases.
 - [ ] Use [AccessKit](https://github.com/AccessKit/accesskit) to make a more accessible interface. (Is that possible?)
 - [ ] Allow user configuration (controls, ui style and compactness, whatever else)
