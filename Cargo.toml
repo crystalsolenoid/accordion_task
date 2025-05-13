@@ -10,6 +10,7 @@ chrono = "0.4.31"
 clap = { version = "4.5.37", features = ["derive"] }
 cli-log = "2.1.0"
 color-eyre = "0.6.2"
-crossterm = "0.27.0"
+crossterm = "0.28"
 csv = "1.3.0"
 ratatui = "0.29.0"
+tui-textarea = "0.7.0"

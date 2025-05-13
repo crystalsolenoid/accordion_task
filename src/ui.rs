@@ -7,20 +7,33 @@ use ratatui::{
 use std::time::Duration;
 
 use crate::app::static_task::CompletionStatus;
-use crate::app::{static_task::Task, App};
+use crate::app::{static_task::Task, App, Menu, Mode};
 
-pub fn render(app: &mut App, f: &mut Frame) {
-    match app.help_menu {
+pub fn render(app: &App, f: &mut Frame) {
+    match &app.help_menu {
         true => render_help_menu(f),
         false => {
             let layout = generate_layout(app, f);
-            render_timer(app, f, layout[0]);
+            match &app.menu_focus {
+                Mode::Navigation => render_timer(app, f, layout[0]),
+                Mode::Typing(menu) => render_text_field(*menu, app, f, layout[0]),
+            }
             render_table(app, f, layout[1]);
             if app.debug {
                 render_debug(app, f, layout[2]);
             }
         }
     }
+}
+
+fn render_text_field(menu: Menu, app: &App, f: &mut Frame, area: Rect) {
+    let label = match menu {
+        Menu::InsertTask => "Insert New Task",
+        Menu::AppendTask => "Append New Task",
+    };
+    let mut para = app.text_input.clone();
+    para.set_block(standard_block(label));
+    f.render_widget(&para, area);
 }
 
 fn render_help_menu(f: &mut Frame) {
@@ -37,6 +50,12 @@ fn help_paragraph() -> Paragraph<'static> {
 S : Skip
 
 J, K : Navigation
+
+I: Insert New Task
+A: Append New Task
+....In new task mode:
+....Enter: Submit
+....Esc: Discard
 
 ? : Help Menu
 D : Debug Panel
@@ -89,7 +108,7 @@ fn render_debug(app: &App, f: &mut Frame, area: Rect) {
     f.render_widget(para, area);
 }
 
-fn render_timer(app: &mut App, f: &mut Frame, area: Rect) {
+fn render_timer(app: &App, f: &mut Frame, area: Rect) {
     let layout = Layout::horizontal([Max(7), Fill(1), Max(7)]).flex(Flex::Start);
     let block = standard_block("Timer");
     let inner = block.inner(area);
@@ -117,7 +136,7 @@ fn render_timer(app: &mut App, f: &mut Frame, area: Rect) {
     f.render_widget(block, area);
 }
 
-fn render_table(app: &mut App, f: &mut Frame, area: Rect) {
+fn render_table(app: &App, f: &mut Frame, area: Rect) {
     let block = standard_block("Routine");
     let rows: Vec<Row> = app
         .tasks

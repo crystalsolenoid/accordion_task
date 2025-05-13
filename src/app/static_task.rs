@@ -130,9 +130,15 @@ impl Routine {
     }
 
     pub fn push(&mut self, task: Task) {
-        // TODO flex goal only shouls change witj an iption set
+        // TODO flex goal only shouls change with an iption set
         self.flex_goal += task.original_duration;
         self.tasks.push(task);
+    }
+
+    pub fn insert(&mut self, i: usize, task: Task) {
+        // TODO flex goal only shouls change with an iption set
+        self.flex_goal += task.original_duration;
+        self.tasks.insert(i, task);
     }
 
     pub fn get_current(&mut self) -> Option<&mut Task> {

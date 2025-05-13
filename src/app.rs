@@ -11,6 +11,7 @@ use static_task::{CompletionStatus, Routine, Task};
 
 use chrono::{DateTime, Days, Local, MappedLocalTime};
 use std::time::{Duration, Instant};
+use tui_textarea::TextArea;
 
 /// Application.
 #[derive(Debug)]
@@ -29,6 +30,8 @@ pub struct App {
     pub last_tick: Instant,
     logger: RoutineLogger,
     pub start_time: DateTime<Local>,
+    pub menu_focus: Mode,
+    pub text_input: TextArea<'static>,
 }
 
 impl App {
@@ -40,6 +43,8 @@ impl App {
         let length = tasks.tasks.len();
         let logger = RoutineLogger::new(&tasks, &Local::now(), routine_name);
         let mut app = Self {
+            text_input: TextArea::default(),
+            menu_focus: Mode::Navigation,
             start_time: Local::now(),
             should_quit: false,
             debug: false,
@@ -126,6 +131,43 @@ impl App {
         self.should_quit = true;
     }
 
+    pub fn append_task_start(&mut self) {
+        self.menu_focus = Mode::Typing(Menu::AppendTask);
+    }
+
+    pub fn insert_task_start(&mut self) {
+        self.menu_focus = Mode::Typing(Menu::InsertTask);
+    }
+
+    pub fn append_task_submit(&mut self) {
+        let name = self.text_input.lines()[0].to_owned();
+        let task = Task::new(&name, 120);
+        self.task_widget_state.append_item();
+        self.tasks.push(task);
+    }
+
+    pub fn insert_task_submit(&mut self) {
+        let name = self.text_input.lines()[0].to_owned();
+        let task = Task::new(&name, 120);
+        self.task_widget_state.append_item();
+        let i = self.task_widget_state
+            .selected().unwrap_or(0) + 1;
+        self.tasks.insert(i, task);
+    }
+
+    pub fn cancel_typing(&mut self) {
+        self.text_input = TextArea::default();
+        self.menu_focus = Mode::Navigation;
+    }
+
+    pub fn submit_typing(&mut self, menu: Menu) {
+        match menu {
+            Menu::AppendTask => self.append_task_submit(),
+            Menu::InsertTask => self.insert_task_submit(),
+        }
+        self.cancel_typing();
+    }
+
     pub fn toggle_debug(&mut self) {
         self.debug = !self.debug;
     }
@@ -191,6 +233,18 @@ impl App {
         let _ = self.task_widget_state.try_prev();
         self.tasks.active = self.task_widget_state.selected();
     }
+}
+
+#[derive(Debug)]
+pub enum Mode {
+    Navigation,
+    Typing(Menu),
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum Menu {
+    AppendTask,
+    InsertTask,
 }
 
 #[cfg(test)]
