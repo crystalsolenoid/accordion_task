@@ -24,6 +24,7 @@ fn update_navigation_view(app: &mut App, key_event: KeyEvent) {
         KeyCode::Char('s') => app.attempt_skip(),
         KeyCode::Char('a') => app.append_task_start(),
         KeyCode::Char('i') => app.insert_task_start(),
+        KeyCode::Char('p') => app.pause(),
         KeyCode::Char('?') => app.toggle_help(),
         KeyCode::Char('d') => app.toggle_debug(),
         _ => {}

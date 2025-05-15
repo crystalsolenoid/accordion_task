@@ -10,6 +10,7 @@ pub enum ScrollError {
 pub struct ListPointer {
     offset: usize,
     selected: Option<usize>,
+    paused: bool,
     length: usize,
 }
 
@@ -22,12 +23,16 @@ impl ListPointer {
         Self {
             offset: 0,
             selected,
+            paused: false,
             length,
         }
     }
 
     pub fn selected(&self) -> Option<usize> {
-        self.selected
+        match self.paused {
+            false => self.selected,
+            true => None,
+        }
     }
 
     pub fn delete_current(&mut self) {
@@ -46,6 +51,14 @@ impl ListPointer {
             self.selected = i;
             Ok(())
         }
+    }
+
+    pub fn pause(&mut self) {
+        self.paused = true;
+    }
+
+    pub fn unpause(&mut self) {
+        self.paused = false;
     }
 
     pub fn try_next(&mut self) -> Result<(), ScrollError> {

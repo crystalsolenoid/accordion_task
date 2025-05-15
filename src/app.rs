@@ -78,7 +78,14 @@ impl App {
             app.tasks.set_deadline(deadline);
         };
 
-        app.task_widget_state.select(app.tasks.active).unwrap();
+        /*
+        app.task_widget_state.select(
+            match app.tasks.len() {
+                0 => None,
+                _ => Some(0),
+            });
+        */
+        //app.task_widget_state.select(app.tasks.active).unwrap();
 
         app
     }
@@ -106,8 +113,8 @@ impl App {
         self.last_tick = this_tick;
 
         cli_log::debug!("Tick");
-        self.tasks.elapse(delta);
-        if let Some(t) = self.tasks.get_current() {
+        self.tasks.elapse(self.task_widget_state.selected(), delta);
+        if let Some(t) = self.tasks.get_nth(self.task_widget_state.selected()) {
             self.logger.log(LogElement::elapsed(t, delta));
         }
     }
@@ -139,20 +146,29 @@ impl App {
         self.menu_focus = Mode::Typing(Menu::InsertTask);
     }
 
-    pub fn append_task_submit(&mut self) {
+    pub fn pause(&mut self) {
+        self.task_widget_state.pause();
+        self.menu_focus = Mode::Typing(Menu::Pause);
+    }
+
+    fn append_task_submit(&mut self) {
         let name = self.text_input.lines()[0].to_owned();
         let task = Task::new(&name, 120);
         self.task_widget_state.append_item();
         self.tasks.push(task);
     }
 
-    pub fn insert_task_submit(&mut self) {
+    fn insert_task_submit(&mut self) {
         let name = self.text_input.lines()[0].to_owned();
         let task = Task::new(&name, 120);
         self.task_widget_state.append_item();
         let i = self.task_widget_state
             .selected().unwrap_or(0) + 1;
         self.tasks.insert(i, task);
+    }
+
+    fn unpause(&mut self) {
+        self.task_widget_state.unpause();
     }
 
     pub fn cancel_typing(&mut self) {
@@ -164,6 +180,7 @@ impl App {
         match menu {
             Menu::AppendTask => self.append_task_submit(),
             Menu::InsertTask => self.insert_task_submit(),
+            Menu::Pause => self.unpause(),
         }
         self.cancel_typing();
     }
@@ -177,20 +194,21 @@ impl App {
     }
 
     pub fn attempt_toggle(&mut self) {
-        match self.tasks.toggle_current() {
+        let i = self.task_widget_state.selected();
+        match self.tasks.toggle(i) {
             Ok(CompletionStatus::Done) => {
                 let task = self
                     .tasks
-                    .get_current()
+                    .get_nth(i)
                     .expect("this should always exist here");
                 self.logger.log(LogElement::completed(task));
                 let _ = self.task_widget_state.try_next();
-                self.tasks.active = self.task_widget_state.selected();
+                //self.tasks.active = self.task_widget_state.selected();
             }
             Ok(CompletionStatus::NotYet) => {
                 let task = self
                     .tasks
-                    .get_current()
+                    .get_nth(self.task_widget_state.selected())
                     .expect("this should always exist here");
                 self.logger.log(LogElement::uncompleted(task));
             }
@@ -200,20 +218,21 @@ impl App {
     }
 
     pub fn attempt_skip(&mut self) {
-        match self.tasks.skip_current() {
+        let i = self.task_widget_state.selected();
+        match self.tasks.skip(i) {
             Ok(CompletionStatus::Skipped) => {
                 let task = self
                     .tasks
-                    .get_current()
+                    .get_nth(i)
                     .expect("this should always exist here");
                 self.logger.log(LogElement::skipped(task));
                 let _ = self.task_widget_state.try_next();
-                self.tasks.active = self.task_widget_state.selected();
+                //self.tasks.active = self.task_widget_state.selected();
             }
             Ok(CompletionStatus::NotYet) => {
                 let task = self
                     .tasks
-                    .get_current()
+                    .get_nth(self.task_widget_state.selected())
                     .expect("this should always exist here");
                 self.logger.log(LogElement::unskipped(task));
             }
@@ -224,14 +243,14 @@ impl App {
 
     pub fn next_task(&mut self) {
         let _ = self.task_widget_state.try_next();
-        self.tasks.active = self.task_widget_state.selected();
+        //self.tasks.active = self.task_widget_state.selected();
     }
 
     pub fn prev_task(&mut self) {
         // TODO update version of ratatui
         //        self.task_widget_state.select_previous();
         let _ = self.task_widget_state.try_prev();
-        self.tasks.active = self.task_widget_state.selected();
+        //self.tasks.active = self.task_widget_state.selected();
     }
 }
 
@@ -245,6 +264,7 @@ pub enum Mode {
 pub enum Menu {
     AppendTask,
     InsertTask,
+    Pause,
 }
 
 #[cfg(test)]

@@ -85,11 +85,13 @@ pub struct Routine {
     pub tasks: Vec<Task>,
     /// The active task, if any.
     /// TODO this should probably eventually use an ID number.
-    pub active: Option<usize>,
+    //active: Option<usize>,
     /// Amount of time to try to fit tasks into.
     pub flex_goal: Duration,
     /// Timing Mode
     mode: TimeMode,
+    /// Time elapsed while not not focused on a task
+    spilled_time: Duration,
 }
 
 impl Routine {
@@ -100,10 +102,11 @@ impl Routine {
             .fold(Duration::ZERO, |acc, t| acc + t.original_duration);
         Self {
             tasks,
-            active: match len {
-                0 => None,
-                _ => Some(0),
-            },
+//            active: match len {
+//              0 => None,
+//              _ => Some(0),
+//            },
+            spilled_time: Duration::ZERO,
             flex_goal: original_max,
             mode: TimeMode::ExpectedEnd,
         }
@@ -141,8 +144,16 @@ impl Routine {
         self.tasks.insert(i, task);
     }
 
+    /*
     pub fn get_current(&mut self) -> Option<&mut Task> {
         match self.active {
+            Some(i) => self.tasks.get_mut(i),
+            None => None,
+        }
+    }
+    */
+    pub fn get_nth(&mut self, active: Option<usize>) -> Option<&mut Task> {
+        match active {
             Some(i) => self.tasks.get_mut(i),
             None => None,
         }
@@ -150,7 +161,7 @@ impl Routine {
 
     fn update_flex(&mut self) {
         let times = self
-            .flex(self.flex_goal)
+            .flex(self.flex_goal - self.spilled_time)
             .unwrap_or(vec![Duration::ZERO; self.tasks.len()]);
         times
             .iter()
@@ -160,8 +171,8 @@ impl Routine {
             });
     }
 
-    pub fn toggle_current(&mut self) -> Result<CompletionStatus, ToggleFailure> {
-        if let Some(i) = self.get_current() {
+    pub fn toggle(&mut self, i: Option<usize>) -> Result<CompletionStatus, ToggleFailure> {
+        if let Some(i) = self.get_nth(i) {
             match i.status {
                 CompletionStatus::Done => {
                     i.status = CompletionStatus::NotYet;
@@ -182,8 +193,8 @@ impl Routine {
         }
     }
 
-    pub fn skip_current(&mut self) -> Result<CompletionStatus, ToggleFailure> {
-        if let Some(i) = self.get_current() {
+    pub fn skip(&mut self, i: Option<usize>) -> Result<CompletionStatus, ToggleFailure> {
+        if let Some(i) = self.get_nth(i) {
             match i.status {
                 CompletionStatus::Skipped => {
                     i.status = CompletionStatus::NotYet;
@@ -202,26 +213,6 @@ impl Routine {
         }
     }
 
-    pub fn next_no_wrap(&mut self) {
-        if let Some(i) = self.active {
-            if i < self.tasks.len() - 1 {
-                self.next();
-            }
-        }
-    }
-
-    pub fn next(&mut self) {
-        if let Some(i) = self.active {
-            self.active = Some((i + 1) % self.tasks.len());
-        }
-    }
-
-    pub fn previous(&mut self) {
-        if let Some(i) = self.active {
-            self.active = Some((i - 1) % self.tasks.len());
-        }
-    }
-
     pub fn duration(&self) -> Duration {
         self.tasks.iter().map(|task| task.duration).sum()
     }
@@ -234,11 +225,12 @@ impl Routine {
         self.tasks.iter().map(|task| task.remaining()).sum()
     }
 
-    pub fn elapse(&mut self, duration: Duration) {
-        if let Some(i) = self.active {
-            self.tasks[i].elapse(duration);
-            self.update_flex();
-        } // TODO else
+    pub fn elapse(&mut self, i: Option<usize>, duration: Duration) {
+        match i {
+            Some(i) => self.tasks[i].elapse(duration),
+            None => self.spilled_time += duration,
+        }
+        self.update_flex();
     }
 }
 

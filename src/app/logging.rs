@@ -44,6 +44,11 @@ enum LogEvent {
     Skip(bool),
 }
 
+/*
+* TODO make a trait Loggable
+* and implement it for LogElement (renamed TaskLog) and Note
+*/
+
 #[derive(Debug)]
 pub struct LogElement {
     time: DateTime<Local>,
@@ -120,6 +125,10 @@ impl LogElement {
     }
 }
 
+trait Loggable {
+    fn contents(&self) -> String;
+}
+
 #[derive(Debug)]
 pub struct RoutineLogger {
     file: BufWriter<File>,
@@ -164,5 +173,31 @@ impl RoutineLogger {
         if let Some(e) = self.event_buffer.pop() {
             self.write(e);
         }
+    }
+}
+
+mod test {
+    #[test]
+    fn api() {
+        let task = Task::new("test", 120);
+        let time = DateTime::from_timestamp(1431648000, 0)
+            .expect("invalid timestamp");
+        let logger = Logger::new(&routine, time);
+
+        let log = completed(task, time);
+        logger.push(log);
+    }
+
+    #[test]
+    fn pause() {
+        let task = Task::new("test", 120);
+        let time = DateTime::from_timestamp(1431648000, 0)
+            .expect("invalid timestamp");
+        let logger = Logger::new(&routine, time);
+
+        let note = "reason for interruption";
+
+        let log = paused(note, time);
+        logger.push(log);
     }
 }
