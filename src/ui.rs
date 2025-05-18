@@ -7,7 +7,7 @@ use ratatui::{
 use std::time::Duration;
 
 use crate::app::static_task::CompletionStatus;
-use crate::app::{static_task::Task, App, Menu, Mode};
+use crate::app::{list_pointer::ListPointer, static_task::Task, App, Menu, Mode};
 
 pub fn render(app: &App, f: &mut Frame) {
     match &app.help_menu {
@@ -150,6 +150,7 @@ fn render_table(app: &App, f: &mut Frame, area: Rect) {
         Constraint::Length(15),
         Constraint::Length(15),
     ];
+    let mut state = prepare_table_state(app.task_widget_state, &block.inner(area));
     let table = Table::new(rows, widths)
         .column_spacing(1)
         .style(Style::new().fg(Color::Yellow))
@@ -161,8 +162,32 @@ fn render_table(app: &App, f: &mut Frame, area: Rect) {
         .block(block)
         .row_highlight_style(Style::new().add_modifier(Modifier::REVERSED))
         .highlight_symbol(">> ");
-    let mut state: TableState = app.task_widget_state.into();
     f.render_stateful_widget(table, area, &mut state);
+}
+
+fn prepare_table_state(pointer: ListPointer, area: &Rect) -> TableState {
+    let selected = pointer.selected().unwrap_or(0);
+    // TODO can header_height be calculated? It comes from
+    // the header row plus the bottom_margin of the table
+    let header_height = 2;
+    let height: usize = (area.height.saturating_sub(header_height)).into();
+    let buffer = match height {
+        // Reasoning for values:
+        // We have to be able to see the current task. If we have extra room, we want to
+        // first be able to see tasks after the current task (for planning). Then, when
+        // the space grows, ramp up to giving a little buffer so that the previous one or
+        // two tasks are shown, without violating the next-task-is-visible constraint.
+        // TODO should be configurable what the maximum buffer is.
+        0..=2 => 0,
+        3..=4 => 1,
+        5.. => 2,
+    };
+    let length = pointer.length();
+    let max_offset = length.saturating_sub(height);
+    let min_offset = selected.saturating_sub(buffer);
+    let offset = min_offset.clamp(0, max_offset);
+    let state: TableState = pointer.into();
+    state.with_offset(offset)
 }
 
 // TODO move to utility module

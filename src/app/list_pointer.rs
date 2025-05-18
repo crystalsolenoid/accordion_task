@@ -26,6 +26,10 @@ impl ListPointer {
         }
     }
 
+    pub fn length(&self) -> usize {
+        self.length
+    }
+
     pub fn selected(&self) -> Option<usize> {
         self.selected
     }

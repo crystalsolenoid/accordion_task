@@ -1,5 +1,5 @@
 mod flex;
-mod list_pointer;
+pub mod list_pointer;
 mod logging;
 mod parse_routine;
 pub mod static_task;
@@ -150,8 +150,7 @@ impl App {
         let name = self.text_input.lines()[0].to_owned();
         let task = Task::new(&name, 120);
         self.task_widget_state.append_item();
-        let i = self.task_widget_state
-            .selected().unwrap_or(0) + 1;
+        let i = self.task_widget_state.selected().unwrap_or(0) + 1;
         self.tasks.insert(i, task);
     }
 
