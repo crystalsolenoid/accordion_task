@@ -40,7 +40,6 @@ fn update_typing_view(app: &mut App, key_event: KeyEvent, menu: Menu) {
         _ => {
             app.text_input
                 .input(<crossterm::event::KeyEvent as Into<Input>>::into(key_event));
-        }
-        //_ => {app.text_input.input(key_event.into());},
+        } //_ => {app.text_input.input(key_event.into());},
     }
 }

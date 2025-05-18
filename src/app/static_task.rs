@@ -96,16 +96,15 @@ pub struct Routine {
 
 impl Routine {
     pub fn with_tasks(tasks: Vec<Task>) -> Self {
-        let len = tasks.len();
         let original_max = tasks
             .iter()
             .fold(Duration::ZERO, |acc, t| acc + t.original_duration);
         Self {
             tasks,
-//            active: match len {
-//              0 => None,
-//              _ => Some(0),
-//            },
+            //            active: match len {
+            //              0 => None,
+            //              _ => Some(0),
+            //            },
             spilled_time: Duration::ZERO,
             flex_goal: original_max,
             mode: TimeMode::ExpectedEnd,

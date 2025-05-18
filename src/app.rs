@@ -162,12 +162,17 @@ impl App {
         let name = self.text_input.lines()[0].to_owned();
         let task = Task::new(&name, 120);
         self.task_widget_state.append_item();
-        let i = self.task_widget_state
-            .selected().unwrap_or(0) + 1;
+        let i = self.task_widget_state.selected().unwrap_or(0) + 1;
         self.tasks.insert(i, task);
     }
 
     fn unpause(&mut self) {
+        // TODO pausing should log the
+        // duration of the pause,
+        // the fact that it was a pause,
+        // and the message.
+        let message = self.text_input.lines()[0].to_owned();
+        self.logger.log_comment(&message, Local::now());
         self.task_widget_state.unpause();
     }
 

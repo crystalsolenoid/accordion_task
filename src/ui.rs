@@ -54,7 +54,8 @@ J, K : Navigation
 
 I: Insert New Task
 A: Append New Task
-....In new task mode:
+P: Pause (and submit message for log)
+....In input mode:
 ....Enter: Submit
 ....Esc: Discard
 
