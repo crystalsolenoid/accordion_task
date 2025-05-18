@@ -24,6 +24,7 @@ fn update_navigation_view(app: &mut App, key_event: KeyEvent) {
         KeyCode::Char('s') => app.attempt_skip(),
         KeyCode::Char('a') => app.append_task_start(),
         KeyCode::Char('i') => app.insert_task_start(),
+        KeyCode::Char('p') => app.pause(),
         KeyCode::Char('?') => app.toggle_help(),
         KeyCode::Char('d') => app.toggle_debug(),
         _ => {}
@@ -39,7 +40,6 @@ fn update_typing_view(app: &mut App, key_event: KeyEvent, menu: Menu) {
         _ => {
             app.text_input
                 .input(<crossterm::event::KeyEvent as Into<Input>>::into(key_event));
-        }
-        //_ => {app.text_input.input(key_event.into());},
+        } //_ => {app.text_input.input(key_event.into());},
     }
 }
