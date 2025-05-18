@@ -48,7 +48,7 @@ The deadline is assumed to be for today, unless the time has already past upon s
 - [x] Allow the marking of a task as skipped but not completed, so that its duration contracts without disturbing statistics.
 - [ ] Show a progress bar with relative durations and progress of each task. (Maybe with [tui-widget-list](https://github.com/preiter93/tui-widget-list)?)
 - [x] Generate log files for each routine session with data about the time taken and order of tasks.
-- [ ] Allow pausing (but the main routine timer still has to run: I can't freeze time for you in real life!)
+- [x] Allow pausing (but the main routine timer still has to run: I can't freeze time for you in real life!)
 - [ ] Record mode: record a routine and save it and the observed timings to a routine file.
 - [ ] Maybe someday: allow subtasks.
 
@@ -58,3 +58,4 @@ I am making this mostly for myself. I am prioritizing what I need. But I would l
 - [ ] Add better error messages and prevent panics and weird little edge cases.
 - [ ] Use [AccessKit](https://github.com/AccessKit/accesskit) to make a more accessible interface. (Is that possible?)
 - [ ] Allow user configuration (controls, ui style and compactness, whatever else)
+- [ ] Make a webapp version using a Rust framework (in the same repository; if it's more fun than it is trouble!)
