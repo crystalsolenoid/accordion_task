@@ -142,6 +142,12 @@ impl RoutineLogger {
         }
     }
 
+    pub fn log_comment(&mut self, message: &str, time: DateTime<Local>) {
+        let time = time.format("%T");
+        writeln!(self.file, "{time} \t{message:}").unwrap();
+        // TODO refactor so that this is also a kind of LogElement!!
+    }
+
     pub fn log(&mut self, event: LogElement) {
         if let Some(e) = self.event_buffer.pop() {
             let (a, b) = e.combine(event);

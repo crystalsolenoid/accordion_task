@@ -30,6 +30,7 @@ fn render_text_field(menu: Menu, app: &App, f: &mut Frame, area: Rect) {
     let label = match menu {
         Menu::InsertTask => "Insert New Task",
         Menu::AppendTask => "Append New Task",
+        Menu::Pause => "Paused",
     };
     let mut para = app.text_input.clone();
     para.set_block(standard_block(label));
@@ -53,7 +54,8 @@ J, K : Navigation
 
 I: Insert New Task
 A: Append New Task
-....In new task mode:
+P: Pause (and submit message for log)
+....In input mode:
 ....Enter: Submit
 ....Esc: Discard
 

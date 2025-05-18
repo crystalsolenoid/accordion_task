@@ -33,6 +33,7 @@ The deadline is assumed to be for today, unless the time has already past upon s
 - Press `enter` to check off (or uncheck) the selected task. Checking a task off will move on to the next task.
 - Press `s` to skip (or unskip) the selected task. This will add its budgeted time back to the pool without claiming it was completed.
 - Press `j` and `k` to go up and down. This allows tasks to be completed out of order, if life happens.
+- Press `p` to pause. Optionally, type a message before pressing `enter` to unpause to put it in the routine log.
 - Press `i` to insert a task directly after the current task.
 - Press `a` to append a task to the end of the routine.
 - When creating a new task, press `esc` to cancel or `enter` to submit.
