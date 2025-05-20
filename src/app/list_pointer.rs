@@ -91,6 +91,31 @@ impl ListPointer {
         }
     }
 
+    /// Takes an iterator parallel to the item that somehow defines which items should
+    /// be skipped (false ones).
+    pub fn try_next_selectable(&mut self, selectable: impl Iterator<Item = bool>) -> Result<(), ScrollError> {
+        match self.selected {
+            Some(i) => {
+                let j = selectable
+                    .enumerate()
+                    .skip(i)
+                    .filter_map(|(i, s)| match s {
+                        true => Some(i),
+                        false => None,
+                    })
+                    .next();
+                match j {
+                    Some(_) => {
+                        self.selected = j;
+                        Ok(())
+                    }
+                    None => Err(ScrollError::EndOfList),
+                }
+            }
+            None => Err(ScrollError::EmptyList),
+        }
+    }
+
     /// Announces to the pointer that an item has been added anywhere BEFORE the pointer. This command
     /// preserves which item the pointer points to.
     pub fn prepend_item(&mut self) {

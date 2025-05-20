@@ -111,6 +111,21 @@ impl Routine {
         }
     }
 
+    // Not ideal to clone here but I'm only using it upon user input and routines
+    // shouldn't be that long. Good enough for prototyping. TODO
+    pub fn get_checkboxes(&self) -> Vec<bool> {
+        self.tasks.iter()
+            .map(|t| match t.status {
+                // The purpose of this function is for auto cursor movement
+                // to the next available task. Matching over the enum to
+                // make sure any future status is considered.
+                CompletionStatus::NotYet => true,
+                CompletionStatus::Done => false,
+                CompletionStatus::Skipped => false,
+            })
+            .collect()
+    }
+
     fn sync_goal(&mut self, now: DateTime<Local>) {
         // TODO make this robust to timing glitches
         match self.mode {

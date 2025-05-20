@@ -207,8 +207,7 @@ impl App {
                     .get_nth(i)
                     .expect("this should always exist here");
                 self.logger.log(LogElement::completed(task));
-                let _ = self.task_widget_state.try_next();
-                //self.tasks.active = self.task_widget_state.selected();
+                self.next_available_task();
             }
             Ok(CompletionStatus::NotYet) => {
                 let task = self
@@ -231,8 +230,7 @@ impl App {
                     .get_nth(i)
                     .expect("this should always exist here");
                 self.logger.log(LogElement::skipped(task));
-                let _ = self.task_widget_state.try_next();
-                //self.tasks.active = self.task_widget_state.selected();
+                self.next_available_task();
             }
             Ok(CompletionStatus::NotYet) => {
                 let task = self
@@ -248,14 +246,15 @@ impl App {
 
     pub fn next_task(&mut self) {
         let _ = self.task_widget_state.try_next();
-        //self.tasks.active = self.task_widget_state.selected();
+    }
+
+    fn next_available_task(&mut self) {
+        let selectable = self.tasks.get_checkboxes().into_iter();
+        let _ = self.task_widget_state.try_next_selectable(selectable);
     }
 
     pub fn prev_task(&mut self) {
-        // TODO update version of ratatui
-        //        self.task_widget_state.select_previous();
         let _ = self.task_widget_state.try_prev();
-        //self.tasks.active = self.task_widget_state.selected();
     }
 }
 
