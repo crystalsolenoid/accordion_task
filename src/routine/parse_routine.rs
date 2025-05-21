@@ -1,7 +1,7 @@
 use csv::{StringRecord, Trim};
 use std::{env, error::Error, ffi::OsString, fs::File, str::FromStr};
 
-use super::static_task::Task;
+use super::Task;
 
 fn run() -> Result<Vec<Task>, Box<dyn Error>> {
     let file_path = get_first_arg()?;

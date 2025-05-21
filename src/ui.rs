@@ -6,8 +6,8 @@ use ratatui::{
 };
 use std::time::Duration;
 
-use crate::app::static_task::CompletionStatus;
-use crate::app::{list_pointer::ListPointer, static_task::Task, App, Menu, Mode};
+use crate::app::{list_pointer::ListPointer, App, Menu, Mode};
+use crate::routine::{CompletionStatus, Task};
 
 pub fn render(app: &App, f: &mut Frame) {
     match &app.help_menu {

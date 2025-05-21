@@ -1,13 +1,10 @@
-mod flex;
 pub mod list_pointer;
 mod logging;
-mod parse_routine;
-pub mod static_task;
 
 use crate::cli::Cli;
 use list_pointer::ListPointer;
 use logging::{LogElement, RoutineLogger};
-use static_task::{CompletionStatus, Routine, Task};
+use crate::routine::{task::{CompletionStatus, Task}, Routine, parse_routine};
 
 use chrono::{DateTime, Days, Local, MappedLocalTime};
 use std::time::{Duration, Instant};

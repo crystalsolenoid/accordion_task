@@ -1,35 +1,20 @@
+pub mod parse_routine;
+pub mod task;
+pub mod flex;
+
+pub use task::{CompletionStatus, Task};
+
 use std::cmp::max;
 use std::time::Duration;
 
 use chrono::{DateTime, Local};
 
-use super::flex::{Flex, FlexItem};
-
-#[derive(Debug, Copy, Clone)]
-pub enum CompletionStatus {
-    NotYet,
-    Done,
-    Skipped,
-}
+use flex::{Flex, FlexItem};
 
 #[derive(Debug, Copy, Clone)]
 pub enum ToggleFailure {
     NoSelection,
     NoDoneToSkip,
-}
-
-#[derive(Debug)]
-pub struct Task {
-    /// How much time has already been spent on the task?
-    pub elapsed: Duration,
-    /// What was the original duration specified for the task?
-    pub original_duration: Duration,
-    /// Is the task completed?
-    pub status: CompletionStatus,
-    /// Name
-    pub name: String,
-    /// Current duration that may be shrunk
-    pub duration: Duration,
 }
 
 impl FlexItem for Task {
@@ -47,26 +32,6 @@ impl FlexItem for Task {
 impl Flex for Routine {
     fn get_items(&self) -> &Vec<impl FlexItem> {
         &self.tasks
-    }
-}
-
-impl Task {
-    pub fn new(name: &str, duration: u64) -> Self {
-        Self {
-            name: name.to_owned(),
-            elapsed: Duration::ZERO,
-            original_duration: Duration::new(duration, 0),
-            duration: Duration::new(duration, 0),
-            status: CompletionStatus::NotYet,
-        }
-    }
-
-    pub fn remaining(&self) -> Duration {
-        self.duration.saturating_sub(self.elapsed)
-    }
-
-    pub fn elapse(&mut self, duration: Duration) {
-        self.elapsed += duration;
     }
 }
 
