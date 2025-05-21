@@ -207,7 +207,7 @@ impl App {
                     .get_nth(i)
                     .expect("this should always exist here");
                 self.logger.log(LogElement::completed(task));
-                self.next_available_task();
+                self.bouncing_next_task();
             }
             Ok(CompletionStatus::NotYet) => {
                 let task = self
@@ -230,7 +230,7 @@ impl App {
                     .get_nth(i)
                     .expect("this should always exist here");
                 self.logger.log(LogElement::skipped(task));
-                self.next_available_task();
+                self.bouncing_next_task();
             }
             Ok(CompletionStatus::NotYet) => {
                 let task = self
@@ -246,6 +246,15 @@ impl App {
 
     pub fn next_task(&mut self) {
         let _ = self.task_widget_state.try_next();
+    }
+
+    fn bouncing_next_task(&mut self) {
+        let selectable = self.tasks.get_checkboxes().into_iter();
+        match self.task_widget_state.try_next_selectable(selectable.clone()) {
+            // TODO shouldnt have to clone here
+            Ok(_) => (),
+            Err(_) => { let _ = self.task_widget_state.try_prev_selectable(selectable);}
+        }
     }
 
     pub fn next_available_task(&mut self) {
