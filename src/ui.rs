@@ -51,19 +51,20 @@ fn help_paragraph() -> Paragraph<'static> {
 S : Skip
 
 J, K : Navigation
-J + Shift, K + Shift : Navigation to unfinished
+J + Shift,
+K + Shift : Navigation (skip done)
 
-I: Insert New Task
-A: Append New Task
-P: Pause (and submit message for log)
+I : Insert New Task
+A : Append New Task
+P : Pause (and submit message for log)
 ....In input mode:
-....Enter: Submit
-....Esc: Discard
+....Enter : Submit
+....Esc : Discard
 
 ? : Help Menu
 D : Debug Panel
 
-Q, Esc : Quit Accordion Task
+Q : Quit Accordion Task
 ";
     Paragraph::new(text).wrap(Wrap { trim: true })
 }

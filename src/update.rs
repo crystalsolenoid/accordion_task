@@ -12,7 +12,8 @@ pub fn update(app: &mut App, key_event: KeyEvent) {
 
 fn update_navigation_view(app: &mut App, key_event: KeyEvent) {
     match key_event.code {
-        KeyCode::Esc | KeyCode::Char('q') => app.quit(),
+        //KeyCode::Esc should close menus and always return you to the main screen
+        KeyCode::Char('q') => app.quit(),
         KeyCode::Char('c') | KeyCode::Char('C') => {
             if key_event.modifiers == KeyModifiers::CONTROL {
                 app.quit()
