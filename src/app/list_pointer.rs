@@ -98,7 +98,33 @@ impl ListPointer {
             Some(i) => {
                 let j = selectable
                     .enumerate()
-                    .skip(i)
+                    .skip(i + 1)
+                    .filter_map(|(i, s)| match s {
+                        true => Some(i),
+                        false => None,
+                    })
+                    .next();
+                match j {
+                    Some(_) => {
+                        self.selected = j;
+                        Ok(())
+                    }
+                    None => Err(ScrollError::EndOfList),
+                }
+            }
+            None => Err(ScrollError::EmptyList),
+        }
+    }
+
+    /// Takes an iterator parallel to the item that somehow defines which items should
+    /// be skipped (false ones).
+    pub fn try_prev_selectable(&mut self, selectable: impl Iterator<Item = bool> + std::iter::DoubleEndedIterator + std::iter::ExactSizeIterator) -> Result<(), ScrollError> {
+        match self.selected {
+            Some(i) => {
+                let j = selectable
+                    .enumerate()
+                    .take(i)
+                    .rev()
                     .filter_map(|(i, s)| match s {
                         true => Some(i),
                         false => None,

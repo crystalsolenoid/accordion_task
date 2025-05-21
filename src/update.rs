@@ -19,7 +19,9 @@ fn update_navigation_view(app: &mut App, key_event: KeyEvent) {
             }
         }
         KeyCode::Right | KeyCode::Char('j') => app.next_task(),
+        KeyCode::Char('J') => app.next_available_task(),
         KeyCode::Left | KeyCode::Char('k') => app.prev_task(),
+        KeyCode::Char('K') => app.prev_available_task(),
         KeyCode::Enter => app.attempt_toggle(),
         KeyCode::Char('s') => app.attempt_skip(),
         KeyCode::Char('a') => app.append_task_start(),

@@ -51,6 +51,7 @@ fn help_paragraph() -> Paragraph<'static> {
 S : Skip
 
 J, K : Navigation
+J + Shift, K + Shift : Navigation to unfinished
 
 I: Insert New Task
 A: Append New Task

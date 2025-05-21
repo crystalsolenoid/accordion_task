@@ -248,13 +248,18 @@ impl App {
         let _ = self.task_widget_state.try_next();
     }
 
-    fn next_available_task(&mut self) {
+    pub fn next_available_task(&mut self) {
         let selectable = self.tasks.get_checkboxes().into_iter();
         let _ = self.task_widget_state.try_next_selectable(selectable);
     }
 
     pub fn prev_task(&mut self) {
         let _ = self.task_widget_state.try_prev();
+    }
+
+    pub fn prev_available_task(&mut self) {
+        let selectable = self.tasks.get_checkboxes().into_iter();
+        let _ = self.task_widget_state.try_prev_selectable(selectable);
     }
 }
 
