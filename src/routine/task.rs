@@ -1,5 +1,7 @@
 use std::time::Duration;
 
+pub mod parse_new_task;
+
 #[derive(Debug, Copy, Clone)]
 pub enum CompletionStatus {
     NotYet,

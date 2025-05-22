@@ -1,7 +1,10 @@
 use csv::{StringRecord, Trim};
-use std::{env, error::Error, ffi::OsString, fs::File, str::FromStr};
+use std::{env, error::Error, ffi::OsString, fs::File};
 
 use super::Task;
+
+// TODO what's a better way to specify this path?
+use crate::routine::task::parse_new_task::parse_duration;
 
 fn run() -> Result<Vec<Task>, Box<dyn Error>> {
     let file_path = get_first_arg()?;
@@ -36,33 +39,7 @@ pub fn read_csv() -> Result<Vec<Task>, Box<dyn Error>> {
 pub fn parse_task(record: StringRecord) -> Task {
     Task::new(
         record.get(0).expect("Missing CSV field."),
-        parse_duration(record.get(1).expect("Missing CSV field.")),
+        parse_duration(record.get(1).expect("Missing CSV field."))
+            .expect("Failure parsing duration. Format: _h_m_s"),
     )
-}
-
-/// Returns the number of seconds.
-fn parse_duration(raw: &str) -> u64 {
-    let mut number_accum = String::new();
-    let mut hours = 0;
-    let mut minutes = 0;
-    let mut seconds = 0;
-    for g in raw.chars() {
-        match g {
-            'h' => {
-                hours = u64::from_str(&number_accum).unwrap();
-                number_accum = String::new();
-            }
-            'm' => {
-                minutes = u64::from_str(&number_accum).unwrap();
-                number_accum = String::new();
-            }
-            's' => {
-                seconds = u64::from_str(&number_accum).unwrap();
-                number_accum = String::new();
-            }
-            ' ' => (),
-            _ => number_accum.push(g),
-        }
-    }
-    hours * 60 * 60 + minutes * 60 + seconds
 }
