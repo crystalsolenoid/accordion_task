@@ -228,12 +228,11 @@ mod tests {
         list.push(Task::new("a", 120));
         list.push(Task::new("b", 80));
         list.push(Task::new("c", 60));
-        list.active = Some(0);
 
-        list.elapse(Duration::new(10, 0));
-        list.toggle_current();
-        list.elapse(Duration::new(100, 0));
-        list.toggle_current();
+        list.elapse(Some(0), Duration::new(10, 0));
+        list.toggle(Some(0)).unwrap();
+        list.elapse(Some(1), Duration::new(100, 0));
+        list.toggle(Some(1)).unwrap();
 
         assert_eq!(list.tasks[2].duration, Duration::new(60, 0));
     }
@@ -246,11 +245,10 @@ mod tests {
         list.push(Task::new("a", 120));
         list.push(Task::new("b", 80));
         list.push(Task::new("c", 60));
-        list.active = Some(0);
 
-        list.elapse(Duration::new(140, 0));
-        list.toggle_current();
-        list.toggle_current();
+        list.elapse(Some(0), Duration::new(140, 0));
+        list.toggle(Some(0)).unwrap();
+        list.toggle(Some(1)).unwrap();
 
         assert_eq!(list.tasks[2].duration, Duration::new(60, 0));
     }
@@ -262,12 +260,12 @@ mod tests {
         list.push(Task::new("b", 80));
         list.push(Task::new("c", 10));
         list.push(Task::new("d", 60));
-        list.active = Some(0);
+        let active = Some(0);
 
         let old_duration = list.duration();
 
-        list.elapse(Duration::new(121, 0));
-        list.elapse(Duration::new(10, 0));
+        list.elapse(active, Duration::new(121, 0));
+        list.elapse(active, Duration::new(10, 0));
 
         assert_eq!(list.duration(), old_duration);
     }
@@ -277,12 +275,12 @@ mod tests {
         let mut list = Routine::default();
         list.push(Task::new("a", 120));
         list.push(Task::new("b", 60));
-        list.active = Some(0);
+        let active = Some(0);
 
         let old_duration = list.duration();
 
-        list.elapse(Duration::new(121, 0));
-        list.elapse(Duration::new(10, 0));
+        list.elapse(active, Duration::new(121, 0));
+        list.elapse(active, Duration::new(10, 0));
 
         assert_eq!(list.duration(), old_duration);
     }
@@ -292,9 +290,9 @@ mod tests {
         let mut list = Routine::default();
         list.push(Task::new("a", 120));
         list.push(Task::new("b", 60));
-        list.active = Some(0);
+        let active = Some(0);
 
-        list.elapse(Duration::new(121, 0));
+        list.elapse(active, Duration::new(121, 0));
 
         assert_eq!(list.tasks[0].duration, list.tasks[0].elapsed);
     }
@@ -304,11 +302,11 @@ mod tests {
         let mut list = Routine::default();
         list.push(Task::new("a", 120));
         list.push(Task::new("b", 60));
-        list.active = Some(0);
+        let active = Some(0);
 
         let old_duration = list.duration();
 
-        list.elapse(Duration::new(121, 0));
+        list.elapse(active, Duration::new(121, 0));
 
         assert_eq!(list.duration(), old_duration);
     }
@@ -318,9 +316,9 @@ mod tests {
         let mut list = Routine::default();
         list.push(Task::new("a", 120));
         list.push(Task::new("b", 60));
-        list.active = Some(0);
+        let active = Some(0);
 
-        list.elapse(Duration::new(121, 0));
+        list.elapse(active, Duration::new(121, 0));
 
         assert_eq!(list.tasks[1].duration, Duration::new(59, 0));
     }
@@ -330,9 +328,9 @@ mod tests {
         let mut list = Routine::default();
         list.push(Task::new("a", 120));
         list.push(Task::new("b", 60));
-        list.active = Some(0);
+        let active = Some(0);
 
-        list.elapse(Duration::new(121, 0));
+        list.elapse(active, Duration::new(121, 0));
 
         assert_eq!(list.tasks[0].remaining(), Duration::ZERO);
     }
@@ -342,9 +340,9 @@ mod tests {
         let mut list = Routine::default();
         list.push(Task::new("a", 120));
         list.push(Task::new("b", 60));
-        list.active = Some(0);
+        let active = Some(0);
 
-        list.elapse(Duration::new(1, 0));
+        list.elapse(active, Duration::new(1, 0));
 
         assert_eq!(list.tasks[0].elapsed, Duration::new(1, 0));
     }

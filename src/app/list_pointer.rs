@@ -180,6 +180,6 @@ mod tests {
 
     #[test]
     fn hello() {
-        panic!();
+        panic!("dont forget to test this module");
     }
 }
