@@ -9,8 +9,39 @@
 // time, or should they compress as necessary for the current time budget?
 use std::str::FromStr;
 use std::num::ParseIntError;
+use std::time::Duration;
+
+use crate::routine::Task;
 
 // TODO consider refactoring to use Winnow? Keep an eye out for if/when it isn't overkill
+
+pub fn parse_new_task(raw: &str) -> Result<Task, ()> {
+    // TODO figure out error type. I want it to fail silently most of the time if
+    // duration parsing fails, but if the task is nameless and durationless, assume it
+    // was a mistake and don't create the new empty task.
+    // - find the final delimiter (whitespace) not counting trailing whitespace
+    // - split on that character
+    // - attempt to parse the latter chunk as a duration
+    // -- if it works, set the name as the former chunk and the duration as the
+    // parsing result
+    // -- if it fails, assume the full unsplit chunk is the name and set the duration to
+    // the default.
+    // - create and return the task
+    let default_duration = 120; // seconds
+    let (name, duration) = match raw.rsplit_once(' ') {
+        None => (raw, default_duration),
+        Some((name, possible_duration)) => {
+            let name = name.to_owned();
+            match parse_duration(possible_duration) {
+                Ok(secs) => (name, secs),
+                Err(_) => (name + " " + possible_duration, default_duration),
+            }
+            // TODO remove unwrap
+            //todo!("{}", duration.as_secs());
+        }
+    };
+    Ok(Task::new(name, duration))
+}
 
 /// Returns the number of seconds.
 pub fn parse_duration(raw: &str) -> Result<u64, ParseIntError> {
@@ -38,4 +69,47 @@ pub fn parse_duration(raw: &str) -> Result<u64, ParseIntError> {
         }
     }
     Ok(hours * 60 * 60 + minutes * 60 + seconds)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_task_with_duration() {
+        let input = "wash clothes 5m30s";
+
+        let task = parse_new_task(input).unwrap();
+
+        assert_eq!(task.name, "wash clothes");
+        assert_eq!(task.original_duration, Duration::from_secs(5*60 + 30));
+    }
+
+    #[test]
+    fn no_duration() {
+        let input = "shower";
+
+        let task = parse_new_task(input).unwrap();
+
+        assert_eq!(task.name, "shower");
+    }
+
+    #[test]
+    fn default_time() {
+        let input = "shower";
+
+        let task = parse_new_task(input).unwrap();
+
+        assert_eq!(task.original_duration, Duration::from_secs(todo!()));
+        // TODO: how will i decide a default?
+    }
+
+    #[test]
+    fn no_duration_with_space() {
+        let input = "wash clothes";
+
+        let task = parse_new_task(input).unwrap();
+
+        assert_eq!(task.name, "wash clothes");
+    }
 }
