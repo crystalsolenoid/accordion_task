@@ -93,7 +93,10 @@ impl ListPointer {
 
     /// Takes an iterator parallel to the item that somehow defines which items should
     /// be skipped (false ones).
-    pub fn try_next_selectable(&mut self, selectable: impl Iterator<Item = bool>) -> Result<(), ScrollError> {
+    pub fn try_next_selectable(
+        &mut self,
+        selectable: impl Iterator<Item = bool>,
+    ) -> Result<(), ScrollError> {
         match self.selected {
             Some(i) => {
                 let j = selectable
@@ -118,7 +121,12 @@ impl ListPointer {
 
     /// Takes an iterator parallel to the item that somehow defines which items should
     /// be skipped (false ones).
-    pub fn try_prev_selectable(&mut self, selectable: impl Iterator<Item = bool> + std::iter::DoubleEndedIterator + std::iter::ExactSizeIterator) -> Result<(), ScrollError> {
+    pub fn try_prev_selectable(
+        &mut self,
+        selectable: impl Iterator<Item = bool>
+            + std::iter::DoubleEndedIterator
+            + std::iter::ExactSizeIterator,
+    ) -> Result<(), ScrollError> {
         match self.selected {
             Some(i) => {
                 let j = selectable

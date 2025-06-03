@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 pub mod parse_new_task;
+pub use parse_new_task::parse_new_task;
 
 #[derive(Debug, Copy, Clone)]
 pub enum CompletionStatus {

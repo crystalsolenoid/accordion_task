@@ -60,6 +60,7 @@ P : Pause (and submit message for log)
 ....In input mode:
 ....Enter : Submit
 ....Esc : Discard
+....Syntax is TASK NAME [__m__s]
 
 ? : Help Menu
 D : Debug Panel

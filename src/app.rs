@@ -2,9 +2,13 @@ pub mod list_pointer;
 mod logging;
 
 use crate::cli::Cli;
+use crate::routine::{
+    parse_routine,
+    task::{parse_new_task, CompletionStatus, Task},
+    Routine,
+};
 use list_pointer::ListPointer;
 use logging::{LogElement, RoutineLogger};
-use crate::routine::{task::{CompletionStatus, Task}, Routine, parse_routine};
 
 use chrono::{DateTime, Days, Local, MappedLocalTime};
 use std::time::{Duration, Instant};
@@ -150,14 +154,15 @@ impl App {
 
     fn append_task_submit(&mut self) {
         let name = self.text_input.lines()[0].to_owned();
-        let task = Task::new(&name, 120);
+        let task = parse_new_task(&name);
         self.task_widget_state.append_item();
         self.tasks.push(task);
     }
 
     fn insert_task_submit(&mut self) {
         let name = self.text_input.lines()[0].to_owned();
-        let task = Task::new(&name, 120);
+        // TODO fix ownership of name
+        let task = parse_new_task(&name);
         self.task_widget_state.append_item();
         let i = self.task_widget_state.selected().unwrap_or(0) + 1;
         self.tasks.insert(i, task);
@@ -247,10 +252,15 @@ impl App {
 
     fn bouncing_next_task(&mut self) {
         let selectable = self.tasks.get_checkboxes().into_iter();
-        match self.task_widget_state.try_next_selectable(selectable.clone()) {
+        match self
+            .task_widget_state
+            .try_next_selectable(selectable.clone())
+        {
             // TODO shouldnt have to clone here
             Ok(_) => (),
-            Err(_) => { let _ = self.task_widget_state.try_prev_selectable(selectable);}
+            Err(_) => {
+                let _ = self.task_widget_state.try_prev_selectable(selectable);
+            }
         }
     }
 

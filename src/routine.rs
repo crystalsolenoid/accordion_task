@@ -1,6 +1,6 @@
+pub mod flex;
 pub mod parse_routine;
 pub mod task;
-pub mod flex;
 
 pub use task::{CompletionStatus, Task};
 
@@ -79,7 +79,8 @@ impl Routine {
     // Not ideal to clone here but I'm only using it upon user input and routines
     // shouldn't be that long. Good enough for prototyping. TODO
     pub fn get_checkboxes(&self) -> Vec<bool> {
-        self.tasks.iter()
+        self.tasks
+            .iter()
             .map(|t| match t.status {
                 // The purpose of this function is for auto cursor movement
                 // to the next available task. Matching over the enum to

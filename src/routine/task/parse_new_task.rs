@@ -7,15 +7,16 @@
 //
 // ambiguity: should tasks created with a specified time have that as their original
 // time, or should they compress as necessary for the current time budget?
-use std::str::FromStr;
 use std::num::ParseIntError;
-use std::time::Duration;
+use std::str::FromStr;
 
 use crate::routine::Task;
 
+const DEFAULT_DURATION_SECS: u64 = 5 * 60;
+
 // TODO consider refactoring to use Winnow? Keep an eye out for if/when it isn't overkill
 
-pub fn parse_new_task(raw: &str) -> Result<Task, ()> {
+pub fn parse_new_task(raw: &str) -> Task {
     // TODO figure out error type. I want it to fail silently most of the time if
     // duration parsing fails, but if the task is nameless and durationless, assume it
     // was a mistake and don't create the new empty task.
@@ -27,9 +28,9 @@ pub fn parse_new_task(raw: &str) -> Result<Task, ()> {
     // -- if it fails, assume the full unsplit chunk is the name and set the duration to
     // the default.
     // - create and return the task
-    let default_duration = 120; // seconds
+    let default_duration = DEFAULT_DURATION_SECS;
     let (name, duration) = match raw.rsplit_once(' ') {
-        None => (raw, default_duration),
+        None => (raw.to_owned(), default_duration),
         Some((name, possible_duration)) => {
             let name = name.to_owned();
             match parse_duration(possible_duration) {
@@ -40,7 +41,7 @@ pub fn parse_new_task(raw: &str) -> Result<Task, ()> {
             //todo!("{}", duration.as_secs());
         }
     };
-    Ok(Task::new(name, duration))
+    Task::new(&name, duration)
 }
 
 /// Returns the number of seconds.
@@ -75,6 +76,8 @@ pub fn parse_duration(raw: &str) -> Result<u64, ParseIntError> {
 mod tests {
     use super::*;
 
+    use std::time::Duration;
+
     #[test]
     fn parse_task_with_duration() {
         let input = "wash clothes 5m30s";
@@ -82,7 +85,7 @@ mod tests {
         let task = parse_new_task(input).unwrap();
 
         assert_eq!(task.name, "wash clothes");
-        assert_eq!(task.original_duration, Duration::from_secs(5*60 + 30));
+        assert_eq!(task.original_duration, Duration::from_secs(5 * 60 + 30));
     }
 
     #[test]
@@ -100,7 +103,7 @@ mod tests {
 
         let task = parse_new_task(input).unwrap();
 
-        assert_eq!(task.original_duration, Duration::from_secs(todo!()));
+        assert_eq!(task.original_duration, Duration::from_secs(5 * 60));
         // TODO: how will i decide a default?
     }
 
