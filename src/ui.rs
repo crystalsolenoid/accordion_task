@@ -14,13 +14,14 @@ pub fn render(app: &App, f: &mut Frame) {
         true => render_help_menu(f),
         false => {
             let layout = generate_layout(app, f);
+            render_timer(app, f, layout[0]);
             match &app.menu_focus {
-                Mode::Navigation => render_timer(app, f, layout[0]),
-                Mode::Typing(menu) => render_text_field(*menu, app, f, layout[0]),
+                Mode::Navigation => render_task(app, f, layout[1]),
+                Mode::Typing(menu) => render_text_field(*menu, app, f, layout[1]),
             }
-            render_table(app, f, layout[1]);
+            render_table(app, f, layout[2]);
             if app.debug {
-                render_debug(app, f, layout[2]);
+                render_debug(app, f, layout[3]);
             }
         }
     }
@@ -70,9 +71,10 @@ Q : Quit Accordion Task
     Paragraph::new(text).wrap(Wrap { trim: true })
 }
 
-fn generate_layout(app: &App, f: &Frame) -> [Rect; 3] {
+fn generate_layout(app: &App, f: &Frame) -> [Rect; 4] {
     let width = f.area().width;
     let header_height = 5;
+    let current_task_height = 5;
     let footer_height = match app.debug {
         true => 15,
         false => 0,
@@ -80,11 +82,20 @@ fn generate_layout(app: &App, f: &Frame) -> [Rect; 3] {
     let split1 = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
+            Constraint::Length(current_task_height + header_height),
+            Constraint::Min(current_task_height + header_height),
+        ])
+        .split(f.area());
+    let headers = split1[0];
+    let split3 = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
             Constraint::Length(header_height),
             Constraint::Min(header_height),
         ])
-        .split(f.area());
-    let header = split1[0];
+        .split(headers);
+    let header = split3[0];
+    let current = split3[1];
     let split2 = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -94,7 +105,7 @@ fn generate_layout(app: &App, f: &Frame) -> [Rect; 3] {
         .split(split1[1]);
     let body = split2[0];
     let footer = split2[1];
-    [header, body, footer]
+    [header, current, body, footer]
 }
 
 fn render_debug(app: &App, f: &mut Frame, area: Rect) {
@@ -111,6 +122,19 @@ fn render_debug(app: &App, f: &mut Frame, area: Rect) {
         .style(Style::new().fg(Color::Yellow))
         .block(block);
     f.render_widget(para, area);
+}
+
+fn render_task(app: &App, f: &mut Frame, area: Rect) {
+    let block = standard_block("Active Task");
+    let inner = block.inner(area);
+
+    let message = match app.get_current_task_name() {
+        Some(name) => name,
+        None => "No active task.",
+    };
+    let message = Paragraph::new(message).block(Block::new().padding(Padding::horizontal(1)));
+    f.render_widget(message, inner);
+    f.render_widget(block, area);
 }
 
 fn render_timer(app: &App, f: &mut Frame, area: Rect) {

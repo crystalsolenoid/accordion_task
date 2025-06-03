@@ -132,9 +132,16 @@ impl Routine {
         }
     }
     */
-    pub fn get_nth(&mut self, active: Option<usize>) -> Option<&mut Task> {
+    fn get_nth_mut(&mut self, active: Option<usize>) -> Option<&mut Task> {
         match active {
             Some(i) => self.tasks.get_mut(i),
+            None => None,
+        }
+    }
+
+    pub fn get_nth(&self, active: Option<usize>) -> Option<&Task> {
+        match active {
+            Some(i) => self.tasks.get(i),
             None => None,
         }
     }
@@ -152,7 +159,7 @@ impl Routine {
     }
 
     pub fn toggle(&mut self, i: Option<usize>) -> Result<CompletionStatus, ToggleFailure> {
-        if let Some(i) = self.get_nth(i) {
+        if let Some(i) = self.get_nth_mut(i) {
             match i.status {
                 CompletionStatus::Done => {
                     i.status = CompletionStatus::NotYet;
@@ -174,7 +181,7 @@ impl Routine {
     }
 
     pub fn skip(&mut self, i: Option<usize>) -> Result<CompletionStatus, ToggleFailure> {
-        if let Some(i) = self.get_nth(i) {
+        if let Some(i) = self.get_nth_mut(i) {
             match i.status {
                 CompletionStatus::Skipped => {
                     i.status = CompletionStatus::NotYet;
