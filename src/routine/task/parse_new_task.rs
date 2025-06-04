@@ -82,7 +82,7 @@ mod tests {
     fn parse_task_with_duration() {
         let input = "wash clothes 5m30s";
 
-        let task = parse_new_task(input).unwrap();
+        let task = parse_new_task(input);
 
         assert_eq!(task.name, "wash clothes");
         assert_eq!(task.original_duration, Duration::from_secs(5 * 60 + 30));
@@ -92,7 +92,7 @@ mod tests {
     fn no_duration() {
         let input = "shower";
 
-        let task = parse_new_task(input).unwrap();
+        let task = parse_new_task(input);
 
         assert_eq!(task.name, "shower");
     }
@@ -101,7 +101,7 @@ mod tests {
     fn default_time() {
         let input = "shower";
 
-        let task = parse_new_task(input).unwrap();
+        let task = parse_new_task(input);
 
         assert_eq!(task.original_duration, Duration::from_secs(5 * 60));
         // TODO: how will i decide a default?
@@ -111,7 +111,7 @@ mod tests {
     fn no_duration_with_space() {
         let input = "wash clothes";
 
-        let task = parse_new_task(input).unwrap();
+        let task = parse_new_task(input);
 
         assert_eq!(task.name, "wash clothes");
     }
