@@ -128,10 +128,7 @@ fn render_task(app: &App, f: &mut Frame, area: Rect) {
     let block = standard_block("Active Task");
     let inner = block.inner(area);
 
-    let message = match app.get_current_task_name() {
-        Some(name) => name,
-        None => "No active task.",
-    };
+    let message = app.get_current_task_name().unwrap_or("No active task.");
     let message = Paragraph::new(message).block(Block::new().padding(Padding::horizontal(1)));
     f.render_widget(message, inner);
     f.render_widget(block, area);

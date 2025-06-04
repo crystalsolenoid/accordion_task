@@ -93,8 +93,7 @@ impl App {
 
     pub fn get_current_task_name(&self) -> Option<&str> {
         let i = self.task_widget_state.selected();
-        self.tasks.get_nth(i)
-            .map(|t| t.name.as_str())
+        self.tasks.get_nth(i).map(|t| t.name.as_str())
     }
 
     pub fn get_total_remaining(&self) -> Duration {
