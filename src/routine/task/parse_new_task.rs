@@ -51,25 +51,34 @@ pub fn parse_duration(raw: &str) -> Result<u64, ParseIntError> {
     let mut hours = 0;
     let mut minutes = 0;
     let mut seconds = 0;
+    let mut seen_hms = false;
     for g in raw.chars() {
         match g {
             'h' => {
                 hours = u64::from_str(&number_accum)?;
                 number_accum = String::new();
+                seen_hms = true;
             }
             'm' => {
                 minutes = u64::from_str(&number_accum)?;
                 number_accum = String::new();
+                seen_hms = true;
             }
             's' => {
                 seconds = u64::from_str(&number_accum)?;
                 number_accum = String::new();
+                seen_hms = true;
             }
             ' ' => (),
             _ => number_accum.push(g),
         }
     }
-    Ok(hours * 60 * 60 + minutes * 60 + seconds)
+    match seen_hms {
+        true => Ok(hours * 60 * 60 + minutes * 60 + seconds),
+        // TODO this is an ugly, ugly hack because I don't want to come up with
+        // a new result type right now.
+        false => Ok(u64::from_str("")?),
+    }
 }
 
 #[cfg(test)]
@@ -114,5 +123,19 @@ mod tests {
         let task = parse_new_task(input);
 
         assert_eq!(task.name, "wash clothes");
+    }
+
+    #[test]
+    fn no_hms_task() {
+        let input = "dishes away";
+
+        let task = parse_new_task(input);
+
+        assert_eq!(task.name, "dishes away");
+    }
+
+    #[test]
+    fn no_hms_duration() {
+        assert!(parse_duration("away").is_err());
     }
 }
