@@ -2,6 +2,7 @@ pub mod list_pointer;
 mod logging;
 
 use crate::cli::Cli;
+use crate::config::{load_config, Config};
 use crate::routine::{
     parse_routine,
     task::{parse_new_task, CompletionStatus, Task},
@@ -15,8 +16,8 @@ use std::time::{Duration, Instant};
 use tui_textarea::TextArea;
 
 /// Application.
-#[derive(Debug)]
 pub struct App {
+    pub config: Config,
     /// should the application exit?
     pub should_quit: bool,
     pub debug: bool,
@@ -38,12 +39,15 @@ pub struct App {
 impl App {
     /// Constructs a new instance of [`App`].
     pub fn new(cli: Cli) -> App {
-        let routine_name = cli.routine_path;
+        let routine_name = cli
+            .routine_path
+            .expect("Routine launcher not yet implemented. Please specify a routine path.");
         let tasks =
             Routine::with_tasks(parse_routine::read_csv().expect("Failed to load routine file"));
         let length = tasks.tasks.len();
         let logger = RoutineLogger::new(&tasks, &Local::now(), routine_name);
         let mut app = Self {
+            config: load_config(),
             text_input: TextArea::default(),
             menu_focus: Mode::Navigation,
             start_time: Local::now(),

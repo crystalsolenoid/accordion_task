@@ -110,11 +110,12 @@ fn generate_layout(app: &App, f: &Frame) -> [Rect; 4] {
 
 fn render_debug(app: &App, f: &mut Frame, area: Rect) {
     let block = standard_block("Debug");
+    let formatter = app.config.clock_format.get_strftime();
     let text = vec![
-        format!("start time \t{}", app.get_start_time().format("%l:%M%P")).into(),
+        format!("start time \t{}", app.get_start_time().format(formatter)).into(),
         format!(
             "projected end time \t{}",
-            app.get_projected_end_time().format("%l:%M%P")
+            app.get_projected_end_time().format(formatter)
         )
         .into(),
     ];
@@ -151,11 +152,12 @@ fn render_timer(app: &App, f: &mut Frame, area: Rect) {
         .ratio(app.get_percentage_elapsed());
     f.render_widget(guage, b);
 
-    let start_time = format!("{}", app.get_start_time().format("%l:%M"));
+    let formatter = app.config.clock_format.get_strftime();
+    let start_time = format!("{}", app.get_start_time().format(formatter));
     let start_time = Paragraph::new(start_time).block(Block::new().padding(Padding::horizontal(1)));
     f.render_widget(start_time, a);
 
-    let end_time = format!("{}", app.get_projected_end_time().format("%l:%M"));
+    let end_time = format!("{}", app.get_projected_end_time().format(formatter));
     let end_time = Paragraph::new(end_time).block(Block::new().padding(Padding::horizontal(1)));
     f.render_widget(end_time, c);
 

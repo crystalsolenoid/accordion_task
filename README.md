@@ -41,6 +41,12 @@ The deadline is assumed to be for today, unless the time has already past upon s
 - Press `d` to toggle the debug panel.
 - Press `q` to quit.
 
+## Config File
+
+It is possible to create a config file to customize some behavior. It uses the [TOML format](https://toml.io/).
+
+The config file will slowly grow as development progresses and as users weigh in. I haven't decided yet how to handle documenting the options. For now, please refer to the docstrings in `src/config.rs`.
+
 ## Planned Features
 
 - [x] Shrink the duration of each remaining task when behind schedule.

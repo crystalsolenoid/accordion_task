@@ -19,6 +19,9 @@ pub mod update;
 /// Command line interface parser.
 pub mod cli;
 
+/// Config file
+pub mod config;
+
 use app::App;
 use clap::Parser;
 use cli::Cli;
@@ -32,6 +35,10 @@ fn main() -> Result<()> {
     cli_log::init_cli_log!();
 
     let cli = Cli::parse();
+
+    if cli.run_instead_of_tui() {
+        return Ok(());
+    }
 
     // Create an application.
     let mut app = App::new(cli);
