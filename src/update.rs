@@ -36,7 +36,7 @@ fn update_navigation_view(app: &mut App, key_event: KeyEvent) {
 
 fn update_typing_view(app: &mut App, key_event: KeyEvent, menu: Menu) {
     match key_event.code {
-        KeyCode::Esc => app.cancel_typing(),
+        KeyCode::Esc => app.cancel_typing(menu),
         // submit
         KeyCode::Enter => app.submit_typing(menu),
         // TODO there are other ways to make a newline which I need to disable.

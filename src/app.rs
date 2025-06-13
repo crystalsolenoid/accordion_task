@@ -183,9 +183,13 @@ impl App {
         self.task_widget_state.unpause();
     }
 
-    pub fn cancel_typing(&mut self) {
+    pub fn cancel_typing(&mut self, menu: Menu) {
         self.text_input = TextArea::default();
         self.menu_focus = Mode::Navigation;
+        if menu == Menu::Pause {
+            // TODO duplicates work. refactor?
+            self.task_widget_state.unpause();
+        }
     }
 
     pub fn submit_typing(&mut self, menu: Menu) {
@@ -194,7 +198,7 @@ impl App {
             Menu::InsertTask => self.insert_task_submit(),
             Menu::Pause => self.unpause(),
         }
-        self.cancel_typing();
+        self.cancel_typing(menu);
     }
 
     pub fn toggle_debug(&mut self) {
@@ -290,7 +294,7 @@ pub enum Mode {
     Typing(Menu),
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(PartialEq, Debug, Copy, Clone)]
 pub enum Menu {
     AppendTask,
     InsertTask,
