@@ -39,7 +39,7 @@ The deadline is assumed to be for today, unless the time has already past upon s
 - Press `a` to append a task to the end of the routine.
 - When creating a new task by either insert or append, press `esc` to cancel or `enter` to submit. After the name of the task and a space, a time may be specified like `12m30s`.
 - Press `d` to toggle the debug panel.
-- Press `q` to quit.
+- Press `ctrl + c` to quit.
 
 ## Config File
 

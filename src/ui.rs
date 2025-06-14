@@ -66,7 +66,7 @@ P : Pause (and submit message for log)
 ? : Help Menu
 D : Debug Panel
 
-Q : Quit Accordion Task
+Ctrl + C : Quit Accordion Task
 ";
     Paragraph::new(text).wrap(Wrap { trim: true })
 }
