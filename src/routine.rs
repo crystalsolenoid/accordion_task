@@ -112,16 +112,25 @@ impl Routine {
         self.sync_goal(Local::now());
     }
 
+    fn increase_time_for_new_task(&mut self, task: &Task) {
+        match self.mode {
+            TimeMode::ExpectedEnd => self.flex_goal += task.original_duration,
+            // want to take people's deadlines seriously and not accidentally
+            // extend them
+            TimeMode::FixedEnd(deadline) => (),
+        }
+    }
+
     pub fn push(&mut self, task: Task) {
-        // TODO flex goal only shouls change with an iption set
-        self.flex_goal += task.original_duration;
+        self.increase_time_for_new_task(&task);
         self.tasks.push(task);
+        self.update_flex();
     }
 
     pub fn insert(&mut self, i: usize, task: Task) {
-        // TODO flex goal only shouls change with an iption set
-        self.flex_goal += task.original_duration;
+        self.increase_time_for_new_task(&task);
         self.tasks.insert(i, task);
+        self.update_flex();
     }
 
     /*
