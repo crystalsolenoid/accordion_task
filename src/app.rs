@@ -138,10 +138,9 @@ impl App {
         // number of tasks completed, which would make the effort of task
         // switching more recognized. The value of leaving it this way even then is honing
         // your time understanding skills.
-        self.tasks.completed_originals()
-            .div_duration_f64(
-                self.tasks.total_originals()
-            )
+        self.tasks
+            .completed_originals()
+            .div_duration_f64(self.tasks.total_originals())
     }
 
     /// Set should_quit to true to quit the application.
