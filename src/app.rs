@@ -134,12 +134,14 @@ impl App {
     }
 
     pub fn get_percentage_elapsed(&self) -> f64 {
-        //0.5 // TODO
-        1.0 - self
-            .tasks
-            .elapsed()
-            .div_duration_f64(self.tasks.elapsed() + self.tasks.remaining())
-        // self.routine_timer.get_percentage()
+        // TODO should the percentage bar be configurable? Another option could be
+        // number of tasks completed, which would make the effort of task
+        // switching more recognized. The value of leaving it this way even then is honing
+        // your time understanding skills.
+        self.tasks.completed_originals()
+            .div_duration_f64(
+                self.tasks.total_originals()
+            )
     }
 
     /// Set should_quit to true to quit the application.

@@ -208,6 +208,25 @@ impl Routine {
         self.tasks.iter().map(|task| task.elapsed).sum()
     }
 
+    pub fn total_originals(&self) -> Duration {
+        self.tasks.iter().map(|task| task.original_duration).sum()
+    }
+
+    pub fn completed_originals(&self) -> Duration {
+        self.tasks.iter().filter(|task| match task.status {
+            CompletionStatus::NotYet => false,
+            CompletionStatus::Done => true,
+            // counting skipped tasks for percentage "complete" is a design
+            // decision. It may end up being something to make configurable.
+            // The benefit to true is more accurate timing and encouraging
+            // making it through the list. The benefit to
+            // false is gamification to discourage skipping. TODO
+            CompletionStatus::Skipped => true,
+        })
+        .map(|task| task.original_duration)
+        .sum()
+    }
+
     pub fn remaining(&self) -> Duration {
         self.tasks.iter().map(|task| task.remaining()).sum()
     }
