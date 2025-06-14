@@ -31,8 +31,11 @@
 // routine for real
 
 use chrono::{DateTime, Local};
-use std::fs::File;
+use color_eyre::eyre::{OptionExt, Result};
+use directories::ProjectDirs;
+use std::fs::{create_dir_all, File};
 use std::io::{BufWriter, Write};
+use std::path::PathBuf;
 use std::time::Duration;
 
 use crate::app::{Routine, Task};
@@ -130,10 +133,13 @@ impl RoutineLogger {
     pub fn new(
         _routine: &Routine,
         start_time: &DateTime<Local>,
-        routine_name: String,
+        routine_path: String,
     ) -> RoutineLogger {
-        let filename = format!("{}-{}", routine_name, start_time.format("%FT%T"));
-        let file = File::create(filename).expect("failed to create file");
+        let path = get_log_location(&routine_path, start_time).expect("failed to find or access the program data directory, or your routine task isnt valid utf8");
+        // creating the file will fail if the directory doesn't exist yet
+        create_dir_all(path.parent().expect("should always work"))
+            .expect("failed to create data directory");
+        let file = File::create(path).expect("failed to create file");
         let file = BufWriter::new(file);
 
         RoutineLogger {
@@ -171,4 +177,28 @@ impl RoutineLogger {
             self.write(e);
         }
     }
+}
+
+// TODO add a command to print out the log location
+//
+pub fn get_log_location(routine_path: &str, time: &DateTime<Local>) -> Result<PathBuf> {
+    // TODO make this configurable: data dir or routine dir
+    let routine_path: PathBuf = routine_path.into();
+    let routine_name = format!(
+        "{}-{}",
+        routine_path.file_name().unwrap().to_str().unwrap(),
+        time.format("%FT%T")
+    );
+    let routine_name: PathBuf = routine_name.into();
+    // TODO i also make a ProjectDirs when loading the config file. Should probably
+    // only call it once because I think it increases startup time noticably.
+    ProjectDirs::from("", "", "Accordion Task")
+        .map(|dirs| {
+            let mut path = dirs.data_local_dir().to_owned();
+            path.push("logs");
+            //let filename = format!("{}-{}", routine_name, time.format("%FT%T"));
+            path.push(routine_name);
+            path
+        })
+        .ok_or_eyre("Could not find a data path for routine logs. Is home directory accessible?")
 }

@@ -47,6 +47,10 @@ It is possible to create a config file to customize some behavior. It uses the [
 
 The config file will slowly grow as development progresses and as users weigh in. I haven't decided yet how to handle documenting the options. For now, please refer to the docstrings in `src/config.rs`.
 
+## Logging
+
+Tasks completed, their order, and their durations, are logged in files for each session. The logs are stored in the project's [local data directory according to your OS](https://docs.rs/directories/latest/directories/struct.ProjectDirs.html#method.data_local_dir).
+
 ## Planned Features
 
 - [x] Shrink the duration of each remaining task when behind schedule.
