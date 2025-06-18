@@ -191,11 +191,10 @@ pub fn get_log_location(routine_path: &str, time: &DateTime<Local>) -> Result<Pa
     // only call it once because I think it increases startup time noticably.
     ProjectDirs::from("", "", "Accordion Task")
         .map(|dirs| {
-            let mut path = dirs.data_local_dir().to_owned();
-            path.push("logs");
-            //let filename = format!("{}-{}", routine_name, time.format("%FT%T"));
-            path.push(routine_name);
-            path
+            dirs.data_local_dir()
+                .to_owned()
+                .join("logs")
+                .join(routine_name)
         })
         .ok_or_eyre("Could not find a data path for routine logs. Is home directory accessible?")
 }
