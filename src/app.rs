@@ -2,10 +2,10 @@ pub mod list_pointer;
 mod logging;
 
 use crate::cli::Cli;
-use crate::config::{load_config, Config};
+use crate::config::{self, Config};
 use crate::routine::{
-    parse_routine,
-    task::{parse_new_task, CompletionStatus, Task},
+    self,
+    task::{self, CompletionStatus, Task},
     Routine,
 };
 use list_pointer::ListPointer;
@@ -43,11 +43,11 @@ impl App {
             .routine_path
             .expect("Routine launcher not yet implemented. Please specify a routine path.");
         let tasks =
-            Routine::with_tasks(parse_routine::read_csv().expect("Failed to load routine file"));
+            Routine::with_tasks(routine::parse::read_csv().expect("Failed to load routine file"));
         let length = tasks.tasks.len();
-        let logger = RoutineLogger::new(&tasks, &Local::now(), routine_name);
+        let logger = RoutineLogger::new(&tasks, &Local::now(), &routine_name);
         let mut app = Self {
-            config: load_config(),
+            config: config::load(),
             text_input: TextArea::default(),
             menu_focus: Mode::Navigation,
             start_time: Local::now(),
@@ -64,14 +64,12 @@ impl App {
         let now = Local::now();
         if let Some(deadline) = cli.deadline {
             // TODO handle DST
-            let today_deadline = match now.with_time(deadline) {
-                MappedLocalTime::Single(t) => t,
-                _ => todo!(), // Risks crash around DST change
+            let MappedLocalTime::Single(today_deadline) = now.with_time(deadline) else {
+                todo!("Handle DST");
             };
             let deadline = if today_deadline < now {
-                let tomorrow = match now.checked_add_days(Days::new(1)) {
-                    Some(t) => t,
-                    None => todo!(), // Risks DST crash
+                let Some(tomorrow) = now.checked_add_days(Days::new(1)) else {
+                    todo!("handle DST properly")
                 };
                 match tomorrow.with_time(deadline) {
                     MappedLocalTime::Single(t) => t,
@@ -143,7 +141,7 @@ impl App {
             .div_duration_f64(self.tasks.total_originals())
     }
 
-    /// Set should_quit to true to quit the application.
+    /// Set `should_quit` to `true` to quit the application.
     pub fn quit(&mut self) {
         self.logger.finish();
         self.should_quit = true;
@@ -163,16 +161,16 @@ impl App {
     }
 
     fn append_task_submit(&mut self) {
-        let name = self.text_input.lines()[0].to_owned();
-        let task = parse_new_task(&name);
+        let name = self.text_input.lines()[0].clone();
+        let task = task::parse_new(&name);
         self.task_widget_state.append_item();
         self.tasks.push(task);
     }
 
     fn insert_task_submit(&mut self) {
-        let name = self.text_input.lines()[0].to_owned();
+        let name = self.text_input.lines()[0].clone();
         // TODO fix ownership of name
-        let task = parse_new_task(&name);
+        let task = task::parse_new(&name);
         self.task_widget_state.append_item();
         let i = self.task_widget_state.selected().unwrap_or(0) + 1;
         self.tasks.insert(i, task);
@@ -183,7 +181,7 @@ impl App {
         // duration of the pause,
         // the fact that it was a pause,
         // and the message.
-        let message = self.text_input.lines()[0].to_owned();
+        let message = self.text_input.lines()[0].clone();
         self.logger.log_comment(&message, Local::now());
         self.task_widget_state.unpause();
     }
@@ -271,7 +269,7 @@ impl App {
             .try_next_selectable(selectable.clone())
         {
             // TODO shouldnt have to clone here
-            Ok(_) => (),
+            Ok(()) => (),
             Err(_) => {
                 let _ = self.task_widget_state.try_prev_selectable(selectable);
             }

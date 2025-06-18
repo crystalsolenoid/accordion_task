@@ -1,5 +1,8 @@
 use std::time::Duration;
 
+// Clippy reason: TODO I tried changing it to Item to try it out but something wouldn't
+// compile.
+#[allow(clippy::module_name_repetitions)]
 pub trait FlexItem {
     // original duration, for example
     fn max_size(&self) -> Duration;
@@ -23,10 +26,7 @@ pub trait Flex {
     }
 
     fn max_sizes(&self) -> Vec<Duration> {
-        self.get_items()
-            .iter()
-            .map(|item| item.max_size())
-            .collect()
+        self.get_items().iter().map(FlexItem::max_size).collect()
     }
 
     fn flex(&self, size: Duration) -> Result<Vec<Duration>, Duration> {

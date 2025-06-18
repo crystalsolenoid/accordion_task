@@ -2,7 +2,7 @@ use ratatui::{
     layout::Flex,
     prelude::{Constraint::*, *},
     style::{Color, Modifier, Style},
-    widgets::*,
+    widgets::{Block, Borders, Gauge, Padding, Paragraph, Row, Table, TableState, Wrap},
 };
 use std::time::Duration;
 
@@ -75,10 +75,7 @@ fn generate_layout(app: &App, f: &Frame) -> [Rect; 4] {
     let width = f.area().width;
     let header_height = 5;
     let current_task_height = 5;
-    let footer_height = match app.debug {
-        true => 15,
-        false => 0,
-    };
+    let footer_height = if app.debug { 15 } else { 0 };
     let split1 = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -178,7 +175,7 @@ fn render_table(app: &App, f: &mut Frame, area: Rect) {
         Constraint::Length(15),
         Constraint::Length(15),
     ];
-    let mut state = prepare_table_state(app.task_widget_state, &block.inner(area));
+    let mut state = prepare_table_state(app.task_widget_state, block.inner(area));
     let table = Table::new(rows, widths)
         .column_spacing(1)
         .style(Style::new().fg(Color::Yellow))
@@ -193,7 +190,7 @@ fn render_table(app: &App, f: &mut Frame, area: Rect) {
     f.render_stateful_widget(table, area, &mut state);
 }
 
-fn prepare_table_state(pointer: ListPointer, area: &Rect) -> TableState {
+fn prepare_table_state(pointer: ListPointer, area: Rect) -> TableState {
     let selected = pointer.selected().unwrap_or(0);
     // TODO can header_height be calculated? It comes from
     // the header row plus the bottom_margin of the table
@@ -224,18 +221,18 @@ pub fn format_duration(dur: Duration) -> String {
     let m = s / 60;
     let h = m / 60;
     let h_str = match h {
-        0 => "".to_string(),
-        _ => format!("{}h ", h),
+        0 => String::new(),
+        _ => format!("{h}h "),
     };
     let m_str = match m {
-        0 => "".to_string(),
+        0 => String::new(),
         _ => format!("{}m ", m - 60 * h),
     };
     let s_str = match s {
         0 => "0s".to_string(),
         _ => format!("{}s", s - 60 * m),
     };
-    format!("{}{}{}", h_str, m_str, s_str)
+    format!("{h_str}{m_str}{s_str}")
 }
 
 fn generate_task_row(task: &Task) -> Row {

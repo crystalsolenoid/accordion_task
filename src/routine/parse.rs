@@ -4,7 +4,7 @@ use std::{env, error::Error, ffi::OsString, fs::File};
 use super::Task;
 
 // TODO what's a better way to specify this path?
-use crate::routine::task::parse_new_task::parse_duration;
+use crate::routine::task::parse_new::parse_duration;
 
 fn run() -> Result<Vec<Task>, Box<dyn Error>> {
     let file_path = get_first_arg()?;
@@ -20,7 +20,7 @@ fn run() -> Result<Vec<Task>, Box<dyn Error>> {
         // The iterator yields Result<StringRecord, Error>, so we check the
         // error here.
         let record = result?;
-        tasks.push(parse_task(record));
+        tasks.push(parse_task(&record));
     }
     Ok(tasks)
 }
@@ -36,7 +36,7 @@ pub fn read_csv() -> Result<Vec<Task>, Box<dyn Error>> {
     run()
 }
 
-pub fn parse_task(record: StringRecord) -> Task {
+fn parse_task(record: &StringRecord) -> Task {
     Task::new(
         record.get(0).expect("Missing CSV field."),
         parse_duration(record.get(1).expect("Missing CSV field."))

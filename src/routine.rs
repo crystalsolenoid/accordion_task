@@ -1,5 +1,5 @@
 pub mod flex;
-pub mod parse_routine;
+pub mod parse;
 pub mod task;
 
 pub use task::{CompletionStatus, Task};
@@ -86,8 +86,7 @@ impl Routine {
                 // to the next available task. Matching over the enum to
                 // make sure any future status is considered.
                 CompletionStatus::NotYet => true,
-                CompletionStatus::Done => false,
-                CompletionStatus::Skipped => false,
+                CompletionStatus::Done | CompletionStatus::Skipped => false,
             })
             .collect()
     }
@@ -117,7 +116,7 @@ impl Routine {
             TimeMode::ExpectedEnd => self.flex_goal += task.original_duration,
             // want to take people's deadlines seriously and not accidentally
             // extend them
-            TimeMode::FixedEnd(deadline) => (),
+            TimeMode::FixedEnd(_) => (),
         }
     }
 
@@ -226,20 +225,19 @@ impl Routine {
             .iter()
             .filter(|task| match task.status {
                 CompletionStatus::NotYet => false,
-                CompletionStatus::Done => true,
                 // counting skipped tasks for percentage "complete" is a design
                 // decision. It may end up being something to make configurable.
                 // The benefit to true is more accurate timing and encouraging
                 // making it through the list. The benefit to
                 // false is gamification to discourage skipping. TODO
-                CompletionStatus::Skipped => true,
+                CompletionStatus::Done | CompletionStatus::Skipped => true,
             })
             .map(|task| task.original_duration)
             .sum()
     }
 
     pub fn remaining(&self) -> Duration {
-        self.tasks.iter().map(|task| task.remaining()).sum()
+        self.tasks.iter().map(task::Task::remaining).sum()
     }
 
     pub fn elapse(&mut self, i: Option<usize>, duration: Duration) {

@@ -95,11 +95,8 @@ impl LogElement {
             LogEvent::Skip(true) => "skipped".to_string(),
             LogEvent::Skip(false) => "unskipped".to_string(),
         };
-        //        let filename = format!("{}-{}", routine_name, start_time.format("%FT%T"));
 
         writeln!(file, "{time} \t{name} \t{message:}").unwrap();
-
-        // 7:36pm   brush teeth 2m30s
     }
 
     pub fn elapsed(task: &Task, elapsed: Duration) -> LogElement {
@@ -133,9 +130,9 @@ impl RoutineLogger {
     pub fn new(
         _routine: &Routine,
         start_time: &DateTime<Local>,
-        routine_path: String,
+        routine_path: &str,
     ) -> RoutineLogger {
-        let path = get_log_location(&routine_path, start_time).expect("failed to find or access the program data directory, or your routine task isnt valid utf8");
+        let path = get_log_location(routine_path, start_time).expect("failed to find or access the program data directory, or your routine task isnt valid utf8");
         // creating the file will fail if the directory doesn't exist yet
         create_dir_all(path.parent().expect("should always work"))
             .expect("failed to create data directory");
@@ -158,7 +155,7 @@ impl RoutineLogger {
         if let Some(e) = self.event_buffer.pop() {
             let (a, b) = e.combine(event);
             if let Some(e) = b {
-                self.write(a);
+                self.write(&a);
                 self.event_buffer.push(e);
             } else {
                 self.event_buffer.push(a);
@@ -168,13 +165,13 @@ impl RoutineLogger {
         }
     }
 
-    fn write(&mut self, log: LogElement) {
+    fn write(&mut self, log: &LogElement) {
         log.write(&mut self.file);
     }
 
     pub fn finish(&mut self) {
         if let Some(e) = self.event_buffer.pop() {
-            self.write(e);
+            self.write(&e);
         }
     }
 }

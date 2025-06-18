@@ -21,6 +21,9 @@ pub enum Event {
 }
 
 /// Terminal event handler.
+// Reason for allow: Staying consistent with the starter project I based this on. I'm not
+// 100% confident that it's the right choice.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug)]
 pub struct EventHandler {
     /// Event sender channel.
@@ -60,7 +63,7 @@ impl EventHandler {
                             CrosstermEvent::Resize(w, h) => sender.send(Event::Resize(w, h)),
                             _ => unimplemented!(),
                         }
-                        .expect("failed to send terminal event")
+                        .expect("failed to send terminal event");
                     }
 
                     if last_tick.elapsed() >= tick_rate {

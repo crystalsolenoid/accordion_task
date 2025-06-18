@@ -1,4 +1,5 @@
 use ratatui::widgets::{ListState, TableState};
+use std::iter::{DoubleEndedIterator, ExactSizeIterator};
 
 #[derive(Debug)]
 pub enum ScrollError {
@@ -33,9 +34,10 @@ impl ListPointer {
     }
 
     pub fn selected(&self) -> Option<usize> {
-        match self.paused {
-            false => self.selected,
-            true => None,
+        if self.paused {
+            None
+        } else {
+            self.selected
         }
     }
 
@@ -102,11 +104,7 @@ impl ListPointer {
                 let j = selectable
                     .enumerate()
                     .skip(i + 1)
-                    .filter_map(|(i, s)| match s {
-                        true => Some(i),
-                        false => None,
-                    })
-                    .next();
+                    .find_map(|(i, s)| if s { Some(i) } else { None });
                 match j {
                     Some(_) => {
                         self.selected = j;
@@ -123,21 +121,16 @@ impl ListPointer {
     /// be skipped (false ones).
     pub fn try_prev_selectable(
         &mut self,
-        selectable: impl Iterator<Item = bool>
-            + std::iter::DoubleEndedIterator
-            + std::iter::ExactSizeIterator,
+        selectable: impl DoubleEndedIterator<Item = bool> + ExactSizeIterator,
     ) -> Result<(), ScrollError> {
         match self.selected {
             Some(i) => {
-                let j = selectable
-                    .enumerate()
-                    .take(i)
-                    .rev()
-                    .filter_map(|(i, s)| match s {
-                        true => Some(i),
-                        false => None,
-                    })
-                    .next();
+                let j =
+                    selectable
+                        .enumerate()
+                        .take(i)
+                        .rev()
+                        .find_map(|(i, s)| if s { Some(i) } else { None });
                 match j {
                     Some(_) => {
                         self.selected = j;

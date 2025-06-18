@@ -50,6 +50,10 @@ impl ClockFormat {
     }
 }
 
+/// # Errors
+///
+/// Will return an error if the home directory does not exist, or if it is inaccessible.
+/// Does not check that the later parts of the path exist.
 pub fn find_config_location() -> Result<PathBuf> {
     ProjectDirs::from("", "", "Accordion Task")
         .map(|dirs| {
@@ -61,7 +65,7 @@ pub fn find_config_location() -> Result<PathBuf> {
         .ok_or_eyre("Could not find a config path.")
 }
 
-fn try_load_config() -> Result<Config> {
+fn try_load() -> Result<Config> {
     let dir = find_config_location()?;
     let conf_str = fs::read_to_string(dir)?;
     let config = toml::from_str(&conf_str)?;
@@ -69,8 +73,8 @@ fn try_load_config() -> Result<Config> {
 }
 
 /// Tries to load and parse the config file. If that fails, returns the default config.
-pub fn load_config() -> Config {
-    match try_load_config() {
+pub fn load() -> Config {
+    match try_load() {
         Err(e) => {
             println!("Warning: Config file failed with error {e} Falling back to default config.");
             Config::default()

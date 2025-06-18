@@ -55,11 +55,20 @@ fn main() -> Result<()> {
         // Render the user interface.
         tui.draw(&mut app)?;
         // Handle events.
+        // Explanation for allow: I intend for Mouse to stay empty, but intend
+        // for Resize to get filled in later.
+        #[allow(clippy::match_same_arms)]
         match tui.events.next()? {
             Event::Tick => app.tick(),
             Event::Key(key_event) => update(&mut app, key_event),
-            Event::Mouse(_) => {}
-            Event::Resize(_, _) => {}
+            Event::Mouse(_) => {
+                // I do not plan on adding mouse functionality for a TUI
+                // unless there are strong requests for it, because I
+                // don't like it.
+            }
+            Event::Resize(_, _) => {
+                //todo!("must handle resizing before release!")
+            }
         };
     }
 

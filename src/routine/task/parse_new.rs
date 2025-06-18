@@ -16,7 +16,7 @@ const DEFAULT_DURATION_SECS: u64 = 5 * 60;
 
 // TODO consider refactoring to use Winnow? Keep an eye out for if/when it isn't overkill
 
-pub fn parse_new_task(raw: &str) -> Task {
+pub fn parse_new(raw: &str) -> Task {
     // TODO figure out error type. I want it to fail silently most of the time if
     // duration parsing fails, but if the task is nameless and durationless, assume it
     // was a mistake and don't create the new empty task.
@@ -73,11 +73,12 @@ pub fn parse_duration(raw: &str) -> Result<u64, ParseIntError> {
             _ => number_accum.push(g),
         }
     }
-    match seen_hms {
-        true => Ok(hours * 60 * 60 + minutes * 60 + seconds),
+    if seen_hms {
+        Ok(hours * 60 * 60 + minutes * 60 + seconds)
+    } else {
         // TODO this is an ugly, ugly hack because I don't want to come up with
         // a new result type right now.
-        false => Ok(u64::from_str("")?),
+        Ok(u64::from_str("")?)
     }
 }
 
