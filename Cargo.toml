@@ -17,3 +17,23 @@ ratatui = "0.29.0"
 serde = { version = "1.0.219", features = ["derive"] }
 toml = "0.8.23"
 tui-textarea = "0.7.0"
+
+[lints.rust]
+# https://doc.rust-lang.org/rustc/lints/listing/allowed-by-default.html#missing-docs
+unsafe_code = "forbid"
+#missing_docs = "warn"
+#unreachable_pub = "warn"
+unused_crate_dependencies = "warn"
+
+[lints.clippy]
+# https://rust-lang.github.io/rust-clippy/master/index.html
+# how do i make these only run when prepping for a release?
+dbg_macro = "warn"
+panic = "warn"
+todo = "warn"
+use_debug = "warn"
+default_numeric_fallback = "warn"
+expect_used = "warn"
+indexing_slicing = "warn"
+unimplemented = "warn"
+unwrap_used = "warn"

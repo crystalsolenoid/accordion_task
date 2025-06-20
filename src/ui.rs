@@ -1,3 +1,8 @@
+#![allow(clippy::indexing_slicing)]
+// Explanation: There is currently a lot of indexing ui elements where the size is known
+// at compile time, so this warning is noisy and not useful here. TODO can I find a way to
+// abstract in a way that expresses the safety in the code model?
+
 use ratatui::{
     layout::Flex,
     prelude::{Constraint::*, *},
