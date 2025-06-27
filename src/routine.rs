@@ -97,7 +97,9 @@ impl Routine {
             TimeMode::ExpectedEnd => (),
             TimeMode::FixedEnd(deadline) => {
                 // TODO handle past due case
-                let time_left = (deadline - now).to_std().expect("handle negative");
+                let time_left = (deadline - now)
+                    .to_std()
+                    .expect("You're past due! Handling that is not yet implemented.");
                 let time_spent = self.elapsed();
                 self.flex_goal = time_spent + time_left;
                 self.update_flex();
@@ -241,8 +243,10 @@ impl Routine {
     }
 
     pub fn elapse(&mut self, i: Option<usize>, duration: Duration) {
-        match i {
-            Some(i) => self.tasks[i].elapse(duration),
+        //match i {
+        match self.get_nth_mut(i) {
+            Some(task) => task.elapse(duration),
+            //Some(task) => self.tasks[i].elapse(duration),
             None => self.spilled_time += duration,
         }
         self.update_flex();

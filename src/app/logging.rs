@@ -31,7 +31,7 @@
 // routine for real
 
 use chrono::{DateTime, Local};
-use color_eyre::eyre::{OptionExt, Result};
+use color_eyre::eyre::{OptionExt, Result, WrapErr};
 use directories::ProjectDirs;
 use std::fs::{create_dir_all, File};
 use std::io::{BufWriter, Write};
@@ -83,7 +83,7 @@ impl LogElement {
         }
     }
 
-    pub fn write(&self, file: &mut BufWriter<File>) {
+    pub fn write(&self, file: &mut BufWriter<File>) -> Result<()> {
         let time = self.time.format("%T");
         let name = &self.task_name;
         let message = match self.event {
@@ -96,7 +96,8 @@ impl LogElement {
             LogEvent::Skip(false) => "unskipped".to_string(),
         };
 
-        writeln!(file, "{time} \t{name} \t{message:}").unwrap();
+        writeln!(file, "{time} \t{name} \t{message:}")?;
+        Ok(())
     }
 
     pub fn elapsed(task: &Task, elapsed: Duration) -> LogElement {
@@ -131,18 +132,21 @@ impl RoutineLogger {
         _routine: &Routine,
         start_time: &DateTime<Local>,
         routine_path: &str,
-    ) -> RoutineLogger {
-        let path = get_log_location(routine_path, start_time).expect("failed to find or access the program data directory, or your routine task isnt valid utf8");
+    ) -> Result<RoutineLogger> {
+        let path = get_log_location(routine_path, start_time).wrap_err("failed to find or access the program data directory, or your routine task isnt valid utf8")?;
         // creating the file will fail if the directory doesn't exist yet
-        create_dir_all(path.parent().expect("should always work"))
-            .expect("failed to create data directory");
-        let file = File::create(path).expect("failed to create file");
+        create_dir_all(
+            path.parent()
+                .ok_or_eyre("This error should never happen TODO")?,
+        )
+        .wrap_err("failed to create data directory")?;
+        let file = File::create(path)?;
         let file = BufWriter::new(file);
 
-        RoutineLogger {
+        Ok(RoutineLogger {
             file,
             event_buffer: vec![],
-        }
+        })
     }
 
     pub fn log_comment(&mut self, message: &str, time: DateTime<Local>) {
@@ -151,11 +155,11 @@ impl RoutineLogger {
         // TODO refactor so that this is also a kind of LogElement!!
     }
 
-    pub fn log(&mut self, event: LogElement) {
+    pub fn log(&mut self, event: LogElement) -> Result<()> {
         if let Some(e) = self.event_buffer.pop() {
             let (a, b) = e.combine(event);
             if let Some(e) = b {
-                self.write(&a);
+                self.write(&a)?;
                 self.event_buffer.push(e);
             } else {
                 self.event_buffer.push(a);
@@ -163,16 +167,19 @@ impl RoutineLogger {
         } else {
             self.event_buffer.push(event);
         }
+        Ok(())
     }
 
-    fn write(&mut self, log: &LogElement) {
-        log.write(&mut self.file);
+    fn write(&mut self, log: &LogElement) -> Result<()> {
+        log.write(&mut self.file)?;
+        Ok(())
     }
 
-    pub fn finish(&mut self) {
+    pub fn finish(&mut self) -> Result<()> {
         if let Some(e) = self.event_buffer.pop() {
-            self.write(&e);
+            self.write(&e)?;
         }
+        Ok(())
     }
 }
 
@@ -183,7 +190,11 @@ pub fn get_log_location(routine_path: &str, time: &DateTime<Local>) -> Result<Pa
     let routine_path: PathBuf = routine_path.into();
     let routine_name = format!(
         "{}-{}",
-        routine_path.file_name().unwrap().to_str().unwrap(),
+        routine_path
+            .file_name()
+            .ok_or_eyre("Routine path must not end with '..'.")?
+            .to_str()
+            .ok_or_eyre("Failed to convert OsStr to str. Did you use some unusual character?")?,
         time.format("%FT%T")
     );
     let routine_name: PathBuf = routine_name.into();

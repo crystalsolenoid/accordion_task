@@ -41,10 +41,6 @@ impl ListPointer {
         }
     }
 
-    pub fn delete_current(&mut self) {
-        todo!()
-    }
-
     pub fn select(&mut self, i: Option<usize>) -> Result<(), ScrollError> {
         if let Some(i) = i {
             if i < self.length {

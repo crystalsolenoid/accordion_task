@@ -56,11 +56,7 @@ impl ClockFormat {
 /// Does not check that the later parts of the path exist.
 pub fn find_config_location() -> Result<PathBuf> {
     ProjectDirs::from("", "", "Accordion Task")
-        .map(|dirs| {
-            dirs.config_local_dir()
-                .to_owned()
-                .join("config.toml")
-        })
+        .map(|dirs| dirs.config_local_dir().to_owned().join("config.toml"))
         .ok_or_eyre("Could not find a config path.")
 }
 

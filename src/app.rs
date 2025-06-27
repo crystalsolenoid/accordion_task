@@ -12,6 +12,10 @@ use list_pointer::ListPointer;
 use logging::{LogElement, RoutineLogger};
 
 use chrono::{DateTime, Days, Local, MappedLocalTime};
+use color_eyre::{
+    eyre::{OptionExt, WrapErr},
+    Result,
+};
 use std::time::{Duration, Instant};
 use tui_textarea::TextArea;
 
@@ -38,14 +42,16 @@ pub struct App {
 
 impl App {
     /// Constructs a new instance of [`App`].
-    pub fn new(cli: Cli) -> App {
+    pub fn new(cli: Cli) -> Result<App> {
         let routine_name = cli
             .routine_path
-            .expect("Routine launcher not yet implemented. Please specify a routine path.");
-        let tasks =
-            Routine::with_tasks(routine::parse::read_csv().expect("Failed to load routine file"));
+            .ok_or_eyre("Routine launcher not yet implemented. Please specify a routine path.")?;
+        let tasks = Routine::with_tasks(
+            routine::parse::read_csv().wrap_err("Failed to load routine file")?,
+        );
         let length = tasks.tasks.len();
-        let logger = RoutineLogger::new(&tasks, &Local::now(), &routine_name);
+        let logger = RoutineLogger::new(&tasks, &Local::now(), &routine_name)
+            .wrap_err("Logger failed to initialize.")?;
         let mut app = Self {
             config: config::load(),
             text_input: TextArea::default(),
@@ -90,7 +96,7 @@ impl App {
         */
         //app.task_widget_state.select(app.tasks.active).unwrap();
 
-        app
+        Ok(app)
     }
 
     pub fn get_current_task_name(&self) -> Option<&str> {

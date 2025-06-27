@@ -41,7 +41,7 @@ fn main() -> Result<()> {
     }
 
     // Create an application.
-    let mut app = App::new(cli);
+    let mut app = App::new(cli)?;
 
     // Initialize the terminal user interface.
     let backend = CrosstermBackend::new(std::io::stderr());
