@@ -3,6 +3,10 @@ name = "accordion_task"
 version = "0.1.0"
 edition = "2021"
 
+[workspace]
+resolver = "3"
+members = [ "accordion_core","tui", "web"]
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
