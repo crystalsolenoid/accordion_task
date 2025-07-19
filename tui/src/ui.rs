@@ -12,7 +12,10 @@ use ratatui::{
 use std::time::Duration;
 
 use crate::app::{App, Menu, Mode, list_pointer::ListPointer};
-use accordion_core::routine::{CompletionStatus, Task};
+use accordion_core::{
+    routine::{CompletionStatus, Task},
+    utils::format_duration,
+};
 
 pub fn render(app: &App, f: &mut Frame) {
     match &app.help_menu {
@@ -218,26 +221,6 @@ fn prepare_table_state(pointer: ListPointer, area: Rect) -> TableState {
     let offset = min_offset.clamp(0, max_offset);
     let state: TableState = pointer.into();
     state.with_offset(offset)
-}
-
-// TODO move to utility module
-pub fn format_duration(dur: Duration) -> String {
-    let s = dur.as_secs();
-    let m = s / 60;
-    let h = m / 60;
-    let h_str = match h {
-        0 => String::new(),
-        _ => format!("{h}h "),
-    };
-    let m_str = match m {
-        0 => String::new(),
-        _ => format!("{}m ", m - 60 * h),
-    };
-    let s_str = match s {
-        0 => "0s".to_string(),
-        _ => format!("{}s", s - 60 * m),
-    };
-    format!("{h_str}{m_str}{s_str}")
 }
 
 fn generate_task_row(task: &Task) -> Row {

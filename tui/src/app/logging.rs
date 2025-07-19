@@ -33,12 +33,13 @@
 use chrono::{DateTime, Local};
 use color_eyre::eyre::{OptionExt, Result, WrapErr};
 use directories::ProjectDirs;
-use std::fs::{create_dir_all, File};
+use std::fs::{File, create_dir_all};
 use std::io::{BufWriter, Write};
 use std::path::PathBuf;
 use std::time::Duration;
 
 use crate::app::{Routine, Task};
+use accordion_core::utils;
 
 #[derive(Debug, Copy, Clone)]
 enum LogEvent {
@@ -88,7 +89,7 @@ impl LogElement {
         let name = &self.task_name;
         let message = match self.event {
             LogEvent::Elapsed(d) => {
-                format!("{} elapsed", crate::ui::format_duration(d))
+                format!("{} elapsed", utils::format_duration(d))
             }
             LogEvent::Complete(true) => "completed".to_string(),
             LogEvent::Complete(false) => "uncompleted".to_string(),

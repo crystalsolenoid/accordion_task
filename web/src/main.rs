@@ -2,15 +2,23 @@ use leptos::prelude::*;
 use std::time::Duration;
 
 use accordion_core::routine::{Routine, Task};
+use accordion_core::utils;
+
+#[component]
+fn Duration(value: ReadSignal<Duration>) -> impl IntoView {
+    view! {
+        {{ utils::format_duration(value.get()) }}
+    }
+}
 
 #[component]
 fn Routine(
     name: RwSignal<String>,
-    elapsed: RwSignal<Duration>,
-    duration: RwSignal<Duration>,
+    elapsed: ReadSignal<Duration>,
+    duration: ReadSignal<Duration>,
 ) -> impl IntoView {
     view! {
-        {{ name }}: {{ elapsed.get().as_secs() }} / {{ duration.get().as_secs() }}
+        <h2>{{ name }}</h2>: <Duration value=elapsed/> / <Duration value=duration/>
         <progress value=move || elapsed.get().as_secs() as f64 / duration.get().as_secs() as f64 />
     }
 }
@@ -27,8 +35,7 @@ fn App() -> impl IntoView {
     let duration = RwSignal::new(Duration::from_secs(120));
 
     view! {
-        <p>{{ myTask.name }}</p>
-        <Routine name=name elapsed=elapsed duration=duration/>
+        <Routine name=name elapsed=elapsed.read_only() duration=duration.read_only()/>
     }
 }
 
