@@ -3,18 +3,17 @@ mod logging;
 
 use crate::cli::Cli;
 use crate::config::{self, Config};
-use crate::routine::{
-    self,
+use accordion_core::routine::{
+    self, Routine,
     task::{self, CompletionStatus, Task},
-    Routine,
 };
 use list_pointer::ListPointer;
 use logging::{LogElement, RoutineLogger};
 
 use chrono::{DateTime, Days, Local, MappedLocalTime};
 use color_eyre::{
-    eyre::{OptionExt, WrapErr},
     Result,
+    eyre::{OptionExt, WrapErr},
 };
 use std::time::{Duration, Instant};
 use tui_textarea::TextArea;

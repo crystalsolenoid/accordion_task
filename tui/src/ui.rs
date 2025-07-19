@@ -11,8 +11,8 @@ use ratatui::{
 };
 use std::time::Duration;
 
-use crate::app::{list_pointer::ListPointer, App, Menu, Mode};
-use crate::routine::{CompletionStatus, Task};
+use crate::app::{App, Menu, Mode, list_pointer::ListPointer};
+use accordion_core::routine::{CompletionStatus, Task};
 
 pub fn render(app: &App, f: &mut Frame) {
     match &app.help_menu {

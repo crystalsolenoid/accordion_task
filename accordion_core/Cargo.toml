@@ -4,3 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+chrono = "0.4.41"
+color-eyre = "0.6.2"
+csv = "1.3.1"
+# TODO wasm probably cant depend on csv's for routine defs?

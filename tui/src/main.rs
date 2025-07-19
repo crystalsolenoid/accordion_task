@@ -1,9 +1,6 @@
 /// Application.
 pub mod app;
 
-/// Routine.
-pub mod routine;
-
 /// Terminal events handler.
 pub mod event;
 
@@ -27,7 +24,7 @@ use clap::Parser;
 use cli::Cli;
 use color_eyre::Result;
 use event::{Event, EventHandler};
-use ratatui::{backend::CrosstermBackend, Terminal};
+use ratatui::{Terminal, backend::CrosstermBackend};
 use tui::Tui;
 use update::update;
 
