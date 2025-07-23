@@ -11,6 +11,9 @@ use chrono::{DateTime, Local};
 
 use flex::{Flex, FlexItem};
 
+#[cfg(feature = "web")]
+use reactive_stores::Store;
+
 #[derive(Debug, Copy, Clone)]
 pub enum ToggleFailure {
     NoSelection,
@@ -45,8 +48,10 @@ enum TimeMode {
 }
 
 #[derive(Default, Debug)]
+#[cfg_attr(feature = "web", derive(Store))]
 pub struct Routine {
     /// An ordered list of the tasks.
+    #[store(key: String = |row| row.name.clone())]
     pub tasks: Vec<Task>,
     /// The active task, if any.
     /// TODO this should probably eventually use an ID number.

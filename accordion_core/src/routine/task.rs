@@ -1,5 +1,8 @@
 use std::time::Duration;
 
+#[cfg(feature = "web")]
+use reactive_stores::Store;
+
 pub mod parse_new;
 pub use parse_new::parse_new;
 
@@ -11,6 +14,7 @@ pub enum CompletionStatus {
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "web", derive(Store, Clone))]
 pub struct Task {
     /// How much time has already been spent on the task?
     pub elapsed: Duration,

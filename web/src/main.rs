@@ -1,11 +1,19 @@
 use leptos::prelude::*;
 use std::time::Duration;
 
+use reactive_stores::{Store, StoreFieldIter, StoreFieldIterator};
+use reactive_stores::StoreField;
+//use reactive_graph::traits::Read;
+//use reactive_graph::traits::Get;
+use accordion_core::routine::RoutineStoreFields;
+use accordion_core::routine::task::TaskStoreFields;
+
 use accordion_core::routine::{Routine, Task};
 use accordion_core::utils;
 
 #[component]
-fn Duration(value: ReadSignal<Duration>) -> impl IntoView {
+fn Duration(
+    value: ReadSignal<Duration>) -> impl IntoView {
     view! {
         {{ move || utils::format_duration(value.get()) }}
     }
@@ -26,8 +34,9 @@ fn Routine(
 #[component]
 fn App() -> impl IntoView {
     let mut list = Routine::default();
-    list.push(Task::new("a", 120));
-    list.push(Task::new("b", 60));
+    list.push(Task::new("shower", 120));
+    list.push(Task::new("eat dinner", 60));
+    let data = Store::new(list);
 
     let myTask = Task::new("wash dishes", 120);
 
@@ -42,6 +51,9 @@ fn App() -> impl IntoView {
 
     view! {
         <Routine name=name elapsed=elapsed.read_only() duration=duration.read_only()/>
+    {{move || data.tasks().at_unkeyed(0).name().get()}}
+    {{move || data.tasks().at_unkeyed(0).duration().get().as_secs()}}
+//    <Duration value=data.tasks().at_unkeyed(0).duration().reader()/>
     }
 }
 

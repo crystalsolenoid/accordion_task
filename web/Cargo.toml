@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-accordion_core = { version = "0.1.0", path = "../accordion_core" }
+accordion_core = { version = "0.1.0", path = "../accordion_core", features = ["web"] }
 console_error_panic_hook = "0.1.7"
 leptos = { version = "0.8.2", features = ["csr"] }
+reactive_stores = "0.2.5"
