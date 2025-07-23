@@ -51,7 +51,7 @@ enum TimeMode {
 #[cfg_attr(feature = "web", derive(Store))]
 pub struct Routine {
     /// An ordered list of the tasks.
-    #[store(key: String = |row| row.name.clone())]
+    #[cfg_attr(feature = "web", store(key: String = |row| row.name.clone()))]
     pub tasks: Vec<Task>,
     /// The active task, if any.
     /// TODO this should probably eventually use an ID number.
