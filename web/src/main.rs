@@ -13,7 +13,8 @@ use accordion_core::utils;
 
 #[component]
 fn Duration(
-    value: ReadSignal<Duration>) -> impl IntoView {
+    #[prop(into)]
+    value: Signal<Duration>) -> impl IntoView {
     view! {
         {{ move || utils::format_duration(value.get()) }}
     }
@@ -49,11 +50,16 @@ fn App() -> impl IntoView {
         Duration::from_secs(1),
     );
 
+    leptos::leptos_dom::helpers::set_interval(
+        move || data.update(|d| d.elapse(Some(0), Duration::from_secs(1))),
+        Duration::from_secs(1),
+    );
+
     view! {
         <Routine name=name elapsed=elapsed.read_only() duration=duration.read_only()/>
-    {{move || data.tasks().at_unkeyed(0).name().get()}}
-    {{move || data.tasks().at_unkeyed(0).duration().get().as_secs()}}
-//    <Duration value=data.tasks().at_unkeyed(0).duration().reader()/>
+    <p>Name: {{move || data.tasks().at_unkeyed(0).name().get()}}</p>
+    <p>Duration: <Duration value=data.tasks().at_unkeyed(0).duration()/></p>
+    <p>Elapsed: <Duration value=data.tasks().at_unkeyed(0).elapsed()/></p>
     }
 }
 
