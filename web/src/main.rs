@@ -3,6 +3,7 @@ use std::time::Duration;
 
 use reactive_stores::{Store, StoreFieldIter, StoreFieldIterator};
 use reactive_stores::StoreField;
+use reactive_stores::Field;
 //use reactive_graph::traits::Read;
 //use reactive_graph::traits::Get;
 use accordion_core::routine::RoutineStoreFields;
@@ -21,14 +22,13 @@ fn Duration(
 }
 
 #[component]
-fn Routine(
-    name: RwSignal<String>,
-    elapsed: ReadSignal<Duration>,
-    duration: ReadSignal<Duration>,
+fn TaskListItem(
+    #[prop(into)]
+    task: Field<Task>,
 ) -> impl IntoView {
     view! {
-        <h2>{{ name }}</h2> <Duration value=elapsed/> / <Duration value=duration/>
-        <progress value=move || elapsed.get().as_secs() as f64 / duration.get().as_secs() as f64 />
+        <h2>{{ move || task.name().get() }}</h2> <Duration value=task.elapsed() /> / <Duration value=task.duration() />
+        <progress value=move || task.elapsed().get().as_secs() as f64 / task.duration().get().as_secs() as f64 />
     }
 }
 
@@ -37,18 +37,8 @@ fn App() -> impl IntoView {
     let mut list = Routine::default();
     list.push(Task::new("shower", 120));
     list.push(Task::new("eat dinner", 60));
+    list.push(Task::new("program", 9990));
     let data = Store::new(list);
-
-    let myTask = Task::new("wash dishes", 120);
-
-    let name = RwSignal::new("wash dishes".to_string());
-    let elapsed = RwSignal::new(Duration::ZERO);
-    let duration = RwSignal::new(Duration::from_secs(120));
-
-    leptos::leptos_dom::helpers::set_interval(
-        move || elapsed.update(|n| *n += Duration::from_secs(1)),
-        Duration::from_secs(1),
-    );
 
     leptos::leptos_dom::helpers::set_interval(
         move || data.update(|d| d.elapse(Some(0), Duration::from_secs(1))),
@@ -56,10 +46,19 @@ fn App() -> impl IntoView {
     );
 
     view! {
-        <Routine name=name elapsed=elapsed.read_only() duration=duration.read_only()/>
-    <p>Name: {{move || data.tasks().at_unkeyed(0).name().get()}}</p>
-    <p>Duration: <Duration value=data.tasks().at_unkeyed(0).duration()/></p>
-    <p>Elapsed: <Duration value=data.tasks().at_unkeyed(0).elapsed()/></p>
+    <ol>
+        <For
+            each=move || data.tasks()
+            key=|task| task.read().name.clone()
+                children=|child| {
+                view! {
+                    <li>
+                    <TaskListItem task=child/>
+                    </li>
+                }
+            }
+        />
+    </ol>
     }
 }
 
