@@ -40,20 +40,23 @@ fn App() -> impl IntoView {
     list.push(Task::new("program", 9990));
     let data = Store::new(list);
 
+    let (active, set_active) = signal(Some(0));
+
     leptos::leptos_dom::helpers::set_interval(
-        move || data.update(|d| d.elapse(Some(0), Duration::from_secs(1))),
+        move || data.update(|d| d.elapse(active.get(), Duration::from_secs(1))),
         Duration::from_secs(1),
     );
 
     view! {
     <ol>
         <For
-            each=move || data.tasks()
-            key=|task| task.read().name.clone()
-                children=|child| {
+            each=move || data.tasks().into_iter().enumerate()
+            key=|(_, task)| task.read().name.clone()
+                children=move |(i, child)| {
                 view! {
                     <li>
-                    <TaskListItem task=child/>
+                    <TaskListItem task=child.clone()/>
+                    <input type="radio" value=i id=child.name() name="active" on:change=move |_| set_active.set(Some(i))/>
                     </li>
                 }
             }
