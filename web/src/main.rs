@@ -9,7 +9,7 @@ use reactive_stores::Field;
 use accordion_core::routine::RoutineStoreFields;
 use accordion_core::routine::task::TaskStoreFields;
 
-use accordion_core::routine::{Routine, Task};
+use accordion_core::routine::{Routine, Task, CompletionStatus};
 use accordion_core::utils;
 
 #[component]
@@ -27,7 +27,14 @@ fn TaskListItem(
     task: Field<Task>,
 ) -> impl IntoView {
     view! {
-        <h2>{{ move || task.name().get() }}</h2> <Duration value=task.elapsed() /> / <Duration value=task.duration() />
+        <h2>{{ move || task.name().get() }}</h2> <p>
+        {{ move || match task.status().get() {
+                CompletionStatus::NotYet => "Incomplete",
+                CompletionStatus::Done => "Done",
+                CompletionStatus::Skipped => "Skipped",
+    } }}
+            </p>
+            <Duration value=task.elapsed() /> / <Duration value=task.duration() />
         <progress value=move || task.elapsed().get().as_secs() as f64 / task.duration().get().as_secs() as f64 />
     }
 }
@@ -48,6 +55,12 @@ fn App() -> impl IntoView {
     );
 
     view! {
+    <button
+        on:click=move |_| {data.write().toggle(active.get());}
+        >Complete Current</button>
+    <button
+        on:click=move |_| {data.write().skip(active.get());}
+        >Skip Current</button>
     <ol>
         <For
             each=move || data.tasks().into_iter().enumerate()
