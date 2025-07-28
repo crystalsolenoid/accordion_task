@@ -48,7 +48,7 @@ enum TimeMode {
 }
 
 #[derive(Default, Debug)]
-#[cfg_attr(feature = "web", derive(Store))]
+#[cfg_attr(feature = "web", derive(Store, Clone))]
 pub struct Routine {
     /// An ordered list of the tasks.
     #[cfg_attr(feature = "web", store(key: String = |row| row.name.clone()))]

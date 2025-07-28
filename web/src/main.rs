@@ -27,15 +27,18 @@ fn TaskListItem(
     task: Field<Task>,
 ) -> impl IntoView {
     view! {
-        <h2>{{ move || task.name().get() }}</h2> <p>
-        {{ move || match task.status().get() {
+        <h2>{{ move || task.name().get() }}</h2>
+        <p>
+        "(" {{ move || match task.status().get() {
                 CompletionStatus::NotYet => "Incomplete",
                 CompletionStatus::Done => "Done",
                 CompletionStatus::Skipped => "Skipped",
-    } }}
+    } }} ")"
             </p>
-            <Duration value=task.elapsed() /> / <Duration value=task.duration() />
+            <p> <Duration value=task.elapsed() />
         <progress value=move || task.elapsed().get().as_secs() as f64 / task.duration().get().as_secs() as f64 />
+            <Duration value=task.duration() />
+            </p>
     }
 }
 
@@ -69,7 +72,9 @@ fn App() -> impl IntoView {
                 view! {
                     <li>
                     <TaskListItem task=child.clone()/>
-                    <input type="radio" value=i id=child.name() name="active" on:change=move |_| set_active.set(Some(i))/>
+                    <input type="radio" value=i id=child.name() name="active"
+                    prop:checked={i == 0}
+                    on:change=move |_| set_active.set(Some(i))/>
                     </li>
                 }
             }
