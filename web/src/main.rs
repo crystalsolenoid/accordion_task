@@ -1,3 +1,6 @@
+// TODO track time with chrono
+// sessionstorage to protect from refresh
+
 use leptos::prelude::*;
 use std::time::Duration;
 
@@ -18,6 +21,18 @@ fn Duration(
     value: Signal<Duration>) -> impl IntoView {
     view! {
         {{ move || utils::format_duration(value.get()) }}
+    }
+}
+
+#[component]
+fn RoutineTimer(
+    #[prop(into)]
+    routine: Field<Routine>,
+) -> impl IntoView {
+    view! {
+        <p>
+    <Duration value=routine.get().remaining() />
+        </p>
     }
 }
 
@@ -62,6 +77,7 @@ fn App() -> impl IntoView {
     );
 
     view! {
+    <RoutineTimer routine=data/>
     <button
         on:click=move |_| {data.write().toggle(active.get());}
         >Complete Current</button>
