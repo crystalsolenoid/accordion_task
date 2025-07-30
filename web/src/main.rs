@@ -72,7 +72,7 @@ fn App() -> impl IntoView {
     let (active, set_active) = signal(Some(0));
 
     leptos::leptos_dom::helpers::set_interval(
-        move || data.update(|d| d.elapse(active.get(), Duration::from_secs(1))),
+        move || data.write().elapse(active.get(), Duration::from_secs(1)),
         Duration::from_secs(1),
     );
 
