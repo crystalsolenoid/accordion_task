@@ -27,9 +27,12 @@ fn RoutineTimer(
     #[prop(into)]
     routine: Field<Routine>,
 ) -> impl IntoView {
+    let elapsed = Memo::new(move |_| routine.get().elapsed());
+    let remaining = Memo::new(move |_| routine.get().remaining());
+
     view! {
-        <p>Remaining: <Duration value=routine.get().remaining() /></p>
-        <p>Elapsed: <Duration value=routine.get().elapsed() /></p>
+        <p>Remaining: <Duration value=remaining /></p>
+        <p>Elapsed: <Duration value=elapsed /></p>
     }
 }
 
