@@ -2,10 +2,13 @@ use std::time::Duration;
 
 #[cfg(feature = "web")]
 use reactive_stores::Store;
+#[cfg(feature = "web")]
+use serde::{Serialize, Deserialize};
 
 pub mod parse_new;
 pub use parse_new::parse_new;
 
+#[cfg_attr(feature = "web", derive(Serialize, Deserialize))]
 #[derive(Debug, Copy, Clone)]
 pub enum CompletionStatus {
     NotYet,
@@ -14,7 +17,7 @@ pub enum CompletionStatus {
 }
 
 #[derive(Debug)]
-#[cfg_attr(feature = "web", derive(Store, Clone))]
+#[cfg_attr(feature = "web", derive(Store, Clone, Serialize, Deserialize))]
 pub struct Task {
     /// How much time has already been spent on the task?
     pub elapsed: Duration,

@@ -4,6 +4,8 @@
 use leptos::prelude::*;
 use std::time::Duration;
 
+use gloo_storage::{Storage, SessionStorage};
+
 use reactive_stores::{Store, Field};
 use accordion_core::routine::RoutineStoreFields;
 use accordion_core::routine::task::TaskStoreFields;
@@ -25,7 +27,6 @@ fn RoutineTimer(
 ) -> impl IntoView {
     let elapsed = Memo::new(move |_| routine.get().elapsed());
     let remaining = Memo::new(move |_| routine.get().remaining());
-
     view! {
         <p>Remaining: <Duration value=remaining /></p>
         <p>Elapsed: <Duration value=elapsed /></p>
@@ -65,16 +66,30 @@ fn TaskListItem(
 
 #[component]
 fn App() -> impl IntoView {
-    let mut list = Routine::default();
-    list.push(Task::new("shower", 120));
-    list.push(Task::new("eat dinner", 60));
-    list.push(Task::new("program", 9990));
-    let data = Store::new(list);
+    let data = if let Ok(list) = SessionStorage::get("in-progress-routine") {
+        Store::new(list)
+    } else {
+        let mut list = Routine::default();
+        list.push(Task::new("shower", 120));
+        list.push(Task::new("eat dinner", 60));
+        list.push(Task::new("program", 9990));
+        Store::new(list)
+    };
 
-    let (active, set_active) = signal(Some(0));
+    let initial_active = if let Ok(i) = SessionStorage::get("active") {
+        i
+    } else {
+        0
+    };
+    let (active, set_active) = signal(Some(initial_active));
 
     leptos::leptos_dom::helpers::set_interval(
-        move || data.write().elapse(active.get(), Duration::from_secs(1)),
+        move || {
+            // elapse time
+            data.write().elapse(active.get(), Duration::from_secs(1));
+            // save to session storage (TODO? when do I actually want to do this?)
+            SessionStorage::set("in-progress-routine", data.get());
+        },
         Duration::from_secs(1),
     );
 
@@ -102,8 +117,11 @@ fn App() -> impl IntoView {
                                 value=i
                                 id=child.name()
                                 name="active"
-                                prop:checked=i == 0
-                                on:change=move |_| set_active.set(Some(i))
+                                prop:checked=i == initial_active
+                                on:change=move |_| {
+                                    set_active.set(Some(i));
+                                    SessionStorage::set("active", i);
+                                }
                             />
                         </li>
                     }

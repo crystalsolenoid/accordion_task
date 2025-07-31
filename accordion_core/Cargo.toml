@@ -8,7 +8,8 @@ chrono = "0.4.41"
 color-eyre = "0.6.2"
 csv = "1.3.1"
 reactive_stores = {version = "0.2.3", optional = true}
+serde = { version = "1.0.219", optional = true, features = ["derive"] }
 # TODO wasm probably cant depend on csv's for routine defs?
 
 [features]
-web = ["dep:reactive_stores"]
+web = ["dep:reactive_stores", "dep:serde", "chrono/serde"]
