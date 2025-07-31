@@ -178,6 +178,7 @@ impl Routine {
             match i.status {
                 CompletionStatus::Done => {
                     i.status = CompletionStatus::NotYet;
+                    self.update_flex();
                     Ok(CompletionStatus::NotYet)
                 }
                 CompletionStatus::NotYet => {
@@ -200,6 +201,7 @@ impl Routine {
             match i.status {
                 CompletionStatus::Skipped => {
                     i.status = CompletionStatus::NotYet;
+                    self.update_flex();
                     Ok(CompletionStatus::NotYet)
                 }
                 CompletionStatus::NotYet => {
