@@ -4,11 +4,7 @@
 use leptos::prelude::*;
 use std::time::Duration;
 
-use reactive_stores::{Store, StoreFieldIter, StoreFieldIterator};
-use reactive_stores::StoreField;
-use reactive_stores::Field;
-//use reactive_graph::traits::Read;
-//use reactive_graph::traits::Get;
+use reactive_stores::{Store, Field};
 use accordion_core::routine::RoutineStoreFields;
 use accordion_core::routine::task::TaskStoreFields;
 
@@ -85,10 +81,10 @@ fn App() -> impl IntoView {
     view! {
         <RoutineTimer routine=data />
         <button on:click=move |_| {
-            data.write().toggle(active.get());
+            let _ = data.write().toggle(active.get());
         }>Complete Current</button>
         <button on:click=move |_| {
-            data.write().skip(active.get());
+            let _ = data.write().skip(active.get());
         }>Skip Current</button>
         <ol class="routine">
             <For
