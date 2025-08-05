@@ -1,7 +1,28 @@
 use chrono::NaiveTime;
 use clap::Parser;
+use color_eyre::{
+    eyre::{OptionExt, WrapErr},
+    Result,
+};
+
+use std::{env, ffi::OsString, fs::File};
+
+use accordion_core::routine::{self, Task};
 
 use crate::config;
+
+pub fn get_routine() -> Result<Vec<Task>> {
+    let file_path = get_first_arg()?;
+    let file = File::open(file_path)?;
+    routine::parse::from_csv(file)
+}
+
+fn get_first_arg() -> Result<OsString> {
+    // TODO should i use CLAP instead here
+    env::args_os()
+        .nth(1)
+        .ok_or_eyre("Expected 1 argument, got none.")
+}
 
 #[derive(Parser)]
 #[command(

@@ -16,7 +16,7 @@ use reactive_stores::{Store, Field};
 use accordion_core::routine::RoutineStoreFields;
 use accordion_core::routine::task::TaskStoreFields;
 
-use accordion_core::routine::{Routine, Task, CompletionStatus};
+use accordion_core::routine::{self, Routine, Task, CompletionStatus};
 use accordion_core::utils;
 
 #[component]
@@ -118,9 +118,38 @@ fn RoutinePlayer(
 }
 
 #[component]
-fn Upload() -> impl IntoView {
-    let (cont, set_cont) = signal("".to_string());
+fn PreviewRoutine(
+    #[prop(into)]
+    routine: Field<Routine>,
+) -> impl IntoView {
+
     view! {
+        <ol class="routine">
+            <For
+                each=move || routine.tasks().into_iter().enumerate()
+                key=|(_, task)| task.read().name.clone()
+                children=move |(i, child)| {
+                    view! {
+                        <li class="task">
+                            <TaskListItem task=child.clone() />
+                        </li>
+                    }
+                }
+            />
+        </ol>
+    }
+}
+
+// TODO I need a better way to set the current routine
+#[component]
+fn Upload(
+    #[prop(into)]
+    data: Field<Routine>,
+) -> impl IntoView {
+    let preview_routine = Store::new(Routine::default());
+    view! {
+        // TODO make this a form
+        <h1>Upload Routine</h1>
         <input type="file" accept=".routine"
             on:change=move |ev| {
                 if let Some(t) = ev.target() {
@@ -129,15 +158,22 @@ fn Upload() -> impl IntoView {
                             let b: GlooBlob = f.item(0).unwrap().into();
                             spawn_local(async move {
                                 let contents = gloo_file::futures::read_as_text(&b).await;
-                                set_cont.set(contents.unwrap().to_string());
+                                let tasks = routine::parse::from_csv(contents.unwrap().as_bytes());
+                                let rout = Routine::with_tasks(tasks.unwrap());
+                                preview_routine.set(rout);
                             });
                         }
                     }
                 }
             }/>
-        <p>
-        {{ move || cont }}
-        </p>
+        <button
+            on:click= move |_| {
+                data.set(preview_routine.get());
+        }>
+            Save Routine
+        </button>
+        <h2>Preview</h2>
+        <PreviewRoutine routine=preview_routine/>
     }
 }
 
@@ -177,7 +213,7 @@ fn App() -> impl IntoView {
                 <A href="upload">Upload</A>
             </nav>
             <Routes fallback=|| "">
-                <Route path=path!("/upload") view=Upload />
+                <Route path=path!("/upload") view=move || view!{<Upload data=data/>} />
                 <Route path=path!("/") view=move || 
             view!{<RoutinePlayer routine=data active=active set_active=set_active initial_active=initial_active/>
                 }

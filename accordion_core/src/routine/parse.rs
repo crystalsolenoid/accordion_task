@@ -3,22 +3,18 @@ use color_eyre::{
     Result,
 };
 use csv::{StringRecord, Trim};
-use std::{env, ffi::OsString, fs::File};
 
-use super::Task;
+use std::io;
 
-// TODO what's a better way to specify this path?
-use crate::routine::task::parse_new::parse_duration;
+use super::{Task, task::parse_new::parse_duration};
 
-fn run() -> Result<Vec<Task>> {
-    let file_path = get_first_arg()?;
-    let file = File::open(file_path)?;
+pub fn from_csv(r: impl io::Read) -> Result<Vec<Task>> {
     // Build the CSV reader and iterate over each record.
     let mut rdr = csv::ReaderBuilder::new()
         .delimiter(b',')
         .trim(Trim::All)
         .comment(Some(b'#'))
-        .from_reader(file);
+        .from_reader(r);
     let mut tasks = Vec::<Task>::new();
     for result in rdr.records() {
         // The iterator yields Result<StringRecord, Error>, so we check the
@@ -27,17 +23,6 @@ fn run() -> Result<Vec<Task>> {
         tasks.push(parse_task(&record)?);
     }
     Ok(tasks)
-}
-
-fn get_first_arg() -> Result<OsString> {
-    // TODO should i use CLAP instead here
-    env::args_os()
-        .nth(1)
-        .ok_or_eyre("Expected 1 argument, got none.")
-}
-
-pub fn read_csv() -> Result<Vec<Task>> {
-    run()
 }
 
 fn parse_task(record: &StringRecord) -> Result<Task> {

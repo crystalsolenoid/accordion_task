@@ -1,7 +1,7 @@
 pub mod list_pointer;
 mod logging;
 
-use crate::cli::Cli;
+use crate::cli::{self, Cli};
 use crate::config::{self, Config};
 use accordion_core::routine::{
     self, Routine,
@@ -46,7 +46,7 @@ impl App {
             .routine_path
             .ok_or_eyre("Routine launcher not yet implemented. Please specify a routine path.")?;
         let tasks = Routine::with_tasks(
-            routine::parse::read_csv().wrap_err("Failed to load routine file")?,
+            cli::get_routine().wrap_err("Failed to load routine file")?,
         );
         let length = tasks.tasks.len();
         let logger = RoutineLogger::new(&tasks, &Local::now(), &routine_name)
