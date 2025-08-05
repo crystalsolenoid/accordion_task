@@ -2,9 +2,15 @@
 // sessionstorage to protect from refresh
 
 use leptos::prelude::*;
+use leptos_router::{path, components::{A, Router, Route, Routes}};
+use leptos::task::spawn_local;
 use std::time::Duration;
 
+use leptos::wasm_bindgen::JsCast;
+use leptos::web_sys::{File, Blob, HtmlInputElement};
+
 use gloo_storage::{Storage, SessionStorage};
+use gloo_file::Blob as GlooBlob;
 
 use reactive_stores::{Store, Field};
 use accordion_core::routine::RoutineStoreFields;
@@ -65,6 +71,77 @@ fn TaskListItem(
 }
 
 #[component]
+fn RoutinePlayer(
+    #[prop(into)]
+    routine: Field<Routine>,
+    active: ReadSignal<Option<usize>>,
+    set_active: WriteSignal<Option<usize>>,
+    initial_active: usize
+) -> impl IntoView {
+
+    view! {
+        <RoutineTimer routine=routine />
+        <button on:click=move |_| {
+            let _ = routine.write().toggle(active.get());
+        }>Complete Current</button>
+        <button on:click=move |_| {
+            let _ = routine.write().skip(active.get());
+        }>Skip Current</button>
+        <ol class="routine">
+            <For
+                each=move || routine.tasks().into_iter().enumerate()
+                key=|(_, task)| task.read().name.clone()
+                children=move |(i, child)| {
+                    view! {
+                        <li class="task">
+                            <label for=child.clone().name()>
+                                <TaskListItem task=child.clone() />
+                            </label>
+                            <input
+                                type="radio"
+                                class="active-task"
+                                value=i
+                                id=child.name()
+                                name="active"
+                                prop:checked=i == initial_active
+                                on:change=move |_| {
+                                    set_active.set(Some(i));
+                                    SessionStorage::set("active", i);
+                                }
+                            />
+                        </li>
+                    }
+                }
+            />
+        </ol>
+    }
+}
+
+#[component]
+fn Upload() -> impl IntoView {
+    let (cont, set_cont) = signal("".to_string());
+    view! {
+        <input type="file" accept=".routine"
+            on:change=move |ev| {
+                if let Some(t) = ev.target() {
+                    if let Some(i) = t.dyn_ref::<HtmlInputElement>() {
+                        if let Some(f) = i.files() {
+                            let b: GlooBlob = f.item(0).unwrap().into();
+                            spawn_local(async move {
+                                let contents = gloo_file::futures::read_as_text(&b).await;
+                                set_cont.set(contents.unwrap().to_string());
+                            });
+                        }
+                    }
+                }
+            }/>
+        <p>
+        {{ move || cont }}
+        </p>
+    }
+}
+
+#[component]
 fn App() -> impl IntoView {
     let data = if let Ok(list) = SessionStorage::get("in-progress-routine") {
         Store::new(list)
@@ -94,43 +171,23 @@ fn App() -> impl IntoView {
     );
 
     view! {
-        <RoutineTimer routine=data />
-        <button on:click=move |_| {
-            let _ = data.write().toggle(active.get());
-        }>Complete Current</button>
-        <button on:click=move |_| {
-            let _ = data.write().skip(active.get());
-        }>Skip Current</button>
-        <ol class="routine">
-            <For
-                each=move || data.tasks().into_iter().enumerate()
-                key=|(_, task)| task.read().name.clone()
-                children=move |(i, child)| {
-                    view! {
-                        <li class="task">
-                            <label for=child.clone().name()>
-                                <TaskListItem task=child.clone() />
-                            </label>
-                            <input
-                                type="radio"
-                                class="active-task"
-                                value=i
-                                id=child.name()
-                                name="active"
-                                prop:checked=i == initial_active
-                                on:change=move |_| {
-                                    set_active.set(Some(i));
-                                    SessionStorage::set("active", i);
-                                }
-                            />
-                        </li>
-                    }
+        <Router>
+            <nav>
+                <A href="">Routine</A>
+                <A href="upload">Upload</A>
+            </nav>
+            <Routes fallback=|| "">
+                <Route path=path!("/upload") view=Upload />
+                <Route path=path!("/") view=move || 
+            view!{<RoutinePlayer routine=data active=active set_active=set_active initial_active=initial_active/>
                 }
             />
-        </ol>
+            </Routes>
+        </Router>
     }
 }
 
 fn main() {
+    console_error_panic_hook::set_once();
     leptos::mount::mount_to_body(App)
 }

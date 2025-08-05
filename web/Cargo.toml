@@ -6,6 +6,9 @@ edition = "2024"
 [dependencies]
 accordion_core = { version = "0.1.0", path = "../accordion_core", features = ["web"] }
 console_error_panic_hook = "0.1.7"
+gloo-file = { version = "0.3.0", features = ["futures"] }
 gloo-storage = "0.3.0"
 leptos = { version = "0.8.2", features = ["csr"] }
+leptos_router = "0.8.5"
 reactive_stores = "0.2.5"
+web-sys = { version = "0.3.77", features = ["Blob", "File", "FileList"] }
