@@ -1,5 +1,7 @@
 // TODO track time with chrono
-// sessionstorage to protect from refresh
+// TODO wrap a Routine in a Session
+// which has state for the current session
+// like the active task and the start/end times
 
 use leptos::prelude::*;
 use leptos_router::{path, components::{A, Router, Route, Routes}};
@@ -152,25 +154,24 @@ fn Upload(
         <h1>Upload Routine</h1>
         <input type="file" accept=".routine"
             on:change=move |ev| {
-                if let Some(t) = ev.target() {
-                    if let Some(i) = t.dyn_ref::<HtmlInputElement>() {
-                        if let Some(f) = i.files() {
-                            let b: GlooBlob = f.item(0).unwrap().into();
-                            spawn_local(async move {
-                                let contents = gloo_file::futures::read_as_text(&b).await;
-                                let tasks = routine::parse::from_csv(contents.unwrap().as_bytes());
-                                let rout = Routine::with_tasks(tasks.unwrap());
-                                preview_routine.set(rout);
-                            });
-                        }
-                    }
-                }
+                // TODO handle the errors
+                let target = ev.target().unwrap();
+                let input = target.dyn_ref::<HtmlInputElement>().unwrap();
+                let blob: GlooBlob = input.files()
+                    .and_then(|files| files.item(0))
+                    .unwrap().into();
+                spawn_local(async move {
+                    let contents = gloo_file::futures::read_as_text(&blob).await;
+                    let tasks = routine::parse::from_csv(contents.unwrap().as_bytes());
+                    let routine = Routine::with_tasks(tasks.unwrap());
+                    preview_routine.set(routine);
+                });
             }/>
         <button
             on:click= move |_| {
                 data.set(preview_routine.get());
         }>
-            Save Routine
+            Overwrite Active Routine
         </button>
         <h2>Preview</h2>
         <PreviewRoutine routine=preview_routine/>
