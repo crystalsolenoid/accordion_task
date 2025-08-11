@@ -11,9 +11,10 @@ use ratatui::{
 };
 use std::time::Duration;
 
-use crate::app::{App, Menu, Mode, list_pointer::ListPointer};
+use crate::app::{App, Menu, Mode};
 use accordion_core::{
     routine::{CompletionStatus, Task},
+    session::ListPointer,
     utils::format_duration,
 };
 
@@ -172,6 +173,7 @@ fn render_timer(app: &App, f: &mut Frame, area: Rect) {
 fn render_table(app: &App, f: &mut Frame, area: Rect) {
     let block = standard_block("Routine");
     let rows: Vec<Row> = app
+        .session
         .tasks
         .tasks
         .iter()
@@ -183,7 +185,7 @@ fn render_table(app: &App, f: &mut Frame, area: Rect) {
         Constraint::Length(15),
         Constraint::Length(15),
     ];
-    let mut state = prepare_table_state(app.task_widget_state, block.inner(area));
+    let mut state = prepare_table_state(app.session.selected, block.inner(area));
     let table = Table::new(rows, widths)
         .column_spacing(1)
         .style(Style::new().fg(Color::Yellow))

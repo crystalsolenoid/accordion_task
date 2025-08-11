@@ -1,4 +1,3 @@
-pub mod list_pointer;
 mod logging;
 
 use crate::cli::{self, Cli};
@@ -7,7 +6,7 @@ use accordion_core::routine::{
     self, Routine,
     task::{self, CompletionStatus, Task},
 };
-use list_pointer::ListPointer;
+use accordion_core::session::Session;
 use logging::{LogElement, RoutineLogger};
 
 use chrono::{DateTime, Days, Local, MappedLocalTime};
@@ -25,16 +24,9 @@ pub struct App {
     pub should_quit: bool,
     pub debug: bool,
     pub help_menu: bool,
-    /// counter
-    pub counter: i64,
     /// task display widget
-    pub task_widget_state: ListPointer,
-    /// task internal list
-    pub tasks: Routine,
-    /// routine timer
-    pub last_tick: Instant,
+    pub session: Session,
     logger: RoutineLogger,
-    pub start_time: DateTime<Local>,
     pub menu_focus: Mode,
     pub text_input: TextArea<'static>,
 }
@@ -45,25 +37,19 @@ impl App {
         let routine_name = cli
             .routine_path
             .ok_or_eyre("Routine launcher not yet implemented. Please specify a routine path.")?;
-        let tasks = Routine::with_tasks(
-            cli::get_routine().wrap_err("Failed to load routine file")?,
-        );
-        let length = tasks.tasks.len();
+        let tasks =
+            Routine::with_tasks(cli::get_routine().wrap_err("Failed to load routine file")?);
         let logger = RoutineLogger::new(&tasks, &Local::now(), &routine_name)
             .wrap_err("Logger failed to initialize.")?;
         let mut app = Self {
             config: config::load(),
             text_input: TextArea::default(),
             menu_focus: Mode::Navigation,
-            start_time: Local::now(),
             should_quit: false,
+            session: Session::new(tasks),
             debug: false,
             help_menu: false,
             logger,
-            counter: 0,
-            tasks,
-            task_widget_state: ListPointer::new(length),
-            last_tick: Instant::now(),
         };
 
         let now = Local::now();
@@ -83,7 +69,7 @@ impl App {
             } else {
                 today_deadline
             };
-            app.tasks.set_deadline(deadline);
+            app.session.tasks.set_deadline(deadline);
         };
 
         /*
@@ -99,51 +85,39 @@ impl App {
     }
 
     pub fn get_current_task_name(&self) -> Option<&str> {
-        let i = self.task_widget_state.selected();
-        self.tasks.get_nth(i).map(|t| t.name.as_str())
+        let i = self.session.selected.selected();
+        self.session.tasks.get_nth(i).map(|t| t.name.as_str())
     }
 
     pub fn get_total_remaining(&self) -> Duration {
-        self.tasks.remaining()
+        self.session.tasks.remaining()
     }
 
     pub fn get_total_duration(&self) -> Duration {
-        self.tasks.duration()
+        self.session.tasks.duration()
     }
 
     pub fn get_start_time(&self) -> DateTime<Local> {
-        self.start_time
+        self.session.start_time
     }
 
     pub fn get_projected_end_time(&self) -> DateTime<Local> {
         Local::now() + self.get_total_remaining()
     }
 
-    /// Handles the tick event of the terminal.
     pub fn tick(&mut self) {
-        let this_tick = Instant::now();
-        let delta = this_tick - self.last_tick;
-        self.last_tick = this_tick;
-
-        cli_log::debug!("Tick");
-        self.tasks.elapse(self.task_widget_state.selected(), delta);
-        if let Some(t) = self.tasks.get_nth(self.task_widget_state.selected()) {
+        let delta = self.session.tick().to_std().unwrap();
+        if let Some(t) = self.session.tasks.get_nth(self.session.selected.selected()) {
             self.logger.log(LogElement::elapsed(t, delta));
         }
     }
 
     pub fn get_time_elapsed(&self) -> Duration {
-        self.tasks.elapsed()
+        self.session.tasks.elapsed()
     }
 
     pub fn get_percentage_elapsed(&self) -> f64 {
-        // TODO should the percentage bar be configurable? Another option could be
-        // number of tasks completed, which would make the effort of task
-        // switching more recognized. The value of leaving it this way even then is honing
-        // your time understanding skills.
-        self.tasks
-            .completed_originals()
-            .div_duration_f64(self.tasks.total_originals())
+        self.session.get_percentage_elapsed()
     }
 
     /// Set `should_quit` to `true` to quit the application.
@@ -161,24 +135,24 @@ impl App {
     }
 
     pub fn pause(&mut self) {
-        self.task_widget_state.pause();
+        self.session.selected.pause();
         self.menu_focus = Mode::Typing(Menu::Pause);
     }
 
     fn append_task_submit(&mut self) {
         let name = self.text_input.lines()[0].clone();
         let task = task::parse_new(&name);
-        self.task_widget_state.append_item();
-        self.tasks.push(task);
+        self.session.selected.append_item();
+        self.session.tasks.push(task);
     }
 
     fn insert_task_submit(&mut self) {
         let name = self.text_input.lines()[0].clone();
         // TODO fix ownership of name
         let task = task::parse_new(&name);
-        self.task_widget_state.append_item();
-        let i = self.task_widget_state.selected().unwrap_or(0) + 1;
-        self.tasks.insert(i, task);
+        self.session.selected.append_item();
+        let i = self.session.selected.selected().unwrap_or(0) + 1;
+        self.session.tasks.insert(i, task);
     }
 
     fn unpause(&mut self) {
@@ -188,7 +162,7 @@ impl App {
         // and the message.
         let message = self.text_input.lines()[0].clone();
         self.logger.log_comment(&message, Local::now());
-        self.task_widget_state.unpause();
+        self.session.selected.unpause();
     }
 
     pub fn cancel_typing(&mut self, menu: Menu) {
@@ -196,7 +170,7 @@ impl App {
         self.menu_focus = Mode::Navigation;
         if menu == Menu::Pause {
             // TODO duplicates work. refactor?
-            self.task_widget_state.unpause();
+            self.session.selected.unpause();
         }
     }
 
@@ -218,10 +192,11 @@ impl App {
     }
 
     pub fn attempt_toggle(&mut self) {
-        let i = self.task_widget_state.selected();
-        match self.tasks.toggle(i) {
+        let i = self.session.selected.selected();
+        match self.session.toggle() {
             Ok(CompletionStatus::Done) => {
                 let task = self
+                    .session
                     .tasks
                     .get_nth(i)
                     .expect("this should always exist here");
@@ -230,8 +205,9 @@ impl App {
             }
             Ok(CompletionStatus::NotYet) => {
                 let task = self
+                    .session
                     .tasks
-                    .get_nth(self.task_widget_state.selected())
+                    .get_nth(self.session.selected.selected())
                     .expect("this should always exist here");
                 self.logger.log(LogElement::uncompleted(task));
             }
@@ -241,10 +217,11 @@ impl App {
     }
 
     pub fn attempt_skip(&mut self) {
-        let i = self.task_widget_state.selected();
-        match self.tasks.skip(i) {
+        let i = self.session.selected.selected();
+        match self.session.tasks.skip(i) {
             Ok(CompletionStatus::Skipped) => {
                 let task = self
+                    .session
                     .tasks
                     .get_nth(i)
                     .expect("this should always exist here");
@@ -253,8 +230,9 @@ impl App {
             }
             Ok(CompletionStatus::NotYet) => {
                 let task = self
+                    .session
                     .tasks
-                    .get_nth(self.task_widget_state.selected())
+                    .get_nth(self.session.selected.selected())
                     .expect("this should always exist here");
                 self.logger.log(LogElement::unskipped(task));
             }
@@ -264,35 +242,36 @@ impl App {
     }
 
     pub fn next_task(&mut self) {
-        let _ = self.task_widget_state.try_next();
+        let _ = self.session.selected.try_next();
     }
 
     fn bouncing_next_task(&mut self) {
-        let selectable = self.tasks.get_checkboxes().into_iter();
+        let selectable = self.session.tasks.get_checkboxes().into_iter();
         match self
-            .task_widget_state
+            .session
+            .selected
             .try_next_selectable(selectable.clone())
         {
             // TODO shouldnt have to clone here
             Ok(()) => (),
             Err(_) => {
-                let _ = self.task_widget_state.try_prev_selectable(selectable);
+                let _ = self.session.selected.try_prev_selectable(selectable);
             }
         }
     }
 
     pub fn next_available_task(&mut self) {
-        let selectable = self.tasks.get_checkboxes().into_iter();
-        let _ = self.task_widget_state.try_next_selectable(selectable);
+        let selectable = self.session.tasks.get_checkboxes().into_iter();
+        let _ = self.session.selected.try_next_selectable(selectable);
     }
 
     pub fn prev_task(&mut self) {
-        let _ = self.task_widget_state.try_prev();
+        let _ = self.session.selected.try_prev();
     }
 
     pub fn prev_available_task(&mut self) {
-        let selectable = self.tasks.get_checkboxes().into_iter();
-        let _ = self.task_widget_state.try_prev_selectable(selectable);
+        let selectable = self.session.tasks.get_checkboxes().into_iter();
+        let _ = self.session.selected.try_prev_selectable(selectable);
     }
 }
 

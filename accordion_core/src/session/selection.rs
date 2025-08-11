@@ -1,5 +1,11 @@
+#[cfg(feature = "ratatui")]
 use ratatui::widgets::{ListState, TableState};
 use std::iter::{DoubleEndedIterator, ExactSizeIterator};
+
+#[cfg(feature = "web")]
+use reactive_stores::Store;
+#[cfg(feature = "web")]
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
 pub enum ScrollError {
@@ -8,6 +14,7 @@ pub enum ScrollError {
 }
 
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "web", derive(Store, Serialize, Deserialize))]
 pub struct ListPointer {
     offset: usize,
     selected: Option<usize>,
@@ -34,11 +41,7 @@ impl ListPointer {
     }
 
     pub fn selected(&self) -> Option<usize> {
-        if self.paused {
-            None
-        } else {
-            self.selected
-        }
+        if self.paused { None } else { self.selected }
     }
 
     pub fn select(&mut self, i: Option<usize>) -> Result<(), ScrollError> {
@@ -121,12 +124,11 @@ impl ListPointer {
     ) -> Result<(), ScrollError> {
         match self.selected {
             Some(i) => {
-                let j =
-                    selectable
-                        .enumerate()
-                        .take(i)
-                        .rev()
-                        .find_map(|(i, s)| if s { Some(i) } else { None });
+                let j = selectable
+                    .enumerate()
+                    .take(i)
+                    .rev()
+                    .find_map(|(i, s)| if s { Some(i) } else { None });
                 match j {
                     Some(_) => {
                         self.selected = j;
@@ -155,6 +157,7 @@ impl ListPointer {
     }
 }
 
+#[cfg(feature = "ratatui")]
 impl From<ListPointer> for ListState {
     fn from(val: ListPointer) -> Self {
         ListState::default()
@@ -163,6 +166,7 @@ impl From<ListPointer> for ListState {
     }
 }
 
+#[cfg(feature = "ratatui")]
 impl From<ListPointer> for TableState {
     fn from(val: ListPointer) -> Self {
         TableState::default()

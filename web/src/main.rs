@@ -3,36 +3,33 @@
 // which has state for the current session
 // like the active task and the start/end times
 
-use leptos::prelude::*;
-use leptos_router::{path, components::{A, Router, Route, Routes}};
-use leptos::task::spawn_local;
 use std::time::Duration;
 
-use leptos::wasm_bindgen::JsCast;
-use leptos::web_sys::{File, Blob, HtmlInputElement};
-
-use gloo_storage::{Storage, SessionStorage};
 use gloo_file::Blob as GlooBlob;
+use gloo_storage::{SessionStorage, Storage};
+use leptos::prelude::*;
+use leptos::task::spawn_local;
+use leptos::wasm_bindgen::JsCast;
+use leptos::web_sys::{Blob, File, HtmlInputElement};
+use leptos_router::{
+    components::{A, Route, Router, Routes},
+    path,
+};
+use reactive_stores::{Field, Store};
 
-use reactive_stores::{Store, Field};
-use accordion_core::routine::RoutineStoreFields;
-use accordion_core::routine::task::TaskStoreFields;
-
-use accordion_core::routine::{self, Routine, Task, CompletionStatus};
+use accordion_core::routine::{
+    self, CompletionStatus, Routine, RoutineStoreFields, Task, task::TaskStoreFields,
+};
+use accordion_core::session::{Session, SessionStoreFields};
 use accordion_core::utils;
 
 #[component]
-fn Duration(
-    #[prop(into)]
-    value: Signal<Duration>) -> impl IntoView {
+fn Duration(#[prop(into)] value: Signal<Duration>) -> impl IntoView {
     view! { {{ move || utils::format_duration(value.get()) }} }
 }
 
 #[component]
-fn RoutineTimer(
-    #[prop(into)]
-    routine: Field<Routine>,
-) -> impl IntoView {
+fn RoutineTimer(#[prop(into)] routine: Field<Routine>) -> impl IntoView {
     let elapsed = Memo::new(move |_| routine.get().elapsed());
     let remaining = Memo::new(move |_| routine.get().remaining());
     view! {
@@ -42,10 +39,7 @@ fn RoutineTimer(
 }
 
 #[component]
-fn TaskListItem(
-    #[prop(into)]
-    task: Field<Task>,
-) -> impl IntoView {
+fn TaskListItem(#[prop(into)] task: Field<Task>) -> impl IntoView {
     view! {
         <h2>{{ move || task.name().get() }}</h2>
         <span>
@@ -73,25 +67,18 @@ fn TaskListItem(
 }
 
 #[component]
-fn RoutinePlayer(
-    #[prop(into)]
-    routine: Field<Routine>,
-    active: ReadSignal<Option<usize>>,
-    set_active: WriteSignal<Option<usize>>,
-    initial_active: usize
-) -> impl IntoView {
-
+fn RoutinePlayer(#[prop(into)] session: Field<Session>, initial_active: usize) -> impl IntoView {
     view! {
-        <RoutineTimer routine=routine />
+        <RoutineTimer routine=session.tasks() />
         <button on:click=move |_| {
-            let _ = routine.write().toggle(active.get());
+            let _ = session.write().toggle();
         }>Complete Current</button>
         <button on:click=move |_| {
-            let _ = routine.write().skip(active.get());
+            let _ = session.write().skip();
         }>Skip Current</button>
         <ol class="routine">
             <For
-                each=move || routine.tasks().into_iter().enumerate()
+                each=move || session.tasks().tasks().into_iter().enumerate()
                 key=|(_, task)| task.read().name.clone()
                 children=move |(i, child)| {
                     view! {
@@ -107,8 +94,8 @@ fn RoutinePlayer(
                                 name="active"
                                 prop:checked=i == initial_active
                                 on:change=move |_| {
-                                    set_active.set(Some(i));
-                                    SessionStorage::set("active", i);
+                                    session.selected().write().select(Some(i));
+                                    SessionStorage::set("in-progress-session", session.get());
                                 }
                             />
                         </li>
@@ -120,11 +107,7 @@ fn RoutinePlayer(
 }
 
 #[component]
-fn PreviewRoutine(
-    #[prop(into)]
-    routine: Field<Routine>,
-) -> impl IntoView {
-
+fn PreviewRoutine(#[prop(into)] routine: Field<Routine>) -> impl IntoView {
     view! {
         <ol class="routine">
             <For
@@ -144,65 +127,62 @@ fn PreviewRoutine(
 
 // TODO I need a better way to set the current routine
 #[component]
-fn Upload(
-    #[prop(into)]
-    data: Field<Routine>,
-) -> impl IntoView {
+fn Upload(#[prop(into)] data: Field<Session>) -> impl IntoView {
     let preview_routine = Store::new(Routine::default());
     view! {
         // TODO make this a form
         <h1>Upload Routine</h1>
-        <input type="file" accept=".routine"
+        <input
+            type="file"
+            accept=".routine"
             on:change=move |ev| {
-                // TODO handle the errors
                 let target = ev.target().unwrap();
                 let input = target.dyn_ref::<HtmlInputElement>().unwrap();
-                let blob: GlooBlob = input.files()
-                    .and_then(|files| files.item(0))
-                    .unwrap().into();
+                let blob: GlooBlob = input.files().and_then(|files| files.item(0)).unwrap().into();
                 spawn_local(async move {
                     let contents = gloo_file::futures::read_as_text(&blob).await;
                     let tasks = routine::parse::from_csv(contents.unwrap().as_bytes());
                     let routine = Routine::with_tasks(tasks.unwrap());
                     preview_routine.set(routine);
                 });
-            }/>
-        <button
-            on:click= move |_| {
-                data.set(preview_routine.get());
-        }>
-            Overwrite Active Routine
-        </button>
-        <h2>Preview</h2>
-        <PreviewRoutine routine=preview_routine/>
+            }
+        />
+        <Show when=move || { preview_routine.tasks().read().len() != 0 }>
+            <button on:click=move |_| {
+                let new_session = Session::new(preview_routine.get());
+                data.set(new_session);
+                SessionStorage::set("in-progress-session", data.get());
+            }>Overwrite Active Routine</button>
+            <h2>Preview</h2>
+            <PreviewRoutine routine=preview_routine />
+        </Show>
     }
 }
 
 #[component]
 fn App() -> impl IntoView {
-    let data = if let Ok(list) = SessionStorage::get("in-progress-routine") {
-        Store::new(list)
+    let initial_active: usize;
+    let session = if let Ok(session) = SessionStorage::get("in-progress-session") {
+        let session: Session = session;
+        initial_active = session.selected.selected().unwrap_or_default();
+        Store::new(session)
     } else {
         let mut list = Routine::default();
         list.push(Task::new("shower", 120));
         list.push(Task::new("eat dinner", 60));
         list.push(Task::new("program", 9990));
-        Store::new(list)
+        let session = Session::new(list);
+        initial_active = session.selected.selected().unwrap_or_default();
+        Store::new(session)
     };
-
-    let initial_active = if let Ok(i) = SessionStorage::get("active") {
-        i
-    } else {
-        0
-    };
-    let (active, set_active) = signal(Some(initial_active));
 
     leptos::leptos_dom::helpers::set_interval(
         move || {
             // elapse time
-            data.write().elapse(active.get(), Duration::from_secs(1));
+            // data.write().elapse(active.get(), Duration::from_secs(1));
+            session.write().tick();
             // save to session storage (TODO? when do I actually want to do this?)
-            SessionStorage::set("in-progress-routine", data.get());
+            SessionStorage::set("in-progress-session", session.get());
         },
         Duration::from_secs(1),
     );
@@ -214,11 +194,13 @@ fn App() -> impl IntoView {
                 <A href="upload">Upload</A>
             </nav>
             <Routes fallback=|| "">
-                <Route path=path!("/upload") view=move || view!{<Upload data=data/>} />
-                <Route path=path!("/") view=move || 
-            view!{<RoutinePlayer routine=data active=active set_active=set_active initial_active=initial_active/>
-                }
-            />
+                <Route path=path!("/upload") view=move || view! { <Upload data=session /> } />
+                <Route
+                    path=path!("/")
+                    view=move || {
+                        view! { <RoutinePlayer session=session initial_active=initial_active /> }
+                    }
+                />
             </Routes>
         </Router>
     }

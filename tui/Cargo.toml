@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-accordion_core = { version = "0.1.0", path = "../accordion_core" }
+accordion_core = { version = "0.1.0", path = "../accordion_core", features = ["ratatui"] }
 chrono = "0.4.31"
 clap = { version = "4.5.37", features = ["derive"] }
 cli-log = "2.1.0"
