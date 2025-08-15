@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 accordion_core = { version = "0.1.0", path = "../accordion_core", features = ["web"] }
+chrono = "0.4.41"
 console_error_panic_hook = "0.1.7"
 gloo-file = { version = "0.3.0", features = ["futures"] }
 gloo-storage = "0.3.0"

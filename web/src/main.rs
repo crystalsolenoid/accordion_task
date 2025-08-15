@@ -3,6 +3,7 @@
 // which has state for the current session
 // like the active task and the start/end times
 
+use chrono::NaiveTime;
 use std::time::Duration;
 
 use gloo_file::Blob as GlooBlob;
@@ -12,7 +13,7 @@ use leptos::task::spawn_local;
 use leptos::wasm_bindgen::JsCast;
 use leptos::web_sys::{Blob, File, HtmlInputElement};
 use leptos_router::{
-    components::{A, Route, Router, Routes},
+    components::{A, Form, Route, Router, Routes},
     path,
 };
 use reactive_stores::{Field, Store};
@@ -22,6 +23,15 @@ use accordion_core::routine::{
 };
 use accordion_core::session::{Session, SessionStoreFields};
 use accordion_core::utils;
+
+use leptos::Params;
+use leptos_router::hooks::use_query;
+use leptos_router::params::Params;
+
+#[derive(Params, PartialEq)]
+struct ContactSearch {
+    d: Option<NaiveTime>,
+}
 
 #[component]
 fn Duration(#[prop(into)] value: Signal<Duration>) -> impl IntoView {
@@ -125,6 +135,27 @@ fn PreviewRoutine(#[prop(into)] routine: Field<Routine>) -> impl IntoView {
     }
 }
 
+#[component]
+fn DeadlinePicker() -> impl IntoView {
+    let query = use_query::<ContactSearch>();
+    view! {
+        <Form method="GET" action="">
+            <label>
+            {{ "Set Deadline" }}
+            <input type="time" name="d" />
+            </label>
+            <button>Submit</button>
+        </Form>
+        {{ move || query
+            .read()
+            .as_ref()
+            .ok()
+            .and_then(|queries| queries.d)
+            .map(|d| d.format("%-I:%M %p").to_string())
+             }}
+    }
+}
+
 // TODO I need a better way to set the current routine
 #[component]
 fn Upload(#[prop(into)] data: Field<Session>) -> impl IntoView {
@@ -198,7 +229,10 @@ fn App() -> impl IntoView {
                 <Route
                     path=path!("/")
                     view=move || {
-                        view! { <RoutinePlayer session=session initial_active=initial_active /> }
+                        view! {
+                            <DeadlinePicker/>
+                            <RoutinePlayer session=session initial_active=initial_active />
+                        }
                     }
                 />
             </Routes>
