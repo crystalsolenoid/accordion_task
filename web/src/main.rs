@@ -119,19 +119,32 @@ fn RoutinePlayer(#[prop(into)] session: Field<Session>, initial_active: usize) -
 #[component]
 fn PreviewRoutine(#[prop(into)] routine: Field<Routine>) -> impl IntoView {
     view! {
-        <ol class="routine">
+        <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Starting Duration</th>
+            </tr>
+        </thead>
+        <tbody>
             <For
                 each=move || routine.tasks().into_iter().enumerate()
                 key=|(_, task)| task.read().name.clone()
                 children=move |(i, child)| {
                     view! {
-                        <li class="task">
-                            <TaskListItem task=child.clone() />
-                        </li>
+                        <tr>
+                            <td>
+                            {{child.clone().name().get()}}
+                            </td>
+                            <td>
+                            <Duration value=child.duration() />
+                            </td>
+                        </tr>
                     }
                 }
             />
-        </ol>
+        </tbody>
+        </table>
     }
 }
 
