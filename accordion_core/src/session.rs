@@ -1,7 +1,7 @@
 pub mod selection;
 pub use selection::ListPointer;
 
-// use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use chrono::{DateTime, Local, TimeDelta, Utc};
 use color_eyre::{
@@ -57,6 +57,14 @@ impl Session {
         self.tasks
             .completed_originals()
             .div_duration_f64(self.tasks.total_originals())
+    }
+
+    pub fn get_total_remaining(&self) -> Duration {
+        self.tasks.remaining()
+    }
+
+    pub fn get_projected_end_time(&self) -> DateTime<Local> {
+        Local::now() + self.get_total_remaining()
     }
 
     pub fn toggle(&mut self) -> Result<CompletionStatus, ToggleFailure> {

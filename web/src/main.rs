@@ -3,7 +3,7 @@
 // which has state for the current session
 // like the active task and the start/end times
 
-use chrono::{Local, NaiveTime};
+use chrono::{DateTime, Local, NaiveTime};
 use std::time::Duration;
 
 use gloo_file::Blob as GlooBlob;
@@ -35,16 +35,26 @@ struct ContactSearch {
 
 #[component]
 fn Duration(#[prop(into)] value: Signal<Duration>) -> impl IntoView {
-    view! { {{ move || utils::format_duration(value.get()) }} }
+    view! {
+        {{ move || utils::format_duration(value.get()) }}
+    }
 }
 
 #[component]
-fn RoutineTimer(#[prop(into)] routine: Field<Routine>) -> impl IntoView {
-    let elapsed = Memo::new(move |_| routine.get().elapsed());
-    let remaining = Memo::new(move |_| routine.get().remaining());
+fn RoutineTimer(#[prop(into)] session: Field<Session>) -> impl IntoView {
+    let elapsed = Memo::new(move |_| session.tasks().read().elapsed());
+    let remaining = Memo::new(move |_| session.tasks().read().remaining());
+    let eta = move || {
+        session
+            .read()
+            .get_projected_end_time()
+            .format(TIME_FORMAT)
+            .to_string()
+    };
     view! {
         <p>Remaining: <Duration value=remaining /></p>
         <p>Elapsed: <Duration value=elapsed /></p>
+        <p>Expected End: {{ move || eta() }}</p>
     }
 }
 
@@ -79,7 +89,7 @@ fn TaskListItem(#[prop(into)] task: Field<Task>) -> impl IntoView {
 #[component]
 fn RoutinePlayer(#[prop(into)] session: Field<Session>, initial_active: usize) -> impl IntoView {
     view! {
-        <RoutineTimer routine=session.tasks() />
+        <RoutineTimer session=session />
         <div id="task-actions">
             <button on:click=move |_| {
                 let _ = session.write().toggle();
@@ -165,10 +175,12 @@ fn DeadlinePicker() -> impl IntoView {
             .as_ref()
             .ok()
             .and_then(|queries| queries.d)
-            .map(|d| d.format("%-I:%M %p").to_string())
+            .map(|d| d.format(TIME_FORMAT).to_string())
              }}
     }
 }
+
+const TIME_FORMAT: &str = "%-I:%M %p";
 
 // TODO I need a better way to set the current routine
 #[component]
@@ -238,13 +250,18 @@ fn App() -> impl IntoView {
 
     leptos::leptos_dom::helpers::set_interval(
         move || {
-            // elapse time
-            // data.write().elapse(active.get(), Duration::from_secs(1));
             session.write().tick();
-            // save to session storage (TODO? when do I actually want to do this?)
+        },
+        // BUG: if this is a larger number ( try 10 seconds ), the
+        // duration-related reactive components... won't react??!
+        Duration::from_millis(50),
+    );
+
+    leptos::leptos_dom::helpers::set_interval(
+        move || {
             SessionStorage::set("in-progress-session", session.get());
         },
-        Duration::from_secs(1),
+        Duration::from_secs(60),
     );
 
     view! {
