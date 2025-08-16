@@ -20,6 +20,7 @@ use serde::{Deserialize, Serialize};
 pub struct Session {
     pub start_time: DateTime<Local>,
     pub last_tick: DateTime<Utc>,
+    // pub deadline: DateTime<Local>,
     pub tasks: Routine,
     pub selected: ListPointer,
 }
@@ -66,5 +67,9 @@ impl Session {
     pub fn skip(&mut self) -> Result<CompletionStatus, ToggleFailure> {
         let i = self.selected.selected();
         self.tasks.skip(i)
+    }
+
+    pub fn set_deadline(&mut self, deadline: DateTime<Local>) {
+        self.tasks.set_deadline(deadline);
     }
 }

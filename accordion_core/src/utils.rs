@@ -1,3 +1,4 @@
+use chrono::{DateTime, Days, Local, MappedLocalTime, NaiveTime};
 use std::time::Duration;
 
 pub fn format_duration(dur: Duration) -> String {
@@ -17,4 +18,25 @@ pub fn format_duration(dur: Duration) -> String {
         _ => format!("{}s", s - 60 * m),
     };
     format!("{h_str}{m_str}{s_str}")
+}
+
+pub fn interpret_naive_time(now: DateTime<Local>, nt: NaiveTime) -> DateTime<Local> {
+    {
+        // TODO handle DST
+        let MappedLocalTime::Single(today_deadline) = now.with_time(nt) else {
+            todo!("Handle DST");
+        };
+        let deadline = if today_deadline < now {
+            let Some(tomorrow) = now.checked_add_days(Days::new(1)) else {
+                todo!("handle DST properly")
+            };
+            match tomorrow.with_time(nt) {
+                MappedLocalTime::Single(t) => t,
+                _ => todo!(), // Risks crash around DST change
+            }
+        } else {
+            today_deadline
+        };
+        deadline
+    }
 }

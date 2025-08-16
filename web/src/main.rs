@@ -3,7 +3,7 @@
 // which has state for the current session
 // like the active task and the start/end times
 
-use chrono::NaiveTime;
+use chrono::{Local, NaiveTime};
 use std::time::Duration;
 
 use gloo_file::Blob as GlooBlob;
@@ -137,7 +137,6 @@ fn PreviewRoutine(#[prop(into)] routine: Field<Routine>) -> impl IntoView {
 
 #[component]
 fn DeadlinePicker() -> impl IntoView {
-    let query = use_query::<ContactSearch>();
     view! {
         <Form method="GET" action="">
             <label>
@@ -146,7 +145,7 @@ fn DeadlinePicker() -> impl IntoView {
             </label>
             <button>Submit</button>
         </Form>
-        {{ move || query
+        {{ move || use_query::<ContactSearch>()
             .read()
             .as_ref()
             .ok()
@@ -206,6 +205,21 @@ fn App() -> impl IntoView {
         initial_active = session.selected.selected().unwrap_or_default();
         Store::new(session)
     };
+
+    Effect::new(move || {
+        // Is an effect really the best way to do this?
+        // Is it a reasonable use of an Effect?
+        // TODO Find out what the other options are...
+        let deadline = use_query::<ContactSearch>()
+            .read()
+            .as_ref()
+            .ok()
+            .and_then(|queries| queries.d)
+            .map(|d| accordion_core::utils::interpret_naive_time(Local::now(), d));
+        if let Some(d) = deadline {
+            session.write().set_deadline(d);
+        }
+    });
 
     leptos::leptos_dom::helpers::set_interval(
         move || {

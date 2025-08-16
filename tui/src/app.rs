@@ -3,18 +3,18 @@ mod logging;
 use crate::cli::{self, Cli};
 use crate::config::{self, Config};
 use accordion_core::routine::{
-    self, Routine,
+    Routine,
     task::{self, CompletionStatus, Task},
 };
 use accordion_core::session::Session;
 use logging::{LogElement, RoutineLogger};
 
-use chrono::{DateTime, Days, Local, MappedLocalTime};
+use chrono::{DateTime, Local};
 use color_eyre::{
     Result,
     eyre::{OptionExt, WrapErr},
 };
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use tui_textarea::TextArea;
 
 /// Application.
@@ -54,21 +54,7 @@ impl App {
 
         let now = Local::now();
         if let Some(deadline) = cli.deadline {
-            // TODO handle DST
-            let MappedLocalTime::Single(today_deadline) = now.with_time(deadline) else {
-                todo!("Handle DST");
-            };
-            let deadline = if today_deadline < now {
-                let Some(tomorrow) = now.checked_add_days(Days::new(1)) else {
-                    todo!("handle DST properly")
-                };
-                match tomorrow.with_time(deadline) {
-                    MappedLocalTime::Single(t) => t,
-                    _ => todo!(), // Risks crash around DST change
-                }
-            } else {
-                today_deadline
-            };
+            let deadline = accordion_core::utils::interpret_naive_time(now, deadline);
             app.session.tasks.set_deadline(deadline);
         };
 
