@@ -80,12 +80,14 @@ fn TaskListItem(#[prop(into)] task: Field<Task>) -> impl IntoView {
 fn RoutinePlayer(#[prop(into)] session: Field<Session>, initial_active: usize) -> impl IntoView {
     view! {
         <RoutineTimer routine=session.tasks() />
-        <button on:click=move |_| {
-            let _ = session.write().toggle();
-        }>Complete Current</button>
-        <button on:click=move |_| {
-            let _ = session.write().skip();
-        }>Skip Current</button>
+        <div id="task-actions">
+            <button on:click=move |_| {
+                let _ = session.write().toggle();
+            }>Complete Current</button>
+            <button on:click=move |_| {
+                let _ = session.write().skip();
+            }>Skip Current</button>
+        </div>
         <ol class="routine">
             <For
                 each=move || session.tasks().tasks().into_iter().enumerate()

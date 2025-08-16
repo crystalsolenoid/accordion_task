@@ -31,3 +31,8 @@ body {
 	outline-width: 6px;
 	background-color: #222244;
 }
+
+#task-actions {
+	position: sticky;
+	top: 0;
+}
