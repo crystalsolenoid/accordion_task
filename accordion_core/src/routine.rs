@@ -1,6 +1,7 @@
 pub mod flex;
 pub mod parse;
 pub mod task;
+pub mod template;
 
 pub use task::{CompletionStatus, Task};
 
@@ -14,7 +15,7 @@ use flex::{Flex, FlexItem};
 #[cfg(feature = "web")]
 use reactive_stores::Store;
 #[cfg(feature = "web")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Copy, Clone)]
 pub enum ToggleFailure {

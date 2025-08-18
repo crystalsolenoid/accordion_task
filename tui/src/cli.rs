@@ -1,17 +1,17 @@
 use chrono::NaiveTime;
 use clap::Parser;
 use color_eyre::{
-    eyre::{OptionExt, WrapErr},
     Result,
+    eyre::{OptionExt, WrapErr},
 };
 
 use std::{env, ffi::OsString, fs::File};
 
-use accordion_core::routine::{self, Task};
+use accordion_core::routine::{self, Task, template::RoutineTemplate};
 
 use crate::config;
 
-pub fn get_routine() -> Result<Vec<Task>> {
+pub fn get_routine() -> Result<RoutineTemplate> {
     let file_path = get_first_arg()?;
     let file = File::open(file_path)?;
     routine::parse::from_csv(file)

@@ -3,6 +3,9 @@
 // which has state for the current session
 // like the active task and the start/end times
 
+use accordion_core::routine::template::{
+    RoutineTemplate, RoutineTemplateStoreFields, TaskTemplate, TaskTemplateStoreFields,
+};
 use chrono::{DateTime, Local, NaiveTime};
 use std::time::Duration;
 
@@ -129,7 +132,7 @@ fn RoutinePlayer(#[prop(into)] session: Field<Session>, initial_active: usize) -
 }
 
 #[component]
-fn PreviewRoutine(#[prop(into)] routine: Field<Routine>) -> impl IntoView {
+fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl IntoView {
     view! {
         <table>
         <thead>
@@ -149,7 +152,7 @@ fn PreviewRoutine(#[prop(into)] routine: Field<Routine>) -> impl IntoView {
                             {{child.clone().name().get()}}
                             </td>
                             <td>
-                            <Duration value=child.duration() />
+                            <Duration value=child.duration().with(|d| Duration::from_secs(*d)) />
                             </td>
                         </tr>
                     }
@@ -185,7 +188,7 @@ const TIME_FORMAT: &str = "%-I:%M %p";
 // TODO I need a better way to set the current routine
 #[component]
 fn Upload(#[prop(into)] data: Field<Session>) -> impl IntoView {
-    let preview_routine = Store::new(Routine::default());
+    let preview_routine = Store::new(RoutineTemplate::default());
     view! {
         // TODO make this a form
         <h1>Upload Routine</h1>
@@ -198,8 +201,7 @@ fn Upload(#[prop(into)] data: Field<Session>) -> impl IntoView {
                 let blob: GlooBlob = input.files().and_then(|files| files.item(0)).unwrap().into();
                 spawn_local(async move {
                     let contents = gloo_file::futures::read_as_text(&blob).await;
-                    let tasks = routine::parse::from_csv(contents.unwrap().as_bytes());
-                    let routine = Routine::with_tasks(tasks.unwrap());
+                    let routine = routine::parse::from_csv(contents.unwrap().as_bytes()).unwrap();
                     preview_routine.set(routine);
                 });
             }
@@ -224,10 +226,10 @@ fn App() -> impl IntoView {
         initial_active = session.selected.selected().unwrap_or_default();
         Store::new(session)
     } else {
-        let mut list = Routine::default();
-        list.push(Task::new("shower", 120));
-        list.push(Task::new("eat dinner", 60));
-        list.push(Task::new("program", 9990));
+        let mut list = RoutineTemplate::default();
+        list.push(TaskTemplate::new("shower", 120));
+        list.push(TaskTemplate::new("eat dinner", 60));
+        list.push(TaskTemplate::new("program", 9990));
         let session = Session::new(list);
         initial_active = session.selected.selected().unwrap_or_default();
         Store::new(session)

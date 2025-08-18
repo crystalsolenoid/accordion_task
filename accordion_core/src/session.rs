@@ -9,7 +9,7 @@ use color_eyre::{
     eyre::{OptionExt, WrapErr},
 };
 
-use crate::routine::{CompletionStatus, Routine, ToggleFailure};
+use crate::routine::{CompletionStatus, Routine, ToggleFailure, template::RoutineTemplate};
 
 #[cfg(feature = "web")]
 use reactive_stores::Store;
@@ -26,7 +26,8 @@ pub struct Session {
 }
 
 impl Session {
-    pub fn new(tasks: Routine) -> Self {
+    pub fn new(template: RoutineTemplate) -> Self {
+        let tasks = template.generate_routine();
         let length = tasks.tasks.len();
         Self {
             start_time: Local::now(),

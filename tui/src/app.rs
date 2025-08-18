@@ -37,16 +37,16 @@ impl App {
         let routine_name = cli
             .routine_path
             .ok_or_eyre("Routine launcher not yet implemented. Please specify a routine path.")?;
-        let tasks =
-            Routine::with_tasks(cli::get_routine().wrap_err("Failed to load routine file")?);
-        let logger = RoutineLogger::new(&tasks, &Local::now(), &routine_name)
+        let tasks = cli::get_routine().wrap_err("Failed to load routine file")?;
+        let session = Session::new(tasks);
+        let logger = RoutineLogger::new(&session.tasks, &Local::now(), &routine_name)
             .wrap_err("Logger failed to initialize.")?;
         let mut app = Self {
             config: config::load(),
             text_input: TextArea::default(),
             menu_focus: Mode::Navigation,
             should_quit: false,
-            session: Session::new(tasks),
+            session,
             debug: false,
             help_menu: false,
             logger,
