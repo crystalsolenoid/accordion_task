@@ -1,6 +1,12 @@
 body {
 	background-color: #222222;
 	color: #eeeeee;
+	margin: 0;
+}
+
+nav, #task-actions, form {
+	display: flex;
+	gap: 4ch;
 }
 
 .active-task {
@@ -9,7 +15,6 @@ body {
 
 .routine {
 	list-style: none;
-	padding: 0;
 }
 
 .routine li {
@@ -35,4 +40,18 @@ body {
 #task-actions {
 	position: sticky;
 	top: 0;
+	background-color: #222222;
+}
+
+body > * {
+	padding: 6px;
+}
+
+label {
+	display: contents;
+}
+
+#task-actions button {
+	padding-block: 1rem;
+	font-size: 1.5rem;
 }
