@@ -10,7 +10,7 @@ use chrono::{DateTime, Local, NaiveTime};
 use std::time::Duration;
 
 use gloo_file::Blob as GlooBlob;
-use gloo_storage::{SessionStorage, Storage};
+use gloo_storage::{LocalStorage, SessionStorage, Storage};
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos::wasm_bindgen::JsCast;
@@ -183,12 +183,40 @@ fn DeadlinePicker() -> impl IntoView {
     }
 }
 
+#[component]
+fn Picker() -> impl IntoView {
+    let routines = Memo::new(move |_| {
+        let routines: Vec<String> = LocalStorage::get("saved-routine-keys").unwrap_or_default();
+        routines
+    });
+    let rlist = move || {
+        routines
+            .get()
+            .into_iter()
+            .map(|r| {
+                view! {
+                    <li>
+                    <a href={{r.clone()}}>{{r.clone()}}</a>
+                    </li>
+                }
+            })
+            .collect_view()
+    };
+    view! {
+        "Pick a routine."
+        <ul>
+        {{ rlist }}
+        </ul>
+    }
+}
+
 const TIME_FORMAT: &str = "%-I:%M %p";
 
 // TODO I need a better way to set the current routine
 #[component]
 fn Upload(#[prop(into)] data: Field<Session>) -> impl IntoView {
     let preview_routine = Store::new(RoutineTemplate::default());
+    let (name, set_name) = signal("New Routine".to_string());
     view! {
         // TODO make this a form
         <h1>Upload Routine</h1>
@@ -212,6 +240,27 @@ fn Upload(#[prop(into)] data: Field<Session>) -> impl IntoView {
                 data.set(new_session);
                 SessionStorage::set("in-progress-session", data.get());
             }>Overwrite Active Routine</button>
+
+            <label>Routine Name
+                <input id="routine-name"
+                    on:input:target=move |ev| {
+                        set_name.set(ev.target().value());
+                    }
+                    prop:value=name
+                />
+            </label>
+
+            <button on:click=move |_| {
+                LocalStorage::set(name.get(), preview_routine.get());
+                let mut keys: Vec<String> =
+                    LocalStorage::get("saved-routine-keys")
+                    .unwrap_or_default();
+                if !keys.contains(&name.get()) {
+                    keys.push(name.get());
+                    LocalStorage::set("saved-routine-keys", keys);
+                }
+            }>Save Routine</button>
+
             <h2>Preview</h2>
             <PreviewRoutine routine=preview_routine />
         </Show>
@@ -269,13 +318,15 @@ fn App() -> impl IntoView {
     view! {
         <Router>
             <nav>
-                <A href="">Routine</A>
+                <A href="">Picker</A>
+                <A href="routine">Routine</A>
                 <A href="upload">Upload</A>
             </nav>
             <Routes fallback=|| "">
+                <Route path=path!("") view=Picker/>
                 <Route path=path!("/upload") view=move || view! { <Upload data=session /> } />
                 <Route
-                    path=path!("/")
+                    path=path!("/routine")
                     view=move || {
                         view! {
                             <DeadlinePicker/>
