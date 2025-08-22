@@ -28,12 +28,19 @@ use accordion_core::session::{Session, SessionStoreFields};
 use accordion_core::utils;
 
 use leptos::Params;
-use leptos_router::hooks::use_query;
+use leptos_router::hooks::{use_params, use_query};
 use leptos_router::params::Params;
 
+// TODO rename
 #[derive(Params, PartialEq)]
 struct ContactSearch {
     d: Option<NaiveTime>,
+}
+
+// TODO rename
+#[derive(Params, PartialEq)]
+struct ContactParams {
+    name: Option<String>,
 }
 
 #[component]
@@ -132,6 +139,33 @@ fn RoutinePlayer(#[prop(into)] session: Field<Session>, initial_active: usize) -
 }
 
 #[component]
+fn SavedRoutineViewer() -> impl IntoView {
+    let params = use_params::<ContactParams>();
+    let name = move || {
+        params
+            .read()
+            .as_ref()
+            .ok()
+            .and_then(|params| params.name.clone()) // TODO lazy clone
+            .unwrap_or_default()
+    };
+
+    let routine_store = Store::new(RoutineTemplate::default());
+
+    Effect::new(move |_| {
+        let routine: Result<RoutineTemplate, _> = LocalStorage::get(name());
+        routine_store.set(routine.unwrap_or_default());
+    });
+
+    view! {
+        <h1>
+            {{move || routine_store.name().get()}}
+        </h1>
+        <PreviewRoutine routine=routine_store />
+    }
+}
+
+#[component]
 fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl IntoView {
     view! {
         <table>
@@ -185,6 +219,7 @@ fn DeadlinePicker() -> impl IntoView {
 
 #[component]
 fn Picker() -> impl IntoView {
+    // TODO is a Memo the best option here?
     let routines = Memo::new(move |_| {
         let routines: Vec<String> = LocalStorage::get("saved-routine-keys").unwrap_or_default();
         routines
@@ -196,7 +231,7 @@ fn Picker() -> impl IntoView {
             .map(|r| {
                 view! {
                     <li>
-                    <a href={{r.clone()}}>{{r.clone()}}</a>
+                    <A href="routine/".to_string()+&r.clone()>{{r.clone()}}</A>
                     </li>
                 }
             })
@@ -229,7 +264,8 @@ fn Upload(#[prop(into)] data: Field<Session>) -> impl IntoView {
                 let blob: GlooBlob = input.files().and_then(|files| files.item(0)).unwrap().into();
                 spawn_local(async move {
                     let contents = gloo_file::futures::read_as_text(&blob).await;
-                    let routine = routine::parse::from_csv(contents.unwrap().as_bytes()).unwrap();
+                    let mut routine = routine::parse::from_csv(contents.unwrap().as_bytes()).unwrap();
+                    routine.name = name.get();
                     preview_routine.set(routine);
                 });
             }
@@ -244,7 +280,9 @@ fn Upload(#[prop(into)] data: Field<Session>) -> impl IntoView {
             <label>Routine Name
                 <input id="routine-name"
                     on:input:target=move |ev| {
-                        set_name.set(ev.target().value());
+                        let routine_name = ev.target().value();
+                        set_name.set(routine_name.clone());
+                        preview_routine.name().set(routine_name);
                     }
                     prop:value=name
                 />
@@ -261,7 +299,9 @@ fn Upload(#[prop(into)] data: Field<Session>) -> impl IntoView {
                 }
             }>Save Routine</button>
 
-            <h2>Preview</h2>
+            <h2>
+                {{move || preview_routine.name().get()}} <em> (Preview)</em>
+            </h2>
             <PreviewRoutine routine=preview_routine />
         </Show>
     }
@@ -334,6 +374,7 @@ fn App() -> impl IntoView {
                         }
                     }
                 />
+                <Route path=path!("/routine/:name") view=SavedRoutineViewer/>
             </Routes>
         </Router>
     }
