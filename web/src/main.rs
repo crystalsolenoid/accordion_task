@@ -139,7 +139,9 @@ fn RoutinePlayer(#[prop(into)] session: Field<Session>, initial_active: usize) -
 }
 
 #[component]
-fn SavedRoutineViewer() -> impl IntoView {
+fn SavedRoutineViewer(
+#[prop(into)] data: Field<Session>
+) -> impl IntoView {
     let params = use_params::<ContactParams>();
     let name = move || {
         params
@@ -161,6 +163,13 @@ fn SavedRoutineViewer() -> impl IntoView {
         <h1>
             {{move || routine_store.name().get()}}
         </h1>
+        // TODO instead, link to a page
+        // thats for that routine? Maybe?
+        <button on:click=move |_| {
+            let new_session = Session::new(routine_store.get());
+            data.set(new_session);
+            SessionStorage::set("in-progress-session", data.get());
+        }>Overwrite Active Routine</button>
         <PreviewRoutine routine=routine_store />
     }
 }
@@ -374,7 +383,7 @@ fn App() -> impl IntoView {
                         }
                     }
                 />
-                <Route path=path!("/routine/:name") view=SavedRoutineViewer/>
+                <Route path=path!("/routine/:name") view=move || {view!{<SavedRoutineViewer data=session/>}}/>
             </Routes>
         </Router>
     }
