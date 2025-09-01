@@ -173,11 +173,11 @@ fn SavedRoutineViewer(#[prop(into)] data: Field<Session>) -> impl IntoView {
         // TODO instead, link to a page
         // thats for that routine? Maybe?
         <button on:click=move |_| {
-            let new_session = Session::new(routine_store.get());
+            let new_session = Session::new(routine_store().get());
             data.set(new_session);
             SessionStorage::set("in-progress-session", data.get());
         }>Overwrite Active Routine</button>
-        <PreviewRoutine routine=routine_store />
+        <PreviewRoutine routine=routine_store() />
     }
 }
 
