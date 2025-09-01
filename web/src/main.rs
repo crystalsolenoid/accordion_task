@@ -158,15 +158,17 @@ fn SavedRoutineViewer(#[prop(into)] data: Field<Session>) -> impl IntoView {
         LocalStorage::set("stored-routines", routines_store.get());
     });
 
-    let routine_store = routines_store
-        .vec_field()
-        .iter_unkeyed()
-        .find(|rs| rs.name().get() == name())
-        .unwrap();
+    let routine_store = move || {
+        routines_store
+            .vec_field()
+            .iter_unkeyed()
+            .find(|rs| rs.name().get() == name())
+            .unwrap()
+    };
 
     view! {
         <h1>
-            {{move || routine_store.name().get()}}
+            {{move || routine_store().name()}}
         </h1>
         // TODO instead, link to a page
         // thats for that routine? Maybe?
@@ -253,7 +255,7 @@ fn Picker() -> impl IntoView {
         {move || routines_store.vec_field().iter_unkeyed().enumerate()
             .map(|(i, routine)| view!{
                 <li>
-                <A href="routine/".to_string()+&routine.name().get()>{{routine.name().get()}}</A>
+                <A href=move || "routine/".to_string()+&routine.name().get()>{{routine.name()}}</A>
                 <button on:click = move |_| {
                     let new_routine = routine.get();
                     let new_name = routine.name().get() + "cloned";
