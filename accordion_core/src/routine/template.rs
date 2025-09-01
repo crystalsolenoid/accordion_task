@@ -5,13 +5,19 @@ use reactive_stores::Store;
 #[cfg(feature = "web")]
 use serde::{Deserialize, Serialize};
 
-#[cfg_attr(feature = "web", derive(Store, Clone, Serialize, Deserialize))]
+#[cfg_attr(
+    feature = "web",
+    derive(Store, Clone, Serialize, Deserialize, PartialEq, Eq)
+)]
 pub struct TaskTemplate {
     pub name: String,
     pub duration: u64,
 }
 
-#[cfg_attr(feature = "web", derive(Store, Clone, Serialize, Deserialize))]
+#[cfg_attr(
+    feature = "web",
+    derive(Store, Clone, Serialize, Deserialize, PartialEq, Eq)
+)]
 pub struct RoutineTemplate {
     pub name: String,
     #[cfg_attr(feature = "web", store(key: String = |row| row.name.clone()))]

@@ -2813,6 +2813,7 @@ dependencies = [
  "leptos",
  "leptos_router",
  "reactive_stores",
+ "serde",
  "web-sys",
 ]
 

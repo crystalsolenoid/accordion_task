@@ -19,7 +19,7 @@ use leptos_router::{
     components::{A, Form, Route, Router, Routes},
     path,
 };
-use reactive_stores::{Field, Store};
+use reactive_stores::{Field, Store, StoreFieldIterator};
 
 use accordion_core::routine::{
     self, CompletionStatus, Routine, RoutineStoreFields, Task, task::TaskStoreFields,
@@ -30,6 +30,7 @@ use accordion_core::utils;
 use leptos::Params;
 use leptos_router::hooks::{use_params, use_query};
 use leptos_router::params::Params;
+use serde::{Deserialize, Serialize};
 
 // TODO rename
 #[derive(Params, PartialEq)]
@@ -139,9 +140,7 @@ fn RoutinePlayer(#[prop(into)] session: Field<Session>, initial_active: usize) -
 }
 
 #[component]
-fn SavedRoutineViewer(
-#[prop(into)] data: Field<Session>
-) -> impl IntoView {
+fn SavedRoutineViewer(#[prop(into)] data: Field<Session>) -> impl IntoView {
     let params = use_params::<ContactParams>();
     let name = move || {
         params
@@ -152,12 +151,18 @@ fn SavedRoutineViewer(
             .unwrap_or_default()
     };
 
-    let routine_store = Store::new(RoutineTemplate::default());
+    let routines: StoredRoutines = LocalStorage::get("stored-routines").unwrap_or_default();
+    let routines_store: Store<StoredRoutines> = Store::new(routines);
 
     Effect::new(move |_| {
-        let routine: Result<RoutineTemplate, _> = LocalStorage::get(name());
-        routine_store.set(routine.unwrap_or_default());
+        LocalStorage::set("stored-routines", routines_store.get());
     });
+
+    let routine_store = routines_store
+        .vec_field()
+        .iter_unkeyed()
+        .find(|rs| rs.name().get() == name())
+        .unwrap();
 
     view! {
         <h1>
@@ -226,30 +231,45 @@ fn DeadlinePicker() -> impl IntoView {
     }
 }
 
+#[derive(Default, Store, Deserialize, Serialize, Clone, PartialEq, Eq)]
+struct StoredRoutine {
+    name: String,
+    routine: RoutineTemplate,
+}
+
+#[derive(Default, Store, Deserialize, Serialize, Clone, PartialEq, Eq)]
+struct StoredRoutines {
+    vec_field: Vec<StoredRoutine>,
+}
+
 #[component]
 fn Picker() -> impl IntoView {
-    // TODO is a Memo the best option here?
-    let routines = Memo::new(move |_| {
-        let routines: Vec<String> = LocalStorage::get("saved-routine-keys").unwrap_or_default();
-        routines
+    let routines: StoredRoutines = LocalStorage::get("stored-routines").unwrap_or_default();
+    let routines_store: Store<StoredRoutines> = Store::new(routines);
+
+    Effect::new(move |_| {
+        LocalStorage::set("stored-routines", routines_store.get());
     });
-    let rlist = move || {
-        routines
-            .get()
-            .into_iter()
-            .map(|r| {
-                view! {
-                    <li>
-                    <A href="routine/".to_string()+&r.clone()>{{r.clone()}}</A>
-                    </li>
-                }
-            })
-            .collect_view()
-    };
+
     view! {
         "Pick a routine."
         <ul>
-        {{ rlist }}
+        {move || routines_store.vec_field().iter_unkeyed()
+            .map(|routine| view!{
+                <li>
+                <A href="routine/".to_string()+&routine.name().get()>{{routine.name().get()}}</A>
+                <button on:click = move |_| {
+                    let new_routine = routine.routine().get();
+                    let new_name = routine.name().get() + "cloned";
+                    routines_store.vec_field().write().push(StoredRoutine {
+                        name: new_name,
+                        routine: new_routine,
+                    });
+                }>clone</button>
+                </li>
+            })
+            .collect_view()
+        }
         </ul>
     }
 }
@@ -299,12 +319,19 @@ fn Upload(#[prop(into)] data: Field<Session>) -> impl IntoView {
 
             <button on:click=move |_| {
                 LocalStorage::set(name.get(), preview_routine.get());
-                let mut keys: Vec<String> =
-                    LocalStorage::get("saved-routine-keys")
+                let mut stored_routines: StoredRoutines =
+                    LocalStorage::get("stored-routines")
                     .unwrap_or_default();
-                if !keys.contains(&name.get()) {
-                    keys.push(name.get());
-                    LocalStorage::set("saved-routine-keys", keys);
+                let already_exists = stored_routines.vec_field.iter()
+                    .find(|r| r.name == name.get())
+                    .is_some();
+                if !already_exists {
+                    let new_stored_routine = StoredRoutine {
+                        name: name.get(),
+                        routine: preview_routine.get(),
+                    };
+                    stored_routines.vec_field.push(new_stored_routine);
+                    LocalStorage::set("stored-routines", stored_routines);
                 }
             }>Save Routine</button>
 

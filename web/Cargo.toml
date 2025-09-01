@@ -12,4 +12,5 @@ gloo-storage = "0.3.0"
 leptos = { version = "0.8.2", features = ["csr"] }
 leptos_router = "0.8.5"
 reactive_stores = "0.2.5"
+serde = { version = "1.0.219", features = ["derive"] }
 web-sys = { version = "0.3.77", features = ["Blob", "File", "FileList"] }
