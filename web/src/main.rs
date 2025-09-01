@@ -251,11 +251,13 @@ fn Picker() -> impl IntoView {
         LocalStorage::set("stored-routines", routines_store.get());
     });
 
+    let (last_delete, set_last_delete) = signal(None::<StoredRoutine>);
+
     view! {
         "Pick a routine."
         <ul>
-        {move || routines_store.vec_field().iter_unkeyed()
-            .map(|routine| view!{
+        {move || routines_store.vec_field().iter_unkeyed().enumerate()
+            .map(|(i, routine)| view!{
                 <li>
                 <A href="routine/".to_string()+&routine.name().get()>{{routine.name().get()}}</A>
                 <button on:click = move |_| {
@@ -266,11 +268,23 @@ fn Picker() -> impl IntoView {
                         routine: new_routine,
                     });
                 }>clone</button>
+                <button on:click = move |_| {
+                    set_last_delete.set(Some(routines_store.vec_field().write().remove(i)));
+                }>delete</button>
                 </li>
             })
             .collect_view()
         }
         </ul>
+        <Show
+            when=move || {last_delete.get().is_some()}
+            fallback=|| view! {}
+        >
+            <button on:click=move |_| {
+                routines_store.vec_field().write().push(last_delete.get().unwrap());
+                set_last_delete.set(None);
+            }>Restore last deleted: {move || last_delete.get().unwrap().name}</button>
+        </Show>
     }
 }
 
