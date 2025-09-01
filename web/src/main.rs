@@ -232,14 +232,8 @@ fn DeadlinePicker() -> impl IntoView {
 }
 
 #[derive(Default, Store, Deserialize, Serialize, Clone, PartialEq, Eq)]
-struct StoredRoutine {
-    name: String,
-    routine: RoutineTemplate,
-}
-
-#[derive(Default, Store, Deserialize, Serialize, Clone, PartialEq, Eq)]
 struct StoredRoutines {
-    vec_field: Vec<StoredRoutine>,
+    vec_field: Vec<RoutineTemplate>,
 }
 
 #[component]
@@ -251,7 +245,7 @@ fn Picker() -> impl IntoView {
         LocalStorage::set("stored-routines", routines_store.get());
     });
 
-    let (last_delete, set_last_delete) = signal(None::<StoredRoutine>);
+    let (last_delete, set_last_delete) = signal(None::<RoutineTemplate>);
 
     view! {
         "Pick a routine."
@@ -261,11 +255,11 @@ fn Picker() -> impl IntoView {
                 <li>
                 <A href="routine/".to_string()+&routine.name().get()>{{routine.name().get()}}</A>
                 <button on:click = move |_| {
-                    let new_routine = routine.routine().get();
+                    let new_routine = routine.get();
                     let new_name = routine.name().get() + "cloned";
-                    routines_store.vec_field().write().push(StoredRoutine {
+                    routines_store.vec_field().write().push(RoutineTemplate {
                         name: new_name,
-                        routine: new_routine,
+                        ..new_routine
                     });
                 }>clone</button>
                 <button on:click = move |_| {
@@ -332,7 +326,6 @@ fn Upload(#[prop(into)] data: Field<Session>) -> impl IntoView {
             </label>
 
             <button on:click=move |_| {
-                LocalStorage::set(name.get(), preview_routine.get());
                 let mut stored_routines: StoredRoutines =
                     LocalStorage::get("stored-routines")
                     .unwrap_or_default();
@@ -340,11 +333,7 @@ fn Upload(#[prop(into)] data: Field<Session>) -> impl IntoView {
                     .find(|r| r.name == name.get())
                     .is_some();
                 if !already_exists {
-                    let new_stored_routine = StoredRoutine {
-                        name: name.get(),
-                        routine: preview_routine.get(),
-                    };
-                    stored_routines.vec_field.push(new_stored_routine);
+                    stored_routines.vec_field.push(preview_routine.get());
                     LocalStorage::set("stored-routines", stored_routines);
                 }
             }>Save Routine</button>
