@@ -192,22 +192,29 @@ fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl IntoVie
             </tr>
         </thead>
         <tbody>
-            <For
-                each=move || routine.tasks().into_iter().enumerate()
-                key=|(_, task)| task.read().name.clone()
-                children=move |(i, child)| {
-                    view! {
-                        <tr>
-                            <td>
-                            {{child.clone().name().get()}}
-                            </td>
-                            <td>
-                            <Duration value=child.duration().with(|d| Duration::from_secs(*d)) />
-                            </td>
-                        </tr>
-                    }
+        // {move || routines_store.vec_field().iter_unkeyed().enumerate()
+        <ForEnumerate
+            each=move || routine.tasks().iter_unkeyed()
+            key=|task| task.name().get()
+            children=move |i, task| {
+                view!{
+                    <tr>
+                        <td>
+                        {{task.name().get()}}
+                        </td>
+                        <td>
+                        <Duration value=task.duration().with(|d| Duration::from_secs(*d)) />
+                        </td>
+                        <td>
+                        <button on:click=move |_| routine.write().move_task_sooner(i.get())>"^"</button>
+                        </td>
+                        <td>
+                        <button on:click=move |_| routine.write().move_task_later(i.get())>"v"</button>
+                        </td>
+                    </tr>
                 }
-            />
+            }
+        />
         </tbody>
         </table>
     }

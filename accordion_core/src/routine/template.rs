@@ -46,6 +46,16 @@ impl RoutineTemplate {
     pub fn push(&mut self, task: TaskTemplate) {
         self.tasks.push(task);
     }
+
+    pub fn move_task_sooner(&mut self, i: usize) {
+        self.tasks.swap(i, i.saturating_sub(1));
+    }
+
+    pub fn move_task_later(&mut self, i: usize) {
+        if self.tasks.get(i + 1).is_some() {
+            self.tasks.swap(i, i + 1);
+        }
+    }
 }
 
 impl Default for RoutineTemplate {
