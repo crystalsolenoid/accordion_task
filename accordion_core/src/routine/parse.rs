@@ -13,6 +13,7 @@ use super::{
 };
 
 pub fn from_csv(r: impl io::Read) -> Result<RoutineTemplate> {
+    let mut counter = 0;
     // Build the CSV reader and iterate over each record.
     let mut rdr = csv::ReaderBuilder::new()
         .delimiter(b',')
@@ -24,15 +25,13 @@ pub fn from_csv(r: impl io::Read) -> Result<RoutineTemplate> {
         // The iterator yields Result<StringRecord, Error>, so we check the
         // error here.
         let record = result?;
-        tasks.push(parse_task(&record)?);
+        tasks.push(parse_task(&record, counter)?);
+        counter += 1;
     }
-    Ok(RoutineTemplate {
-        name: "Current Routine".to_string(),
-        tasks,
-    })
+    Ok(RoutineTemplate::new("Current Routine".to_string(), tasks))
 }
 
-fn parse_task(record: &StringRecord) -> Result<TaskTemplate> {
+fn parse_task(record: &StringRecord, id: usize) -> Result<TaskTemplate> {
     Ok(TaskTemplate {
         name: record
             .get(0)
@@ -40,5 +39,6 @@ fn parse_task(record: &StringRecord) -> Result<TaskTemplate> {
             .to_string(),
         duration: parse_duration(record.get(1).ok_or_eyre("Missing CSV field.")?)
             .wrap_err("Failure parsing duration. Format: _h_m_s")?,
+        id,
     })
 }

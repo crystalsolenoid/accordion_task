@@ -1,9 +1,12 @@
-use std::time::Duration;
+use std::{
+    sync::atomic::{AtomicUsize, Ordering},
+    time::Duration,
+};
 
 #[cfg(feature = "web")]
 use reactive_stores::Store;
 #[cfg(feature = "web")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 pub mod parse_new;
 pub use parse_new::parse_new;
@@ -29,16 +32,18 @@ pub struct Task {
     pub name: String,
     /// Current duration that may be shrunk
     pub duration: Duration,
+    pub id: usize,
 }
 
 impl Task {
-    pub fn new(name: &str, duration: u64) -> Self {
+    pub fn new(name: &str, duration: u64, id: usize) -> Self {
         Self {
             name: name.to_owned(),
             elapsed: Duration::ZERO,
             original_duration: Duration::new(duration, 0),
             duration: Duration::new(duration, 0),
             status: CompletionStatus::NotYet,
+            id,
         }
     }
 

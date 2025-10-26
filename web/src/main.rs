@@ -183,6 +183,7 @@ fn SavedRoutineViewer(#[prop(into)] data: Field<Session>) -> impl IntoView {
 
 #[component]
 fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl IntoView {
+    let (edit, set_edit) = signal(None::<usize>);
     view! {
         <table>
         <thead>
@@ -192,24 +193,17 @@ fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl IntoVie
             </tr>
         </thead>
         <tbody>
-        // {move || routines_store.vec_field().iter_unkeyed().enumerate()
         <ForEnumerate
             each=move || routine.tasks().iter_unkeyed()
-            key=|task| task.name().get()
-            children=move |i, task| {
+            key=|task| task.id().get()
+            children=move |_i, task| {
                 view!{
                     <tr>
                         <td>
-                        {{task.name().get()}}
+                        {task.name().get()}
                         </td>
                         <td>
                         <Duration value=task.duration().with(|d| Duration::from_secs(*d)) />
-                        </td>
-                        <td>
-                        <button on:click=move |_| routine.write().move_task_sooner(i.get())>"^"</button>
-                        </td>
-                        <td>
-                        <button on:click=move |_| routine.write().move_task_later(i.get())>"v"</button>
                         </td>
                     </tr>
                 }
@@ -266,10 +260,7 @@ fn Picker() -> impl IntoView {
                 <button on:click = move |_| {
                     let new_routine = routine.get();
                     let new_name = routine.name().get() + "cloned";
-                    routines_store.vec_field().write().push(RoutineTemplate {
-                        name: new_name,
-                        ..new_routine
-                    });
+                    routines_store.vec_field().write().push(RoutineTemplate::new(new_name, vec![]));
                 }>clone</button>
                 <button on:click = move |_| {
                     set_last_delete.set(Some(routines_store.vec_field().write().remove(i)));
@@ -364,9 +355,9 @@ fn App() -> impl IntoView {
         Store::new(session)
     } else {
         let mut list = RoutineTemplate::default();
-        list.push(TaskTemplate::new("shower", 120));
-        list.push(TaskTemplate::new("eat dinner", 60));
-        list.push(TaskTemplate::new("program", 9990));
+        list.push(TaskTemplate::new("shower", 120, 0));
+        list.push(TaskTemplate::new("eat dinner", 60, 1));
+        list.push(TaskTemplate::new("program", 9990, 2));
         let session = Session::new(list);
         initial_active = session.selected.selected().unwrap_or_default();
         Store::new(session)

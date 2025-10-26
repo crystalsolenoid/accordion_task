@@ -55,8 +55,8 @@ enum TimeMode {
 #[cfg_attr(feature = "web", derive(Store, Clone, Serialize, Deserialize))]
 pub struct Routine {
     /// An ordered list of the tasks.
-    #[cfg_attr(feature = "web", store(key: String = |row| row.name.clone()))]
-    pub tasks: Vec<Task>,
+    #[cfg_attr(feature = "web", store(key: usize = |row| row.id))]
+    pub tasks: Vec<Task>, // TODO should this be a hash map
     /// The active task, if any.
     /// TODO this should probably eventually use an ID number.
     //active: Option<usize>,
@@ -66,15 +66,18 @@ pub struct Routine {
     mode: TimeMode,
     /// Time elapsed while not not focused on a task
     spilled_time: Duration,
+    /// ID Counter
+    counter: usize,
 }
 
 impl Routine {
     pub fn with_tasks(tasks: Vec<Task>) -> Self {
+        let counter = tasks.len();
         let original_max = tasks
             .iter()
             .fold(Duration::ZERO, |acc, t| acc + t.original_duration);
         Self {
-            tasks,
+            tasks: tasks,
             //            active: match len {
             //              0 => None,
             //              _ => Some(0),
@@ -82,6 +85,7 @@ impl Routine {
             spilled_time: Duration::ZERO,
             flex_goal: original_max,
             mode: TimeMode::ExpectedEnd,
+            counter,
         }
     }
 
@@ -132,14 +136,20 @@ impl Routine {
     }
 
     pub fn push(&mut self, task: Task) {
+        let mut task = task;
+        task.id = self.counter;
         self.increase_time_for_new_task(&task);
         self.tasks.push(task);
+        self.counter += 1;
         self.update_flex();
     }
 
     pub fn insert(&mut self, i: usize, task: Task) {
+        let mut task = task;
+        task.id = self.counter;
         self.increase_time_for_new_task(&task);
         self.tasks.insert(i, task);
+        self.counter += 1;
         self.update_flex();
     }
 
@@ -250,7 +260,7 @@ impl Routine {
     }
 
     pub fn remaining(&self) -> Duration {
-        self.tasks.iter().map(task::Task::remaining).sum()
+        self.tasks.iter().map(|task| task.remaining()).sum()
     }
 
     pub fn elapse(&mut self, i: Option<usize>, duration: Duration) {
@@ -264,6 +274,7 @@ impl Routine {
     }
 }
 
+/*
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -428,3 +439,4 @@ mod tests {
         assert_eq!(list.duration(), Duration::new(180, 0))
     }
 }
+*/

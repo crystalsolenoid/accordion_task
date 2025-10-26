@@ -16,7 +16,7 @@ const DEFAULT_DURATION_SECS: u64 = 5 * 60;
 
 // TODO consider refactoring to use Winnow? Keep an eye out for if/when it isn't overkill
 
-pub fn parse_new(raw: &str) -> Task {
+pub fn parse_new(raw: &str, id: usize) -> Task {
     // TODO figure out error type. I want it to fail silently most of the time if
     // duration parsing fails, but if the task is nameless and durationless, assume it
     // was a mistake and don't create the new empty task.
@@ -41,7 +41,7 @@ pub fn parse_new(raw: &str) -> Task {
             //todo!("{}", duration.as_secs());
         }
     };
-    Task::new(&name, duration)
+    Task::new(&name, duration, id)
 }
 
 /// Returns the number of seconds.
@@ -92,7 +92,7 @@ mod tests {
     fn parse_task_with_duration() {
         let input = "wash clothes 5m30s";
 
-        let task = parse_new_task(input);
+        let task = parse_new(input);
 
         assert_eq!(task.name, "wash clothes");
         assert_eq!(task.original_duration, Duration::from_secs(5 * 60 + 30));
@@ -102,7 +102,7 @@ mod tests {
     fn no_duration() {
         let input = "shower";
 
-        let task = parse_new_task(input);
+        let task = parse_new(input);
 
         assert_eq!(task.name, "shower");
     }
@@ -111,7 +111,7 @@ mod tests {
     fn default_time() {
         let input = "shower";
 
-        let task = parse_new_task(input);
+        let task = parse_new(input);
 
         assert_eq!(task.original_duration, Duration::from_secs(5 * 60));
         // TODO: how will i decide a default?
@@ -121,7 +121,7 @@ mod tests {
     fn no_duration_with_space() {
         let input = "wash clothes";
 
-        let task = parse_new_task(input);
+        let task = parse_new(input);
 
         assert_eq!(task.name, "wash clothes");
     }
@@ -130,7 +130,7 @@ mod tests {
     fn no_hms_task() {
         let input = "dishes away";
 
-        let task = parse_new_task(input);
+        let task = parse_new(input);
 
         assert_eq!(task.name, "dishes away");
     }
