@@ -6,15 +6,11 @@
 use accordion_core::routine::template::{RoutineTemplate, TaskTemplate};
 use chrono::Local;
 use std::time::Duration;
-use web::components::{DeadlinePicker, Picker, RoutinePlayer, SavedRoutineViewer, Upload};
+use web::components::AppRouter;
 use web::router::DeadlineQuery;
 
 use gloo_storage::{SessionStorage, Storage};
 use leptos::prelude::*;
-use leptos_router::{
-    components::{A, Route, Router, Routes},
-    path,
-};
 use reactive_stores::Store;
 
 use accordion_core::session::Session;
@@ -70,27 +66,10 @@ fn App() -> impl IntoView {
     );
 
     view! {
-        <Router>
-            <nav>
-                <A href="">Picker</A>
-                <A href="routine">Routine</A>
-                <A href="upload">Upload</A>
-            </nav>
-            <Routes fallback=|| "">
-                <Route path=path!("") view=Picker/>
-                <Route path=path!("/upload") view=move || view! { <Upload data=session /> } />
-                <Route
-                    path=path!("/routine")
-                    view=move || {
-                        view! {
-                            <DeadlinePicker/>
-                            <RoutinePlayer session=session initial_active=initial_active />
-                        }
-                    }
-                />
-                <Route path=path!("/routine/:name") view=move || {view!{<SavedRoutineViewer data=session/>}}/>
-            </Routes>
-        </Router>
+        <AppRouter
+            session=session
+            initial_active=initial_active
+        />
     }
 }
 

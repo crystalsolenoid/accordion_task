@@ -1,3 +1,6 @@
+mod router;
+pub use router::AppRouter;
+
 mod duration;
 pub use duration::DurationCmp;
 
