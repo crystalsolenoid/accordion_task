@@ -18,20 +18,29 @@ pub fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl Int
             <tr>
                 <th>Name</th>
                 <th>Starting Duration</th>
+                <th>(Debug) ID</th>
             </tr>
         </thead>
         <tbody>
         <ForEnumerate
             each=move || routine.tasks().iter_unkeyed()
             key=|task| task.id().get()
-            children=move |_i, task| {
+            children=move |i, task| {
                 view!{
                     <tr>
                         <td>
-                        {task.name().get()}
+                        <button on:click = move |_| {
+                            routine.write().move_task_sooner(i.get());
+                            routine.write();
+                        }>
+                        {{task.name().get()}}
+                        </button>
                         </td>
                         <td>
                         <DurationCmp value=task.duration().with(|d| Duration::from_secs(*d)) />
+                        </td>
+                        <td>
+                        {{task.id().get()}}
                         </td>
                     </tr>
                 }
