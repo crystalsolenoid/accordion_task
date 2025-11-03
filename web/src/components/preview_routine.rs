@@ -1,27 +1,58 @@
 use std::time::Duration;
 
+use accordion_core::routine::task::parse_new::parse_duration;
 use accordion_core::routine::template::{
     RoutineTemplate, RoutineTemplateStoreFields, TaskTemplate, TaskTemplateStoreFields,
 };
-use leptos::prelude::*;
 use leptos::{IntoView, component};
+use leptos::{html, prelude::*};
 use reactive_stores::{Field, StoreFieldIterator};
+use web_sys::SubmitEvent;
 
 use crate::components::DurationCmp;
 
 #[component]
 pub fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl IntoView {
     let (edit, set_edit) = signal(None::<usize>);
+    let new_task_name: NodeRef<html::Input> = NodeRef::new();
+    let new_task_duration: NodeRef<html::Input> = NodeRef::new();
     view! {
+        <form on:submit=move |ev: SubmitEvent| {
+            ev.prevent_default();
+            let name = new_task_name.get()
+                .expect("<input> should be mounted")
+                .value();
+            let raw_duration = new_task_duration.get()
+                .expect("<input> should be mounted")
+                .value();
+            let duration = parse_duration(&raw_duration);
+            match duration {
+                Ok(d) => routine.write().push(TaskTemplate::new(&name, d, 0)),
+                Err(_) => (),
+            };
+        }>
+        "Name"
+            <input type="text"
+                node_ref=new_task_name
+                required
+            />
+            "Duration"
+            <input type="text"
+                node_ref=new_task_duration
+                pattern="(([0-9]+m)([0-9]+s)?)|(([0-9]+m)?([0-9]+s))"
+            />
+            <button>
+            "Create"
+            </button>
+        </form>
         <table>
         <thead>
             <tr>
                 <th>Name</th>
                 <th>Starting Duration</th>
-                <th>Move Up</th>
-                <th>Move Down</th>
+                <th>Reorder</th>
                 <th>Remove</th>
-                <th>(Debug) ID</th>
+                // <th>(Debug) ID</th>
             </tr>
         </thead>
         <tbody>
@@ -47,8 +78,6 @@ pub fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl Int
                             }>
                             "^"
                             </button>
-                        </td>
-                        <td>
                             <button on:click = move |_| {
                                 routine.write().move_task_later(i.get());
                             }>
@@ -62,9 +91,9 @@ pub fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl Int
                             "x"
                             </button>
                         </td>
-                        <td>
-                        {{task.id().get()}}
-                        </td>
+                        // <td>
+                        // {{task.id().get()}}
+                        // </td>
                     </tr>
                 }
             }
