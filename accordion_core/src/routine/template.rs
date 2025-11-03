@@ -71,6 +71,12 @@ impl RoutineTemplate {
             self.tasks.swap(i, i + 1);
         }
     }
+
+    pub fn remove_task(&mut self, i: usize) {
+        if self.tasks.get(i).is_some() {
+            self.tasks.remove(i);
+        }
+    }
 }
 
 impl Default for RoutineTemplate {

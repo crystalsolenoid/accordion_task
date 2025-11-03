@@ -18,6 +18,9 @@ pub fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl Int
             <tr>
                 <th>Name</th>
                 <th>Starting Duration</th>
+                <th>Move Up</th>
+                <th>Move Down</th>
+                <th>Remove</th>
                 <th>(Debug) ID</th>
             </tr>
         </thead>
@@ -29,15 +32,35 @@ pub fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl Int
                 view!{
                     <tr>
                         <td>
-                        <button on:click = move |_| {
-                            routine.write().move_task_sooner(i.get());
-                            routine.write();
-                        }>
+                        // <button on:click = move |_| {
+                        //     routine.write().move_task_sooner(i.get());
+                        // }>
                         {{task.name().get()}}
-                        </button>
+                        // </button>
                         </td>
                         <td>
                         <DurationCmp value=task.duration().with(|d| Duration::from_secs(*d)) />
+                        </td>
+                        <td>
+                            <button on:click = move |_| {
+                                routine.write().move_task_sooner(i.get());
+                            }>
+                            "^"
+                            </button>
+                        </td>
+                        <td>
+                            <button on:click = move |_| {
+                                routine.write().move_task_later(i.get());
+                            }>
+                            "v"
+                            </button>
+                        </td>
+                        <td>
+                            <button on:click = move |_| {
+                                routine.write().remove_task(i.get());
+                            }>
+                            "x"
+                            </button>
                         </td>
                         <td>
                         {{task.id().get()}}
