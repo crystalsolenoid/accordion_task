@@ -1,6 +1,6 @@
 use accordion_core::{routine::template::RoutineTemplateStoreFields, session::Session};
 use gloo_storage::{LocalStorage, SessionStorage, Storage};
-use leptos::prelude::*;
+use leptos::{leptos_dom::debug_log, prelude::*};
 use leptos_router::hooks::use_params;
 use leptos_router::params::Params;
 use reactive_stores::{Field, Store, StoreFieldIterator};
@@ -55,5 +55,6 @@ pub fn SavedRoutineViewer(#[prop(into)] data: Field<Session>) -> impl IntoView {
             SessionStorage::set("in-progress-session", data.get());
         }>Overwrite Active Routine</button>
         <PreviewRoutine routine=routine_store() />
+        {move || routine_store().tasks().get().len()}
     }
 }

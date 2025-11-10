@@ -4,6 +4,7 @@ use accordion_core::routine::task::parse_new::parse_duration;
 use accordion_core::routine::template::{
     RoutineTemplate, RoutineTemplateStoreFields, TaskTemplate, TaskTemplateStoreFields,
 };
+use leptos::leptos_dom::debug_log;
 use leptos::{IntoView, component};
 use leptos::{html, prelude::*};
 use reactive_stores::{Field, StoreFieldIterator};
@@ -16,7 +17,16 @@ pub fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl Int
     let (edit, set_edit) = signal(None::<usize>);
     let new_task_name: NodeRef<html::Input> = NodeRef::new();
     let new_task_duration: NodeRef<html::Input> = NodeRef::new();
+    Effect::new(move |_| {
+        debug_log!("routine updated {}", routine.get().tasks.len());
+    });
+    Effect::new(move |_| {
+        debug_log!("routine tasks updated {}", routine.tasks().get().len());
+    });
     view! {
+    {
+        move || routine.get().tasks.len()
+    }
         <form on:submit=move |ev: SubmitEvent| {
             ev.prevent_default();
             let name = new_task_name.get()
@@ -27,7 +37,10 @@ pub fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl Int
                 .value();
             let duration = parse_duration(&raw_duration);
             match duration {
-                Ok(d) => routine.write().push(TaskTemplate::new(&name, d, 0)),
+                Ok(d) => {routine.update(|routine| routine.push(TaskTemplate::new(&name, d, 0)));
+                    routine.tasks().update(|_| ());
+                    // TODO this is a sad hack. Tasks should update on its own.
+                },
                 Err(_) => (),
             };
         }>
