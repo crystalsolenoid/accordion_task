@@ -17,6 +17,7 @@ const DURATION_VALIDATOR: &str = "(([0-9]+m)([0-9]+s)?)|(([0-9]+m)?([0-9]+s))";
 #[component]
 pub fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl IntoView {
     let (edit, set_edit) = signal(None::<usize>);
+    let new_task_form: NodeRef<html::Form> = NodeRef::new();
     let new_task_name: NodeRef<html::Input> = NodeRef::new();
     let new_task_duration: NodeRef<html::Input> = NodeRef::new();
     Effect::new(move |_| {
@@ -29,7 +30,9 @@ pub fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl Int
     {
         move || routine.get().tasks.len()
     }
-        <form on:submit=move |ev: SubmitEvent| {
+        <form
+            node_ref=new_task_form
+            on:submit=move |ev: SubmitEvent| {
             ev.prevent_default();
             let name = new_task_name.get()
                 .expect("<input> should be mounted")
@@ -39,9 +42,13 @@ pub fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl Int
                 .value();
             let duration = parse_duration(&raw_duration);
             match duration {
-                Ok(d) => {routine.update(|routine| routine.push(TaskTemplate::new(&name, d, 0)));
-                    routine.tasks().update(|_| ());
+                Ok(d) => {
+                    routine.update(|routine| routine.push(TaskTemplate::new(&name, d, 0)));
                     // TODO this is a sad hack. Tasks should update on its own.
+                    routine.tasks().update(|_| ());
+                    new_task_form.get()
+                        .expect("<form> should be mounted")
+                        .reset();
                 },
                 Err(_) => (),
             };
