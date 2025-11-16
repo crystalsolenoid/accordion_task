@@ -1,6 +1,41 @@
+:root {
+	--background: #eeeeee;
+	--foreground: #222222;
+	--off-background: #ccccee;
+	--off-foreground: #222244;
+	--link: #003eba;
+	--visited: #7d0091;
+	--focused: #960000;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--background: #222222;
+		--foreground: #eeeeee;
+		--off-background: #222244;
+		--off-foreground: #ccccee;
+		--link: #91b6ff;
+		--visited: #f091ff;
+		--focused: #ff9191;
+	}
+}
+
+a {
+	color: var(--link);
+	&:visited {
+		color: var(--visited);
+			&:hover, &:focus {
+				color: var(--focused);
+			}
+	}
+	&:hover, &:focus {
+		color: var(--focused);
+	}
+}
+
 body {
-	background-color: #222222;
-	color: #eeeeee;
+	background-color: var(--background);
+	color: var(--foreground);
 	margin: 16px;
 }
 
@@ -59,7 +94,8 @@ input[type="text"] {
 		&:has(:checked) {
 			outline: solid;
 			outline-width: 6px;
-			background-color: #222244;
+			outline-color: var(--off-foreground);
+			background-color: var(--off-background);
 		}
 	}
 
@@ -72,8 +108,7 @@ input[type="text"] {
 #task-actions {
 	position: sticky;
 	top: 0;
-	background-color: #222222;
-}
+	background-color: inherit;
 
 	button {
 		padding-block: 1rem;
