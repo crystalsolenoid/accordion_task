@@ -4,6 +4,11 @@ body {
 	margin: 16px;
 }
 
+/* TODO remove. This is for breathing room when prototyping. */
+body > * {
+	padding: 6px;
+}
+
 nav, #task-actions, form {
 	display: flex;
 	row-gap: 0.8rem;
@@ -34,36 +39,34 @@ input[type="text"] {
 	}
 }
 
-.active-task {
-	display: none;
-}
-
-.routine label {
-	display: contents;
-}
 
 .routine {
 	list-style: none;
-}
 
-.routine li {
-	padding-block: 10px;
-}
+	label {
+		display: contents;
+	}
 
-.routine li label {
-}
+	li {
+		padding-block: 10px;
+	}
 
-.routine li label h2 {
-	display: inline;
-}
+	h2 {
+		display: inline;
+	}
 
-.task {
-}
+	.task {
+		&:has(:checked) {
+			outline: solid;
+			outline-width: 6px;
+			background-color: #222244;
+		}
+	}
 
-.task:has(:checked) {
-	outline: solid;
-	outline-width: 6px;
-	background-color: #222244;
+	/* Radio button to select active task */
+	.active-task {
+		display: none;
+	}
 }
 
 #task-actions {
@@ -72,11 +75,8 @@ input[type="text"] {
 	background-color: #222222;
 }
 
-body > * {
-	padding: 6px;
-}
-
-#task-actions button {
-	padding-block: 1rem;
-	font-size: 1.5rem;
+	button {
+		padding-block: 1rem;
+		font-size: 1.5rem;
+	}
 }
