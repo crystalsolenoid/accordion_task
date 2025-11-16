@@ -1,7 +1,7 @@
 body {
 	background-color: #222222;
 	color: #eeeeee;
-	margin: 0;
+	margin: 16px;
 }
 
 nav, #task-actions, form {
@@ -21,6 +21,17 @@ label {
 input[type="text"] {
 	width: 100%;
 	max-width: 20ch;
+}
+
+.routine-picker {
+	display: grid;
+	grid-template-columns: repeat(3, auto);
+	justify-items: start;
+	align-items: center;
+	grid-row-gap: 1.8ch;
+	> li {
+		display: contents;
+	}
 }
 
 .active-task {

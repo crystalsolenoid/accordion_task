@@ -40,7 +40,7 @@ pub fn Picker() -> impl IntoView {
                 "Create New Routine"
             </button>
         </form>
-        <ul>
+        <ul class="routine-picker">
         <ForEnumerate
             each=move || routines_store.vec_field().iter_unkeyed()
             key=|routine| routine.name().get()
