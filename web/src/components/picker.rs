@@ -29,13 +29,15 @@ pub fn Picker() -> impl IntoView {
                 .value();
             routines_store.vec_field().write().push(RoutineTemplate::new(name, vec![]));
         }>
-        "Name"
-            <input type="text"
-                node_ref=new_routine_name
-                required
-            />
+            <label>
+                <span>"Name"</span>
+                <input type="text"
+                    node_ref=new_routine_name
+                    required
+                />
+            </label>
             <button>
-            "Create New Routine"
+                "Create New Routine"
             </button>
         </form>
         <ul>

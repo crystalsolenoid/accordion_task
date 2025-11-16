@@ -9,8 +9,8 @@ pub fn DeadlinePicker() -> impl IntoView {
     view! {
         <Form method="GET" action="">
             <label>
-            {{ "Set Deadline" }}
-            <input type="time" name="d" />
+                <span>"Set Deadline"</span>
+                <input type="time" name="d" />
             </label>
             <button>Submit</button>
         </Form>

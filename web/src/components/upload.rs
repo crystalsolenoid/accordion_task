@@ -44,7 +44,8 @@ pub fn Upload(#[prop(into)] data: Field<Session>) -> impl IntoView {
                 SessionStorage::set("in-progress-session", data.get());
             }>Overwrite Active Routine</button>
 
-            <label>Routine Name
+            <label>
+                <span>"Routine Name"</span>
                 <input id="routine-name"
                     on:input:target=move |ev| {
                         let routine_name = ev.target().value();

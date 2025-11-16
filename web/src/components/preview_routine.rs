@@ -12,6 +12,8 @@ use web_sys::SubmitEvent;
 
 use crate::components::DurationCmp;
 
+const DURATION_VALIDATOR: &str = "(([0-9]+m)([0-9]+s)?)|(([0-9]+m)?([0-9]+s))";
+
 #[component]
 pub fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl IntoView {
     let (edit, set_edit) = signal(None::<usize>);
@@ -44,16 +46,20 @@ pub fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl Int
                 Err(_) => (),
             };
         }>
-        "Name"
+        <label>
+            <span>"Name"</span>
             <input type="text"
                 node_ref=new_task_name
                 required
             />
-            "Duration"
+        </label>
+        <label>
+            <span>"Duration"</span>
             <input type="text"
                 node_ref=new_task_duration
-                pattern="(([0-9]+m)([0-9]+s)?)|(([0-9]+m)?([0-9]+s))"
+                pattern=DURATION_VALIDATOR
             />
+        </label>
             <button>
             "Create"
             </button>

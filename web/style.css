@@ -6,11 +6,29 @@ body {
 
 nav, #task-actions, form {
 	display: flex;
-	gap: 4ch;
+	row-gap: 0.8rem;
+	column-gap: 4ch;
+	flex-wrap: wrap;
+}
+
+label {
+	display: flex;
+	gap: 2ch;
+	row-gap: 0.2rem;
+	flex-wrap: wrap;
+}
+
+input[type="text"] {
+	width: 100%;
+	max-width: 20ch;
 }
 
 .active-task {
 	display: none;
+}
+
+.routine label {
+	display: contents;
 }
 
 .routine {
@@ -45,10 +63,6 @@ nav, #task-actions, form {
 
 body > * {
 	padding: 6px;
-}
-
-label {
-	display: contents;
 }
 
 #task-actions button {
