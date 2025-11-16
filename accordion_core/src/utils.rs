@@ -40,3 +40,7 @@ pub fn interpret_naive_time(now: DateTime<Local>, nt: NaiveTime) -> DateTime<Loc
         deadline
     }
 }
+
+pub fn seconds_to_eta(now: DateTime<Local>, duration: u64) -> DateTime<Local> {
+    now + Duration::from_secs(duration)
+}

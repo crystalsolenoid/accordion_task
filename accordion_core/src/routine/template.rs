@@ -42,7 +42,7 @@ impl TaskTemplate {
 
 impl RoutineTemplate {
     pub fn new(name: String, tasks: Vec<TaskTemplate>) -> Self {
-        // TODO assert unique IDs
+        // TODO assert unique sequential IDs?
         let counter = tasks.len();
         Self {
             name,
@@ -76,6 +76,10 @@ impl RoutineTemplate {
         if self.tasks.get(i).is_some() {
             self.tasks.remove(i);
         }
+    }
+
+    pub fn total_duration(&self) -> u64 {
+        self.tasks.iter().map(|t| t.duration).sum()
     }
 }
 

@@ -1,12 +1,19 @@
-use accordion_core::{routine::template::RoutineTemplateStoreFields, session::Session};
+use accordion_core::{
+    routine::template::RoutineTemplateStoreFields, session::Session, utils::seconds_to_eta,
+};
+use chrono::Local;
 use gloo_storage::{LocalStorage, SessionStorage, Storage};
-use leptos::{leptos_dom::debug_log, prelude::*};
+use leptos::{
+    leptos_dom::{debug_log, helpers},
+    prelude::*,
+};
 use leptos_router::hooks::use_params;
 use leptos_router::params::Params;
 use reactive_stores::{Field, Store, StoreFieldIterator};
 
 use crate::{
     components::PreviewRoutine,
+    config::TIME_FORMAT,
     local_storage::{StoredRoutines, StoredRoutinesStoreFields},
 };
 
@@ -43,10 +50,29 @@ pub fn SavedRoutineViewer(#[prop(into)] data: Field<Session>) -> impl IntoView {
             .unwrap()
     };
 
+    let (now, set_now) = signal(Local::now());
+
+    helpers::set_interval(
+        move || {
+            set_now.set(Local::now());
+        },
+        std::time::Duration::from_secs(20),
+    );
+
+    let eta = Memo::new(move |_| {
+        seconds_to_eta(now.get(), routine_store().read().total_duration())
+            .format(TIME_FORMAT)
+            .to_string()
+    });
+
     view! {
         <h1>
             {{move || routine_store().name()}}
         </h1>
+        <p>
+            "Projected end time: "
+            {{ move || eta.get() }}
+        </p>
         // TODO instead, link to a page
         // thats for that routine? Maybe?
         <button on:click=move |_| {
