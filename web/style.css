@@ -84,10 +84,39 @@ input[type="text"] {
 
 	li {
 		padding-block: 10px;
+		padding-inline: 0.5em;
+
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5em;
+		flex-wrap: wrap;
 	}
 
 	h2 {
-		display: inline;
+		display: flex;
+		gap: 0.5em;
+		margin: 0;
+	}
+
+	.progress-values {
+		display: flex;
+		gap: 0.5em;
+		justify-content: center;
+
+		progress {
+			min-width: 10ch;
+		}
+
+		.duration {
+			min-width: 7ex;
+			&.left {
+				text-align: right;
+			}
+			&.right {
+				text-align: left;
+			}
+		}
 	}
 
 	.task {
