@@ -14,8 +14,8 @@ pub fn RoutinePlayer(
     initial_active: usize,
 ) -> impl IntoView {
     view! {
-        <RoutineTimer session=session />
         <div id="task-actions">
+            <RoutineTimer session=session />
             <button on:click=move |_| {
                 let _ = session.write().toggle();
             }>Complete Current</button>
