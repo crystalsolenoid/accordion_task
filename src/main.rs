@@ -1,3 +1,3 @@
 fn main() {
-    println!("hi")
+    println!("Run the TUI with -p tui")
 }

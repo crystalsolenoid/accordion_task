@@ -127,7 +127,8 @@ impl App {
 
     fn append_task_submit(&mut self) {
         let name = self.text_input.lines()[0].clone();
-        let task = task::parse_new(&name);
+        // TODO not using IDs in TUI yet
+        let task = task::parse_new(&name, 0);
         self.session.selected.append_item();
         self.session.tasks.push(task);
     }
@@ -135,7 +136,8 @@ impl App {
     fn insert_task_submit(&mut self) {
         let name = self.text_input.lines()[0].clone();
         // TODO fix ownership of name
-        let task = task::parse_new(&name);
+        // TODO not using IDs in TUI yet
+        let task = task::parse_new(&name, 0);
         self.session.selected.append_item();
         let i = self.session.selected.selected().unwrap_or(0) + 1;
         self.session.tasks.insert(i, task);

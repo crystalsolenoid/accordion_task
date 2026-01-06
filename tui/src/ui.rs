@@ -177,7 +177,7 @@ fn render_table(app: &App, f: &mut Frame, area: Rect) {
         .tasks
         .tasks
         .iter()
-        .map(|(_, i)| generate_task_row(i))
+        .map(|task| generate_task_row(task))
         .collect();
     let widths = [
         Constraint::Length(5),
