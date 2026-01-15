@@ -12,6 +12,7 @@ dependencies = [
  "ratatui",
  "reactive_stores",
  "serde",
+ "toml 0.8.23",
 ]
 
 [[package]]

@@ -14,8 +14,9 @@ use flex::{Flex, FlexItem};
 
 #[cfg(feature = "web")]
 use reactive_stores::Store;
+use serde::Deserialize;
 #[cfg(feature = "web")]
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 #[derive(Debug, Copy, Clone)]
 pub enum ToggleFailure {
@@ -43,8 +44,8 @@ impl Flex for Routine {
 
 // for testing, methods that use this timing should not query the current time but accept it as a
 // value
-#[derive(Default, Debug, Copy, Clone)]
-#[cfg_attr(feature = "web", derive(Serialize, Deserialize))]
+#[derive(Deserialize, Default, Debug, Copy, Clone)]
+#[cfg_attr(feature = "web", derive(Serialize))]
 enum TimeMode {
     #[default]
     ExpectedEnd,
