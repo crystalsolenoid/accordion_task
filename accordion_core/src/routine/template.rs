@@ -19,6 +19,7 @@ pub struct TaskTemplate {
     pub id: usize,
 }
 
+#[cfg_attr(feature = "web", derive(Store, Clone, Serialize, PartialEq, Eq))]
 #[derive(Deserialize, Default)]
 pub struct Config {
     #[serde(rename = "deadline")]
