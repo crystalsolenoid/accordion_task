@@ -19,6 +19,9 @@ pub use routine_player::RoutinePlayer;
 mod saved_routine_viewer;
 pub use saved_routine_viewer::SavedRoutineViewer;
 
+mod download_routine;
+pub use download_routine::DownloadRoutine;
+
 mod deadline_picker;
 pub use deadline_picker::DeadlinePicker;
 

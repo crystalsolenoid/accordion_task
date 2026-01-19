@@ -12,7 +12,7 @@ use leptos_router::params::Params;
 use reactive_stores::{Field, Store, StoreFieldIterator};
 
 use crate::{
-    components::PreviewRoutine,
+    components::{DownloadRoutine, PreviewRoutine},
     config::TIME_FORMAT,
     local_storage::{StoredRoutines, StoredRoutinesStoreFields},
 };
@@ -69,6 +69,7 @@ pub fn SavedRoutineViewer(#[prop(into)] data: Field<Session>) -> impl IntoView {
         <h1>
             {{move || routine_store().name()}}
         </h1>
+        <DownloadRoutine routine=routine_store() />
         <p>
             "Projected end time: "
             {{ move || eta.get() }}

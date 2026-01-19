@@ -36,7 +36,7 @@ pub struct RoutineTemplate {
     #[cfg_attr(feature = "web", store(key: usize = |row| row.id))]
     pub tasks: Vec<TaskTemplate>,
     counter: usize,
-    pub config: Config,
+    pub config: Option<Config>,
 }
 
 impl TaskTemplate {
@@ -61,7 +61,7 @@ impl RoutineTemplate {
             name,
             tasks,
             counter,
-            config: Config::default(),
+            config: None,
         }
     }
 
@@ -72,19 +72,25 @@ impl RoutineTemplate {
             name,
             tasks,
             counter,
-            config,
+            config: Some(config),
         }
+    }
+
+    pub fn get_routine_file(&self) -> String {
+        self.name.to_string()
     }
 
     pub fn generate_routine(&self) -> Routine {
         let tasks = self.tasks.iter().map(|t| t.generate_task()).collect();
         let mut routine = Routine::with_tasks(tasks);
 
-        // If a default deadline is specified, use it
-        if let Some(deadline) = self.config.default_deadline {
-            let now = Local::now();
-            let next_deadline = crate::utils::interpret_naive_time(now, deadline);
-            routine.set_deadline(next_deadline);
+        if let Some(config) = &self.config {
+            // If a default deadline is specified, use it
+            if let Some(deadline) = config.default_deadline {
+                let now = Local::now();
+                let next_deadline = crate::utils::interpret_naive_time(now, deadline);
+                routine.set_deadline(next_deadline);
+            }
         }
 
         routine
@@ -124,7 +130,7 @@ impl Default for RoutineTemplate {
             name: "Empty Routine".to_string(),
             tasks: vec![],
             counter: 0,
-            config: Config::default(),
+            config: None,
         }
     }
 }
