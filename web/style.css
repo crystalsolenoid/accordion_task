@@ -65,7 +65,7 @@ input[type="text"] {
 
 .routine-picker {
 	display: grid;
-	grid-template-columns: repeat(3, auto);
+	grid-template-columns: repeat(4, auto);
 	justify-items: start;
 	align-items: center;
 	grid-row-gap: 1.8ch;
