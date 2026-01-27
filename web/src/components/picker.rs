@@ -48,6 +48,9 @@ pub fn Picker() -> impl IntoView {
                 view!{
                 <li>
                 <A href="routine/".to_string()+&routine.name().get()>{{routine.name()}}</A>
+                <a download=format!("{}.routine", "name") href= move || {
+                    format!("data:text/routine;charset=utf-8,{}", routine.read().get_routine_file())
+                }>"Download"</a>
                 <button on:click = move |_| {
                     let old_routine = routine.get(); // TODO cloning broken
                     let new_name = routine.name().get() + "cloned";

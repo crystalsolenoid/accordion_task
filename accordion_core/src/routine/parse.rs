@@ -35,7 +35,11 @@ pub fn from_csv(mut r: impl io::Read) -> Result<RoutineTemplate> {
     } else {
         combined
     };
-    let config: template::Config = toml::from_str(&raw_config).unwrap();
+    let config: Option<template::Config> = if has_config {
+        Some(toml::from_str(&raw_config).unwrap())
+    } else {
+        None
+    };
 
     // Then get the tasks
     let mut counter = 0;

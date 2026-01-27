@@ -1,10 +1,14 @@
-use crate::routine::{Routine, Task};
+use std::time::Duration;
+
+use crate::{
+    routine::{Routine, Task},
+    utils::format_duration,
+};
 
 use chrono::{Local, NaiveTime};
 #[cfg(feature = "web")]
 use reactive_stores::Store;
 use serde::Deserialize;
-#[cfg(feature = "web")]
 use serde::Serialize;
 
 use super::TimeMode;
@@ -19,8 +23,8 @@ pub struct TaskTemplate {
     pub id: usize,
 }
 
-#[cfg_attr(feature = "web", derive(Store, Clone, Serialize, PartialEq, Eq))]
-#[derive(Deserialize, Default)]
+#[cfg_attr(feature = "web", derive(Store, Clone, PartialEq, Eq))]
+#[derive(Deserialize, Serialize, Default)]
 pub struct Config {
     #[serde(rename = "deadline")]
     #[serde(default)]
@@ -65,23 +69,43 @@ impl RoutineTemplate {
         }
     }
 
-    pub fn with_config(name: String, tasks: Vec<TaskTemplate>, config: Config) -> Self {
+    pub fn with_config(name: String, tasks: Vec<TaskTemplate>, config: Option<Config>) -> Self {
         // TODO assert unique sequential IDs?
         let counter = tasks.len();
         Self {
             name,
             tasks,
             counter,
-            config: Some(config),
+            config: config,
         }
     }
 
     pub fn get_routine_file(&self) -> String {
-        self.name.to_string()
+        let config = if let Some(c) = &self.config {
+            let string_config = toml::to_string(&c).unwrap();
+            format!("---\n{}---\n", string_config)
+        } else {
+            String::new()
+        };
+        let mut wrtr = csv::WriterBuilder::new()
+            .delimiter(b',')
+            .comment(Some(b'#'))
+            .from_writer(vec![]);
+        wrtr.write_record(&["task", "duration"]).unwrap();
+        self.tasks.iter().for_each(|task| {
+            wrtr.write_record(&[
+                task.name.clone(),
+                format_duration(Duration::from_secs(task.duration)),
+            ])
+            .unwrap();
+        });
+        let tasks = String::from_utf8(wrtr.into_inner().unwrap()).unwrap();
+        config.to_owned() + &tasks
     }
 
     pub fn generate_routine(&self) -> Routine {
         let tasks = self.tasks.iter().map(|t| t.generate_task()).collect();
+
         let mut routine = Routine::with_tasks(tasks);
 
         if let Some(config) = &self.config {
