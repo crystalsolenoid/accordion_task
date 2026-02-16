@@ -17,62 +17,62 @@ use crate::local_storage::StoredRoutines;
 // TODO I need a better way to set the current routine
 #[component]
 pub fn Upload(#[prop(into)] data: Field<Session>) -> impl IntoView {
-    let preview_routine = Store::new(RoutineTemplate::default());
-    let (name, set_name) = signal("New Routine".to_string());
-    view! {
-        // TODO make this a form
-        <h1>Upload Routine</h1>
-        <input
-            type="file"
-            accept=".routine"
-            on:change=move |ev| {
-                let target = ev.target().unwrap();
-                let input = target.dyn_ref::<HtmlInputElement>().unwrap();
-                let blob: GlooBlob = input.files().and_then(|files| files.item(0)).unwrap().into();
-                spawn_local(async move {
-                    let contents = gloo_file::futures::read_as_text(&blob).await;
-                    let mut routine = routine::parse::from_csv(contents.unwrap().as_bytes()).unwrap();
-                    routine.name = name.get();
-                    preview_routine.set(routine);
-                });
-            }
-        />
-        <Show when=move || { preview_routine.tasks().read().len() != 0 }>
-            <button on:click=move |_| {
-                let new_session = Session::new(preview_routine.get());
-                data.set(new_session);
-                SessionStorage::set("in-progress-session", data.get());
-            }>Overwrite Active Routine</button>
+	let preview_routine = Store::new(RoutineTemplate::default());
+	let (name, set_name) = signal("New Routine".to_string());
+	view! {
+		// TODO make this a form
+		<h1>Upload Routine</h1>
+		<input
+			type="file"
+			accept=".routine"
+			on:change=move |ev| {
+				let target = ev.target().unwrap();
+				let input = target.dyn_ref::<HtmlInputElement>().unwrap();
+				let blob: GlooBlob = input.files().and_then(|files| files.item(0)).unwrap().into();
+				spawn_local(async move {
+					let contents = gloo_file::futures::read_as_text(&blob).await;
+					let mut routine = routine::parse::from_csv(contents.unwrap().as_bytes()).unwrap();
+					routine.name = name.get();
+					preview_routine.set(routine);
+				});
+			}
+		/>
+		<Show when=move || { preview_routine.tasks().read().len() != 0 }>
+			<button on:click=move |_| {
+				let new_session = Session::new(preview_routine.get());
+				data.set(new_session);
+				SessionStorage::set("in-progress-session", data.get());
+			}>Overwrite Active Routine</button>
 
-            <label>
-                <span>"Routine Name"</span>
-                <input id="routine-name"
-                    on:input:target=move |ev| {
-                        let routine_name = ev.target().value();
-                        set_name.set(routine_name.clone());
-                        preview_routine.name().set(routine_name);
-                    }
-                    prop:value=name
-                />
-            </label>
+			<label>
+				<span>"Routine Name"</span>
+				<input id="routine-name"
+					on:input:target=move |ev| {
+						let routine_name = ev.target().value();
+						set_name.set(routine_name.clone());
+						preview_routine.name().set(routine_name);
+					}
+					prop:value=name
+				/>
+			</label>
 
-            <button on:click=move |_| {
-                let mut stored_routines: StoredRoutines =
-                    LocalStorage::get("stored-routines")
-                    .unwrap_or_default();
-                let already_exists = stored_routines.vec_field.iter()
-                    .find(|r| r.name == name.get())
-                    .is_some();
-                if !already_exists {
-                    stored_routines.vec_field.push(preview_routine.get());
-                    LocalStorage::set("stored-routines", stored_routines);
-                }
-            }>Save Routine</button>
+			<button on:click=move |_| {
+				let mut stored_routines: StoredRoutines =
+					LocalStorage::get("stored-routines")
+					.unwrap_or_default();
+				let already_exists = stored_routines.vec_field.iter()
+					.find(|r| r.name == name.get())
+					.is_some();
+				if !already_exists {
+					stored_routines.vec_field.push(preview_routine.get());
+					LocalStorage::set("stored-routines", stored_routines);
+				}
+			}>Save Routine</button>
 
-            <h2>
-                {{move || preview_routine.name().get()}} <em> (Preview)</em>
-            </h2>
-            <PreviewRoutine routine=preview_routine />
-        </Show>
-    }
+			<h2>
+				{{move || preview_routine.name().get()}} <em> (Preview)</em>
+			</h2>
+			<PreviewRoutine routine=preview_routine />
+		</Show>
+	}
 }

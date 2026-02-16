@@ -6,20 +6,20 @@ use crate::router::DeadlineQuery;
 
 #[component]
 pub fn DeadlinePicker() -> impl IntoView {
-    view! {
-        <Form method="GET" action="">
-            <label>
-                <span>"Set Deadline"</span>
-                <input type="time" name="d" />
-            </label>
-            <button>Submit</button>
-        </Form>
-        {{ move || use_query::<DeadlineQuery>()
-            .read()
-            .as_ref()
-            .ok()
-            .and_then(|queries| queries.d)
-            .map(|d| d.format(TIME_FORMAT).to_string())
-             }}
-    }
+	view! {
+		<Form method="GET" action="">
+			<label>
+				<span>"Set Deadline"</span>
+				<input type="time" name="d" />
+			</label>
+			<button>Submit</button>
+		</Form>
+		{{ move || use_query::<DeadlineQuery>()
+			.read()
+			.as_ref()
+			.ok()
+			.and_then(|queries| queries.d)
+			.map(|d| d.format(TIME_FORMAT).to_string())
+			 }}
+	}
 }
