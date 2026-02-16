@@ -134,7 +134,9 @@ impl RoutineLogger {
         start_time: &DateTime<Local>,
         routine_path: &str,
     ) -> Result<RoutineLogger> {
-        let path = get_log_location(routine_path, start_time).wrap_err("failed to find or access the program data directory, or your routine task isnt valid utf8")?;
+        let path = get_log_location(routine_path, start_time).wrap_err(
+			"failed to find or access the program data directory, or your routine task isnt valid utf8",
+		)?;
         // creating the file will fail if the directory doesn't exist yet
         create_dir_all(
             path.parent()

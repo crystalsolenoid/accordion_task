@@ -23,8 +23,8 @@ pub struct TaskTemplate {
     pub id: usize,
 }
 
-#[cfg_attr(feature = "web", derive(Store, Clone, PartialEq, Eq))]
-#[derive(Deserialize, Serialize, Default)]
+#[cfg_attr(feature = "web", derive(Store, PartialEq, Eq))]
+#[derive(Clone, Deserialize, Serialize, Default)]
 pub struct Config {
     #[serde(rename = "deadline")]
     #[serde(default)]
@@ -118,6 +118,16 @@ impl RoutineTemplate {
         }
 
         routine
+    }
+
+    pub fn conf_set_default_deadline(&mut self, time: NaiveTime) {
+        if self.config.is_none() {
+            self.config = Some(Config::default());
+        }
+        self.config = Some(Config {
+            default_deadline: Some(time),
+            ..self.config.clone().unwrap()
+        });
     }
 
     pub fn push(&mut self, task: TaskTemplate) {
