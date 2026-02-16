@@ -24,51 +24,55 @@ pub fn Picker() -> impl IntoView {
 		"Pick a routine."
 		<form on:submit=move |ev: SubmitEvent| {
 			ev.prevent_default();
-			let name = new_routine_name.get()
-				.expect("<input> should be mounted")
-				.value();
+			let name = new_routine_name.get().expect("<input> should be mounted").value();
 			routines_store.vec_field().write().push(RoutineTemplate::new(name, vec![]));
 		}>
 			<label>
 				<span>"Name"</span>
-				<input type="text"
-					node_ref=new_routine_name
-					required
-				/>
+				<input type="text" node_ref=new_routine_name required />
 			</label>
-			<button>
-				"Create New Routine"
-			</button>
+			<button>"Create New Routine"</button>
 		</form>
 		<ul class="routine-picker">
-		<ForEnumerate
-			each=move || routines_store.vec_field().iter_unkeyed()
-			key=|routine| routine.name().get()
-			children=move |i, routine| {
-				view!{
-				<li>
-				<A href="routine/".to_string()+&routine.name().get()>{{routine.name()}}</A>
-				<a download=format!("{}.routine", "name") href= move || {
-					format!("data:text/routine;charset=utf-8,{}", routine.read().get_routine_file())
-				}>"Download"</a>
-				<button on:click = move |_| {
-					let old_routine = routine.get(); // TODO cloning broken
-					let new_name = routine.name().get() + "cloned";
-					let mut new_routine = RoutineTemplate::new(new_name, vec![]);
-					old_routine.tasks.iter().for_each(|task| new_routine.push(task.clone()));
-					routines_store.vec_field().write().push(new_routine);
-				}>clone</button>
-				<button on:click = move |_| {
-					set_last_delete.set(Some(routines_store.vec_field().write().remove(i.get())));
-				}>delete</button>
-				</li>
-			}
-		}/>
+			<ForEnumerate
+				each=move || routines_store.vec_field().iter_unkeyed()
+				key=|routine| routine.name().get()
+				children=move |i, routine| {
+					view! {
+						<li>
+							<A href="routine/".to_string()
+								+ &routine.name().get()>{{ routine.name() }}</A>
+							<a
+								download=format!("{}.routine", "name")
+								href=move || {
+									format!(
+										"data:text/routine;charset=utf-8,{}",
+										routine.read().get_routine_file(),
+									)
+								}
+							>
+								"Download"
+							</a>
+							<button on:click=move |_| {
+								let old_routine = routine.get();
+								let new_name = routine.name().get() + "cloned";
+								let mut new_routine = RoutineTemplate::new(new_name, vec![]);
+								old_routine
+									.tasks
+									.iter()
+									.for_each(|task| new_routine.push(task.clone()));
+								routines_store.vec_field().write().push(new_routine);
+							}>clone</button>
+							<button on:click=move |_| {
+								set_last_delete
+									.set(Some(routines_store.vec_field().write().remove(i.get())));
+							}>delete</button>
+						</li>
+					}
+				}
+			/>
 		</ul>
-		<Show
-			when=move || {last_delete.get().is_some()}
-			fallback=|| view! {}
-		>
+		<Show when=move || { last_delete.get().is_some() } fallback=|| view! {}>
 			<button on:click=move |_| {
 				routines_store.vec_field().write().push(last_delete.get().unwrap());
 				set_last_delete.set(None);

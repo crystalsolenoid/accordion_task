@@ -65,12 +65,7 @@ fn App() -> impl IntoView {
 		Duration::from_secs(60),
 	);
 
-	view! {
-		<AppRouter
-			session=session
-			initial_active=initial_active
-		/>
-	}
+	view! { <AppRouter session=session initial_active=initial_active /> }
 }
 
 fn main() {

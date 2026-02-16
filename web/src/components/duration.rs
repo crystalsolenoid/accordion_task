@@ -5,7 +5,5 @@ use leptos::prelude::*;
 
 #[component]
 pub fn DurationCmp(#[prop(into)] value: Signal<Duration>) -> impl IntoView {
-	view! {
-		{{ move || utils::format_duration(value.get()) }}
-	}
+	view! { {{ move || utils::format_duration(value.get()) }} }
 }

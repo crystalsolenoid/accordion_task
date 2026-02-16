@@ -14,12 +14,15 @@ pub fn DeadlinePicker() -> impl IntoView {
 			</label>
 			<button>Submit</button>
 		</Form>
-		{{ move || use_query::<DeadlineQuery>()
-			.read()
-			.as_ref()
-			.ok()
-			.and_then(|queries| queries.d)
-			.map(|d| d.format(TIME_FORMAT).to_string())
-			 }}
+		{{
+			move || {
+				use_query::<DeadlineQuery>()
+					.read()
+					.as_ref()
+					.ok()
+					.and_then(|queries| queries.d)
+					.map(|d| d.format(TIME_FORMAT).to_string())
+			}
+		}}
 	}
 }

@@ -69,34 +69,32 @@ pub fn SavedRoutineViewer(#[prop(into)] data: Field<Session>) -> impl IntoView {
 	});
 
 	view! {
-		<h1>
-			{{move || routine_store().name()}}
-		</h1>
-		{{ move || if let Some(config) = routine_store().config().get() {
-			if let Some(deadline) = config.default_deadline {
-				deadline.to_string()
-			} else {
-				"no deadline".to_string()
+		<h1>{{ move || routine_store().name() }}</h1>
+		{{
+			move || {
+				if let Some(config) = routine_store().config().get() {
+					if let Some(deadline) = config.default_deadline {
+						deadline.to_string()
+					} else {
+						"no deadline".to_string()
+					}
+				} else {
+					"no config".to_string()
+				}
 			}
-		} else {
-				"no config".to_string()
-			}
-			 }}
-		<button
-		on:click= move |_| {
-		routine_store().write().conf_set_default_deadline(NaiveTime::parse_from_str(&deadline.get().unwrap().value(), "%H:%M").unwrap());
-		}
-		>
-		"set default deadline"
-		</button>
+		}}
+		<button on:click=move |_| {
+			routine_store()
+				.write()
+				.conf_set_default_deadline(
+					NaiveTime::parse_from_str(&deadline.get().unwrap().value(), "%H:%M").unwrap(),
+				);
+		}>"set default deadline"</button>
 		<label>
 			<span>"Default Deadline"</span>
 			<input node_ref=deadline id="deadline" type="time" name="deadline" />
 		</label>
-		<p>
-			"Projected end time: "
-			{{ move || eta.get() }}
-		</p>
+		<p>"Projected end time: " {{ move || eta.get() }}</p>
 		// TODO instead, link to a page
 		// thats for that routine? Maybe?
 		<button on:click=move |_| {

@@ -9,6 +9,7 @@ in
 		packages = [
 			toolchain
 			pkgs.trunk
+			pkgs.leptosfmt
 		];
 	}
 # shell.nix

@@ -31,7 +31,8 @@ pub fn Upload(#[prop(into)] data: Field<Session>) -> impl IntoView {
 				let blob: GlooBlob = input.files().and_then(|files| files.item(0)).unwrap().into();
 				spawn_local(async move {
 					let contents = gloo_file::futures::read_as_text(&blob).await;
-					let mut routine = routine::parse::from_csv(contents.unwrap().as_bytes()).unwrap();
+					let mut routine = routine::parse::from_csv(contents.unwrap().as_bytes())
+						.unwrap();
 					routine.name = name.get();
 					preview_routine.set(routine);
 				});
@@ -46,7 +47,8 @@ pub fn Upload(#[prop(into)] data: Field<Session>) -> impl IntoView {
 
 			<label>
 				<span>"Routine Name"</span>
-				<input id="routine-name"
+				<input
+					id="routine-name"
 					on:input:target=move |ev| {
 						let routine_name = ev.target().value();
 						set_name.set(routine_name.clone());
@@ -57,10 +59,11 @@ pub fn Upload(#[prop(into)] data: Field<Session>) -> impl IntoView {
 			</label>
 
 			<button on:click=move |_| {
-				let mut stored_routines: StoredRoutines =
-					LocalStorage::get("stored-routines")
+				let mut stored_routines: StoredRoutines = LocalStorage::get("stored-routines")
 					.unwrap_or_default();
-				let already_exists = stored_routines.vec_field.iter()
+				let already_exists = stored_routines
+					.vec_field
+					.iter()
 					.find(|r| r.name == name.get())
 					.is_some();
 				if !already_exists {
@@ -69,9 +72,7 @@ pub fn Upload(#[prop(into)] data: Field<Session>) -> impl IntoView {
 				}
 			}>Save Routine</button>
 
-			<h2>
-				{{move || preview_routine.name().get()}} <em> (Preview)</em>
-			</h2>
+			<h2>{{ move || preview_routine.name().get() }} <em>(Preview)</em></h2>
 			<PreviewRoutine routine=preview_routine />
 		</Show>
 	}

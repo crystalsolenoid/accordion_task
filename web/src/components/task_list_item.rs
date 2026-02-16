@@ -19,14 +19,9 @@ pub fn TaskListItem(#[prop(into)] task: Field<Task>) -> impl IntoView {
 	};
 
 	view! {
-		<label
-			for={move || task.name().get()}
-			class=plain_text_status
-		>
+		<label for=move || task.name().get() class=plain_text_status>
 			<h2>
-				<span class="checkbox"
-					aria-label=plain_text_status
-				>
+				<span class="checkbox" aria-label=plain_text_status>
 					{{ status_symbol }}
 				</span>
 				" "
@@ -36,8 +31,7 @@ pub fn TaskListItem(#[prop(into)] task: Field<Task>) -> impl IntoView {
 				<span class="duration left">
 					<DurationCmp value=task.elapsed() />
 				</span>
-				<progress
-				value=move || {
+				<progress value=move || {
 					task.elapsed().get().as_secs() as f64 / task.duration().get().as_secs() as f64
 				} />
 				<span class="duration right">
