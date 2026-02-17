@@ -44,3 +44,15 @@ pub fn interpret_naive_time(now: DateTime<Local>, nt: NaiveTime) -> DateTime<Loc
 pub fn seconds_to_eta(now: DateTime<Local>, duration: u64) -> DateTime<Local> {
 	now + Duration::from_secs(duration)
 }
+
+pub fn seconds_to_start(
+	now: DateTime<Local>,
+	deadline: NaiveTime,
+	duration: u64,
+) -> DateTime<Local> {
+	// TODO this is so convoluted. It should
+	// not require knowing the current time??
+	// I think should return a NaiveTime.
+	let goal = interpret_naive_time(now + Duration::from_secs(duration), deadline);
+	goal - Duration::from_secs(duration)
+}

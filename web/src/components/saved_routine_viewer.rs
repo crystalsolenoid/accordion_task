@@ -1,5 +1,7 @@
 use accordion_core::{
-	routine::template::RoutineTemplateStoreFields, session::Session, utils::seconds_to_eta,
+	routine::template::RoutineTemplateStoreFields,
+	session::Session,
+	utils::{seconds_to_eta, seconds_to_start},
 };
 use chrono::{Local, NaiveTime};
 use gloo_storage::{LocalStorage, SessionStorage, Storage};
@@ -68,6 +70,20 @@ pub fn SavedRoutineViewer(#[prop(into)] data: Field<Session>) -> impl IntoView {
 			.to_string()
 	});
 
+	let start_by = Memo::new(move |_| {
+		if let Some(config) = routine_store().config().get() {
+			if let Some(deadline) = config.default_deadline {
+				seconds_to_start(now.get(), deadline, routine_store().read().total_duration())
+					.format(TIME_FORMAT)
+					.to_string()
+			} else {
+				"".to_string()
+			}
+		} else {
+			"".to_string()
+		}
+	});
+
 	view! {
 		<h1>{{ move || routine_store().name() }}</h1>
 		{{
@@ -94,6 +110,7 @@ pub fn SavedRoutineViewer(#[prop(into)] data: Field<Session>) -> impl IntoView {
 			<span>"Default Deadline"</span>
 			<input node_ref=deadline id="deadline" type="time" name="deadline" />
 		</label>
+		<p>"Recommended start time: " {{ move || start_by.get() }}</p>
 		<p>"Projected end time: " {{ move || eta.get() }}</p>
 		// TODO instead, link to a page
 		// thats for that routine? Maybe?
