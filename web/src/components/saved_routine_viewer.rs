@@ -71,14 +71,10 @@ pub fn SavedRoutineViewer(#[prop(into)] data: Field<Session>) -> impl IntoView {
 	});
 
 	let start_by = Memo::new(move |_| {
-		if let Some(config) = routine_store().config().get() {
-			if let Some(deadline) = config.default_deadline {
-				seconds_to_start(now.get(), deadline, routine_store().read().total_duration())
-					.format(TIME_FORMAT)
-					.to_string()
-			} else {
-				"".to_string()
-			}
+		if let Some(deadline) = routine_store().read().conf_get_default_deadline() {
+			seconds_to_start(now.get(), deadline, routine_store().read().total_duration())
+				.format(TIME_FORMAT)
+				.to_string()
 		} else {
 			"".to_string()
 		}
@@ -88,16 +84,12 @@ pub fn SavedRoutineViewer(#[prop(into)] data: Field<Session>) -> impl IntoView {
 		<h1>{{ move || routine_store().name() }}</h1>
 		{{
 			move || {
-				if let Some(config) = routine_store().config().get() {
-					if let Some(deadline) = config.default_deadline {
+				if let Some(deadline) = routine_store().read().conf_get_default_deadline() {
 						deadline.to_string()
 					} else {
 						"no deadline".to_string()
 					}
-				} else {
-					"no config".to_string()
 				}
-			}
 		}}
 		<button on:click=move |_| {
 			routine_store()

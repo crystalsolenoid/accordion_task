@@ -130,6 +130,13 @@ impl RoutineTemplate {
 		});
 	}
 
+	pub fn conf_get_default_deadline(&self) -> Option<NaiveTime> {
+		self.config
+			.as_ref()
+			.map(|c| c.default_deadline.clone())
+			.flatten()
+	}
+
 	pub fn push(&mut self, task: TaskTemplate) {
 		let mut task = task;
 		task.id = self.counter;
