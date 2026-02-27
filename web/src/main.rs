@@ -6,8 +6,8 @@
 use accordion_core::routine::template::{RoutineTemplate, TaskTemplate};
 use chrono::Local;
 use std::time::Duration;
-use web::components::AppRouter;
 use web::router::DeadlineQuery;
+use web::{components::AppRouter, local_storage::save_session};
 
 use gloo_storage::{SessionStorage, Storage};
 use leptos::prelude::*;
@@ -60,7 +60,8 @@ fn App() -> impl IntoView {
 
 	leptos::leptos_dom::helpers::set_interval(
 		move || {
-			SessionStorage::set("in-progress-session", session.get());
+			// SessionStorage::set("in-progress-session", session.get());
+			save_session(session);
 		},
 		Duration::from_secs(60),
 	);

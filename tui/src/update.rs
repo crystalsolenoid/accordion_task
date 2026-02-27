@@ -15,7 +15,12 @@ fn update_navigation_view(app: &mut App, key_event: KeyEvent) {
 		//KeyCode::Esc should close menus and always return you to the main screen
 		KeyCode::Char('c' | 'C') => {
 			if key_event.modifiers == KeyModifiers::CONTROL {
-				app.quit();
+				match app.quit() {
+					Ok(_) => (),
+					Err(err) => {
+						dbg!(format!("failed to quit {}", err));
+					}
+				};
 			}
 		}
 		KeyCode::Right | KeyCode::Char('j') => app.next_task(),

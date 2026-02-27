@@ -158,7 +158,16 @@ impl RoutineLogger {
 		// TODO refactor so that this is also a kind of LogElement!!
 	}
 
-	pub fn log(&mut self, event: LogElement) -> Result<()> {
+	pub fn log(&mut self, event: LogElement) {
+		match self.try_log(event) {
+			Ok(_) => (),
+			Err(_) => {
+				dbg!("logging failed");
+			}
+		}
+	}
+
+	fn try_log(&mut self, event: LogElement) -> Result<()> {
 		if let Some(e) = self.event_buffer.pop() {
 			let (a, b) = e.combine(event);
 			if let Some(e) = b {

@@ -5,7 +5,7 @@ use leptos_router::components::A;
 use reactive_stores::{Store, StoreFieldIterator};
 use web_sys::SubmitEvent;
 
-use crate::local_storage::{StoredRoutines, StoredRoutinesStoreFields};
+use crate::local_storage::{StoredRoutines, StoredRoutinesStoreFields, save_routine_list};
 
 #[component]
 pub fn Picker() -> impl IntoView {
@@ -15,7 +15,8 @@ pub fn Picker() -> impl IntoView {
 	let new_routine_name: NodeRef<html::Input> = NodeRef::new();
 
 	Effect::new(move |_| {
-		LocalStorage::set("stored-routines", routines_store.get());
+		save_routine_list(routines_store);
+		// LocalStorage::set("stored-routines", routines_store.get());
 	});
 
 	let (last_delete, set_last_delete) = signal(None::<RoutineTemplate>);

@@ -39,8 +39,11 @@ pub fn RoutinePlayer(
 								name="active"
 								prop:checked=i == initial_active
 								on:change=move |_| {
-									session.selected().write().select(Some(i));
-									SessionStorage::set("in-progress-session", session.get());
+									let _ = session.selected().write().select(Some(i));
+									let _ = SessionStorage::set(
+										"in-progress-session",
+										session.get(),
+									);
 								}
 							/>
 						</li>

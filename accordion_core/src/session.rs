@@ -4,10 +4,7 @@ pub use selection::ListPointer;
 use std::time::Duration;
 
 use chrono::{DateTime, Local, TimeDelta, Utc};
-use color_eyre::{
-	Result,
-	eyre::{OptionExt, WrapErr},
-};
+use color_eyre::Result;
 
 use crate::routine::{CompletionStatus, Routine, ToggleFailure, template::RoutineTemplate};
 

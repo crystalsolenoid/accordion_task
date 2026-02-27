@@ -11,8 +11,6 @@ use reactive_stores::Store;
 use serde::Deserialize;
 use serde::Serialize;
 
-use super::TimeMode;
-
 #[cfg_attr(
 	feature = "web",
 	derive(Store, Clone, Serialize, Deserialize, PartialEq, Eq)

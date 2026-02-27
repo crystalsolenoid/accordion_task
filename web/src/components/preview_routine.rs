@@ -16,7 +16,6 @@ const DURATION_VALIDATOR: &str = "(([0-9]+m)([0-9]+s)?)|(([0-9]+m)?([0-9]+s))";
 
 #[component]
 pub fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl IntoView {
-	let (edit, set_edit) = signal(None::<usize>);
 	let new_task_form: NodeRef<html::Form> = NodeRef::new();
 	let new_task_name: NodeRef<html::Input> = NodeRef::new();
 	let new_task_duration: NodeRef<html::Input> = NodeRef::new();

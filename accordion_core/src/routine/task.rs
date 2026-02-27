@@ -1,7 +1,4 @@
-use std::{
-	sync::atomic::{AtomicUsize, Ordering},
-	time::Duration,
-};
+use std::time::Duration;
 
 #[cfg(feature = "web")]
 use reactive_stores::Store;

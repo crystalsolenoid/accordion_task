@@ -107,9 +107,10 @@ impl App {
 	}
 
 	/// Set `should_quit` to `true` to quit the application.
-	pub fn quit(&mut self) {
-		self.logger.finish();
+	pub fn quit(&mut self) -> Result<()> {
+		self.logger.finish()?;
 		self.should_quit = true;
+		Ok(())
 	}
 
 	pub fn append_task_start(&mut self) {

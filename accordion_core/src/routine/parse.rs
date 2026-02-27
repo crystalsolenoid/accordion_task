@@ -7,7 +7,6 @@ use csv::{StringRecord, Trim};
 use std::io;
 
 use super::{
-	Task,
 	task::parse_new::parse_duration,
 	template::{self, RoutineTemplate, TaskTemplate},
 };

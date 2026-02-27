@@ -9,7 +9,6 @@ use ratatui::{
 	style::{Color, Modifier, Style},
 	widgets::{Block, Borders, Gauge, Padding, Paragraph, Row, Table, TableState, Wrap},
 };
-use std::time::Duration;
 
 use crate::app::{App, Menu, Mode};
 use accordion_core::{

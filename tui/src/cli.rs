@@ -1,13 +1,10 @@
 use chrono::NaiveTime;
 use clap::Parser;
-use color_eyre::{
-	Result,
-	eyre::{OptionExt, WrapErr},
-};
+use color_eyre::{Result, eyre::OptionExt};
 
 use std::{env, ffi::OsString, fs::File};
 
-use accordion_core::routine::{self, Task, template::RoutineTemplate};
+use accordion_core::routine::{self, template::RoutineTemplate};
 
 use crate::config;
 

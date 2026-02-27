@@ -1,6 +1,5 @@
 use accordion_core::session::Session;
 use leptos::prelude::*;
-use leptos_router::hooks::use_query;
 use leptos_router::{
 	components::{A, Route, Router, Routes},
 	path,

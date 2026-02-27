@@ -2,7 +2,6 @@ use accordion_core::routine::template::{RoutineTemplate, RoutineTemplateStoreFie
 use leptos::prelude::*;
 
 use gloo_file::Blob as GlooBlob;
-use gloo_storage::{LocalStorage, SessionStorage, Storage};
 use leptos::task::spawn_local;
 use leptos::wasm_bindgen::JsCast;
 use leptos::web_sys::HtmlInputElement;
@@ -12,7 +11,7 @@ use accordion_core::routine;
 use accordion_core::session::Session;
 
 use crate::components::PreviewRoutine;
-use crate::local_storage::StoredRoutines;
+use crate::local_storage::{save_routine, save_session};
 
 // TODO I need a better way to set the current routine
 #[component]
@@ -42,7 +41,7 @@ pub fn Upload(#[prop(into)] data: Field<Session>) -> impl IntoView {
 			<button on:click=move |_| {
 				let new_session = Session::new(preview_routine.get());
 				data.set(new_session);
-				SessionStorage::set("in-progress-session", data.get());
+				save_session(data);
 			}>Overwrite Active Routine</button>
 
 			<label>
@@ -59,17 +58,7 @@ pub fn Upload(#[prop(into)] data: Field<Session>) -> impl IntoView {
 			</label>
 
 			<button on:click=move |_| {
-				let mut stored_routines: StoredRoutines = LocalStorage::get("stored-routines")
-					.unwrap_or_default();
-				let already_exists = stored_routines
-					.vec_field
-					.iter()
-					.find(|r| r.name == name.get())
-					.is_some();
-				if !already_exists {
-					stored_routines.vec_field.push(preview_routine.get());
-					LocalStorage::set("stored-routines", stored_routines);
-				}
+				save_routine(preview_routine, name);
 			}>Save Routine</button>
 
 			<h2>{{ move || preview_routine.name().get() }} <em>(Preview)</em></h2>

@@ -4,12 +4,8 @@ use accordion_core::{
 	utils::{seconds_to_eta, seconds_to_start},
 };
 use chrono::{Local, NaiveTime};
-use gloo_storage::{LocalStorage, SessionStorage, Storage};
-use leptos::{
-	html,
-	leptos_dom::{debug_log, helpers},
-	prelude::*,
-};
+use gloo_storage::{LocalStorage, Storage};
+use leptos::{html, leptos_dom::helpers, prelude::*};
 use leptos_router::hooks::use_params;
 use leptos_router::params::Params;
 use reactive_stores::{Field, Store, StoreFieldIterator};
@@ -17,7 +13,7 @@ use reactive_stores::{Field, Store, StoreFieldIterator};
 use crate::{
 	components::PreviewRoutine,
 	config::TIME_FORMAT,
-	local_storage::{StoredRoutines, StoredRoutinesStoreFields},
+	local_storage::{StoredRoutines, StoredRoutinesStoreFields, save_routine_list, save_session},
 };
 
 // TODO rename
@@ -42,7 +38,7 @@ pub fn SavedRoutineViewer(#[prop(into)] data: Field<Session>) -> impl IntoView {
 	let routines_store: Store<StoredRoutines> = Store::new(routines);
 
 	Effect::new(move |_| {
-		LocalStorage::set("stored-routines", routines_store.get());
+		save_routine_list(routines_store);
 	});
 
 	let deadline: NodeRef<html::Input> = NodeRef::new();
@@ -85,11 +81,11 @@ pub fn SavedRoutineViewer(#[prop(into)] data: Field<Session>) -> impl IntoView {
 		{{
 			move || {
 				if let Some(deadline) = routine_store().read().conf_get_default_deadline() {
-						deadline.to_string()
-					} else {
-						"no deadline".to_string()
-					}
+					deadline.to_string()
+				} else {
+					"no deadline".to_string()
 				}
+			}
 		}}
 		<button on:click=move |_| {
 			routine_store()
@@ -109,7 +105,7 @@ pub fn SavedRoutineViewer(#[prop(into)] data: Field<Session>) -> impl IntoView {
 		<button on:click=move |_| {
 			let new_session = Session::new(routine_store().get());
 			data.set(new_session);
-			SessionStorage::set("in-progress-session", data.get());
+			save_session(data);
 		}>Overwrite Active Routine</button>
 		<PreviewRoutine routine=routine_store() />
 		{move || routine_store().tasks().get().len()}
