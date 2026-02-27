@@ -74,7 +74,7 @@ impl RoutineTemplate {
 			name,
 			tasks,
 			counter,
-			config: config,
+			config,
 		}
 	}
 
@@ -89,7 +89,7 @@ impl RoutineTemplate {
 			.delimiter(b',')
 			.comment(Some(b'#'))
 			.from_writer(vec![]);
-		wrtr.write_record(&["task", "duration"]).unwrap();
+		wrtr.write_record(["task", "duration"]).unwrap();
 		self.tasks.iter().for_each(|task| {
 			wrtr.write_record(&[
 				task.name.clone(),
@@ -129,10 +129,7 @@ impl RoutineTemplate {
 	}
 
 	pub fn conf_get_default_deadline(&self) -> Option<NaiveTime> {
-		self.config
-			.as_ref()
-			.map(|c| c.default_deadline.clone())
-			.flatten()
+		self.config.as_ref().and_then(|c| c.default_deadline)
 	}
 
 	pub fn push(&mut self, task: TaskTemplate) {

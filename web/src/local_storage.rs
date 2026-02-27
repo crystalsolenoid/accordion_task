@@ -23,8 +23,7 @@ pub fn save_routine(routine: Store<RoutineTemplate>, name: ReadSignal<String>) {
 	let already_exists = stored_routines
 		.vec_field
 		.iter()
-		.find(|r| r.name == name.get())
-		.is_some();
+		.any(|r| r.name == name.get());
 	if !already_exists {
 		stored_routines.vec_field.push(routine.get());
 		let _ = LocalStorage::set("stored-routines", stored_routines);

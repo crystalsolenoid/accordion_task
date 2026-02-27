@@ -78,7 +78,7 @@ impl Routine {
 			.iter()
 			.fold(Duration::ZERO, |acc, t| acc + t.original_duration);
 		Self {
-			tasks: tasks,
+			tasks,
 			//            active: match len {
 			//              0 => None,
 			//              _ => Some(0),

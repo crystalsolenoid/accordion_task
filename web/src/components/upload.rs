@@ -37,7 +37,7 @@ pub fn Upload(#[prop(into)] data: Field<Session>) -> impl IntoView {
 				});
 			}
 		/>
-		<Show when=move || { preview_routine.tasks().read().len() != 0 }>
+		<Show when=move || { !preview_routine.tasks().read().is_empty() }>
 			<button on:click=move |_| {
 				let new_session = Session::new(preview_routine.get());
 				data.set(new_session);

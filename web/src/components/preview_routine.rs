@@ -37,14 +37,11 @@ pub fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl Int
 					.expect("<input> should be mounted")
 					.value();
 				let duration = parse_duration(&raw_duration);
-				match duration {
-					Ok(d) => {
+				if let Ok(d) = duration {
 						routine.update(|routine| routine.push(TaskTemplate::new(&name, d, 0)));
 						routine.tasks().update(|_| ());
 						new_task_form.get().expect("<form> should be mounted").reset();
-					}
-					Err(_) => {}
-				};
+				}
 			}
 		>
 			<label>

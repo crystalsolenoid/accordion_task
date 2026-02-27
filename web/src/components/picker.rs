@@ -73,7 +73,7 @@ pub fn Picker() -> impl IntoView {
 				}
 			/>
 		</ul>
-		<Show when=move || { last_delete.get().is_some() } fallback=|| view! {}>
+		<Show when=move || { last_delete.get().is_some() } fallback=|| ()>
 			<button on:click=move |_| {
 				routines_store.vec_field().write().push(last_delete.get().unwrap());
 				set_last_delete.set(None);

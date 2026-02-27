@@ -30,7 +30,7 @@ pub fn RoutinePlayer(
 				children=move |(i, child)| {
 					view! {
 						<li class="task">
-							<TaskListItem task=child.clone() />
+							<TaskListItem task=child />
 							<input
 								type="radio"
 								class="active-task"

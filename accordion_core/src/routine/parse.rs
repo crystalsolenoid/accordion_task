@@ -41,7 +41,6 @@ pub fn from_csv(mut r: impl io::Read) -> Result<RoutineTemplate> {
 	};
 
 	// Then get the tasks
-	let mut counter = 0;
 	// Build the CSV reader and iterate over each record.
 	let mut rdr = csv::ReaderBuilder::new()
 		.delimiter(b',')
@@ -49,12 +48,11 @@ pub fn from_csv(mut r: impl io::Read) -> Result<RoutineTemplate> {
 		.comment(Some(b'#'))
 		.from_reader(tasks_csv.as_bytes());
 	let mut tasks = Vec::<TaskTemplate>::new();
-	for result in rdr.records() {
+	for (counter, result) in rdr.records().enumerate() {
 		// The iterator yields Result<StringRecord, Error>, so we check the
 		// error here.
 		let record = result?;
 		tasks.push(parse_task(&record, counter)?);
-		counter += 1;
 	}
 	Ok(RoutineTemplate::with_config(
 		"Current Routine".to_string(),

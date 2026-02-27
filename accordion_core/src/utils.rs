@@ -22,11 +22,13 @@ pub fn format_duration(dur: Duration) -> String {
 
 pub fn interpret_naive_time(now: DateTime<Local>, nt: NaiveTime) -> DateTime<Local> {
 	{
+		// returns a reasonable deadline
+		// from a naive time
 		// TODO handle DST
 		let MappedLocalTime::Single(today_deadline) = now.with_time(nt) else {
 			todo!("Handle DST");
 		};
-		let deadline = if today_deadline < now {
+		if today_deadline < now {
 			let Some(tomorrow) = now.checked_add_days(Days::new(1)) else {
 				todo!("handle DST properly")
 			};
@@ -36,8 +38,7 @@ pub fn interpret_naive_time(now: DateTime<Local>, nt: NaiveTime) -> DateTime<Loc
 			}
 		} else {
 			today_deadline
-		};
-		deadline
+		}
 	}
 }
 
