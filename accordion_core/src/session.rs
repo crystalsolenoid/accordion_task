@@ -65,6 +65,39 @@ impl Session {
 		Local::now() + self.get_total_remaining()
 	}
 
+	fn bouncing_next_task(&mut self) {
+		let selectable = self.tasks.get_checkboxes().into_iter();
+		match self.selected.try_next_selectable(selectable.clone()) {
+			// TODO shouldnt have to clone here
+			Ok(()) => (),
+			Err(_) => {
+				let _ = self.selected.try_prev_selectable(selectable);
+			}
+		}
+	}
+
+	pub fn toggle_advance(&mut self) -> Result<CompletionStatus, ToggleFailure> {
+		let res = self.toggle();
+		match res {
+			Ok(CompletionStatus::Done) => {
+				self.bouncing_next_task();
+			}
+			_ => (),
+		};
+		res
+	}
+
+	pub fn skip_advance(&mut self) -> Result<CompletionStatus, ToggleFailure> {
+		let res = self.skip();
+		match res {
+			Ok(CompletionStatus::Skipped) => {
+				self.bouncing_next_task();
+			}
+			_ => (),
+		};
+		res
+	}
+
 	pub fn toggle(&mut self) -> Result<CompletionStatus, ToggleFailure> {
 		let i = self.selected.selected();
 		self.tasks.toggle(i)

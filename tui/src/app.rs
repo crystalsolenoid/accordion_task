@@ -182,7 +182,7 @@ impl App {
 
 	pub fn attempt_toggle(&mut self) {
 		let i = self.session.selected.selected();
-		match self.session.toggle() {
+		match self.session.toggle_advance() {
 			Ok(CompletionStatus::Done) => {
 				let task = self
 					.session
@@ -190,7 +190,6 @@ impl App {
 					.get_nth(i)
 					.expect("this should always exist here");
 				self.logger.log(LogElement::completed(task));
-				self.bouncing_next_task();
 			}
 			Ok(CompletionStatus::NotYet) => {
 				let task = self
@@ -207,7 +206,7 @@ impl App {
 
 	pub fn attempt_skip(&mut self) {
 		let i = self.session.selected.selected();
-		match self.session.tasks.skip(i) {
+		match self.session.skip_advance() {
 			Ok(CompletionStatus::Skipped) => {
 				let task = self
 					.session
@@ -215,7 +214,6 @@ impl App {
 					.get_nth(i)
 					.expect("this should always exist here");
 				self.logger.log(LogElement::skipped(task));
-				self.bouncing_next_task();
 			}
 			Ok(CompletionStatus::NotYet) => {
 				let task = self

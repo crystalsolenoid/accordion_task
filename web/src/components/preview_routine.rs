@@ -38,9 +38,9 @@ pub fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl Int
 					.value();
 				let duration = parse_duration(&raw_duration);
 				if let Ok(d) = duration {
-						routine.update(|routine| routine.push(TaskTemplate::new(&name, d, 0)));
-						routine.tasks().update(|_| ());
-						new_task_form.get().expect("<form> should be mounted").reset();
+					routine.update(|routine| routine.push(TaskTemplate::new(&name, d, 0)));
+					routine.tasks().update(|_| ());
+					new_task_form.get().expect("<form> should be mounted").reset();
 				}
 			}
 		>
