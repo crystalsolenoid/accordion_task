@@ -126,11 +126,23 @@ input[type="text"] {
 			outline-color: var(--off-foreground);
 			background-color: var(--off-background);
 		}
+
+		&:focus {
+			color: cyan;
+		}
 	}
 
 	/* Radio button to select active task */
 	.active-task {
-		display: none;
+		/* hide while allowing focus */
+		/* source https://adrianroselli.com/2017/05/under-engineered-custom-radio-buttons-and-checkboxen.html */
+		position: absolute;
+	  top: auto;
+	  overflow: hidden;
+	  clip: rect(1px, 1px, 1px, 1px);
+	  width: 1px;
+	  height: 1px;
+	  white-space: nowrap;
 	}
 }
 

@@ -6,7 +6,7 @@ use std::time::Duration;
 use chrono::{DateTime, Local, TimeDelta, Utc};
 use color_eyre::Result;
 
-use crate::routine::{CompletionStatus, Routine, ToggleFailure, template::RoutineTemplate};
+use crate::routine::{CompletionStatus, Routine, Task, ToggleFailure, template::RoutineTemplate};
 
 #[cfg(feature = "web")]
 use reactive_stores::Store;
@@ -96,6 +96,11 @@ impl Session {
 			_ => (),
 		};
 		res
+	}
+
+	pub fn get_selected_task(&self) -> Option<&Task> {
+		let i = self.selected.selected()?;
+		Some(&self.tasks.tasks[i])
 	}
 
 	pub fn toggle(&mut self) -> Result<CompletionStatus, ToggleFailure> {

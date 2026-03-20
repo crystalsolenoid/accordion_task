@@ -19,7 +19,11 @@ pub fn TaskListItem(#[prop(into)] task: Field<Task>) -> impl IntoView {
 	};
 
 	view! {
-		<label for=move || task.name().get() class=plain_text_status>
+		<label
+			id=move || format!("label-{}", task.id().get())
+			for=move || task.name().get()
+			class=plain_text_status
+			>
 			<h2>
 				<span class="checkbox" aria-label=plain_text_status>
 					{{ status_symbol }}
@@ -37,6 +41,7 @@ pub fn TaskListItem(#[prop(into)] task: Field<Task>) -> impl IntoView {
 				<span class="duration right">
 					<DurationCmp value=task.duration() />
 				</span>
+				{{move || format!("label-{}", task.id().get())}}
 			</div>
 		</label>
 	}
