@@ -36,7 +36,14 @@ pub fn TaskListItem(#[prop(into)] task: Field<Task>) -> impl IntoView {
 					<DurationCmp value=task.elapsed() />
 				</span>
 				<progress value=move || {
-					task.elapsed().get().as_secs() as f64 / task.duration().get().as_secs() as f64
+					let total = task.duration().get().as_secs();
+					let elapsed = task.elapsed().get().as_secs();
+					if total == 0 {
+						// Avoid division by zero
+						1.
+					} else {
+						elapsed as f64 / total as f64
+					}
 				} />
 				<span class="duration right">
 					<DurationCmp value=task.duration() />
