@@ -1,7 +1,9 @@
 use chrono::{DateTime, Days, Local, MappedLocalTime, NaiveTime};
 use std::time::Duration;
 
-pub fn format_duration(dur: Duration) -> String {
+use crate::routine::task::FlexDuration;
+
+pub fn format_duration(dur: &Duration) -> String {
 	let s = dur.as_secs();
 	let m = s / 60;
 	let h = m / 60;
@@ -18,6 +20,13 @@ pub fn format_duration(dur: Duration) -> String {
 		_ => format!("{}s", s - 60 * m),
 	};
 	format!("{h_str}{m_str}{s_str}")
+}
+
+pub fn format_flex_duration(dur: &FlexDuration) -> String {
+	match dur {
+		FlexDuration::Shrinking(d) => format_duration(d),
+		FlexDuration::Growing(d) => format_duration(d) + "+",
+	}
 }
 
 pub fn interpret_naive_time(now: DateTime<Local>, nt: NaiveTime) -> DateTime<Local> {
@@ -42,18 +51,18 @@ pub fn interpret_naive_time(now: DateTime<Local>, nt: NaiveTime) -> DateTime<Loc
 	}
 }
 
-pub fn seconds_to_eta(now: DateTime<Local>, duration: u64) -> DateTime<Local> {
-	now + Duration::from_secs(duration)
+pub fn seconds_to_eta(now: DateTime<Local>, duration: Duration) -> DateTime<Local> {
+	now + duration
 }
 
 pub fn seconds_to_start(
 	now: DateTime<Local>,
 	deadline: NaiveTime,
-	duration: u64,
+	duration: Duration,
 ) -> DateTime<Local> {
 	// TODO this is so convoluted. It should
 	// not require knowing the current time??
 	// I think should return a NaiveTime.
-	let goal = interpret_naive_time(now + Duration::from_secs(duration), deadline);
-	goal - Duration::from_secs(duration)
+	let goal = interpret_naive_time(now + duration, deadline);
+	goal - duration
 }

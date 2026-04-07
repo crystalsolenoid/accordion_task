@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use accordion_core::routine::task::parse_new::parse_duration;
 use accordion_core::routine::template::{
 	RoutineTemplate, RoutineTemplateStoreFields, TaskTemplate, TaskTemplateStoreFields,
@@ -10,9 +8,9 @@ use leptos::{html, prelude::*};
 use reactive_stores::{Field, StoreFieldIterator};
 use web_sys::SubmitEvent;
 
-use crate::components::DurationCmp;
+use crate::components::FlexDurationCmp;
 
-const DURATION_VALIDATOR: &str = "(([0-9]+m)([0-9]+s)?)|(([0-9]+m)?([0-9]+s))";
+const DURATION_VALIDATOR: &str = r"((([0-9]+m)([0-9]+s)?)|(([0-9]+m)?([0-9]+s)))\+?";
 
 #[component]
 pub fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl IntoView {
@@ -79,9 +77,7 @@ pub fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl Int
 								// </button>
 								</td>
 								<td>
-									<DurationCmp value=task
-										.duration()
-										.with(|d| Duration::from_secs(*d)) />
+									<FlexDurationCmp value=task.duration().get() />
 								</td>
 								<td>
 									<button on:click=move |_| {

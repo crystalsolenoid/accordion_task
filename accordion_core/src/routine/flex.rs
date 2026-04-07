@@ -5,13 +5,16 @@ use std::time::Duration;
 #[allow(clippy::module_name_repetitions)]
 pub trait FlexItem {
 	// original duration, for example
-	fn max_size(&self) -> Duration;
+	fn max_size(&self) -> Option<Duration>;
 	// time elapsed, for example
 	fn min_size(&self) -> Duration;
 }
 
-pub trait Flex {
-	fn get_items(&self) -> &Vec<impl FlexItem>;
+pub trait Flex<I>
+where
+	I: FlexItem,
+{
+	fn get_items(&self) -> &Vec<I>;
 
 	fn min_size(&self) -> Duration {
 		self.get_items()
@@ -20,13 +23,19 @@ pub trait Flex {
 	}
 
 	fn max_size(&self) -> Duration {
-		self.get_items()
-			.iter()
-			.fold(Duration::ZERO, |acc, x| acc + x.max_size())
+		// TODO am I handling max size: None correctly?
+		self.get_items().iter().fold(Duration::ZERO, |acc, x| {
+			acc + x.max_size().unwrap_or(Duration::ZERO)
+		})
 	}
 
-	fn max_sizes(&self) -> Vec<Duration> {
-		self.get_items().iter().map(FlexItem::max_size).collect()
+	fn max_sizes(&self, remainder: Duration) -> Vec<Duration> {
+		// TODO rename fn
+		// TODO account for multiple growing items
+		self.get_items()
+			.iter()
+			.map(|i| i.max_size().unwrap_or(remainder))
+			.collect()
 	}
 
 	fn flex(&self, size: Duration) -> Result<Vec<Duration>, Duration> {
@@ -37,14 +46,18 @@ pub trait Flex {
 			return Err(self.min_size());
 		}
 		if size > self.max_size() {
-			return Ok(self.max_sizes());
+			// TODO grow growing here
+			return Ok(self.max_sizes(size - self.max_size()));
 		}
 		let ratio = wiggle_room.div_duration_f64(shrinkable);
 		Ok(self
 			.get_items()
 			.iter()
 			.map(|item| {
-				let item_wiggle = item.max_size().saturating_sub(item.min_size());
+				let item_wiggle = item
+					.max_size()
+					.unwrap_or(Duration::ZERO)
+					.saturating_sub(item.min_size());
 				item.min_size() + item_wiggle.mul_f64(ratio)
 			})
 			.collect())
@@ -56,21 +69,30 @@ mod tests {
 	use super::*;
 
 	struct Amount {
-		max: Duration,
 		min: Duration,
+		max: Option<Duration>,
 	}
 
 	impl From<(f64, f64)> for Amount {
 		fn from(item: (f64, f64)) -> Self {
 			Amount {
 				min: Duration::try_from_secs_f64(item.0).unwrap(),
-				max: Duration::try_from_secs_f64(item.1).unwrap(),
+				max: Some(Duration::try_from_secs_f64(item.1).unwrap()),
+			}
+		}
+	}
+
+	impl From<(f64, Option<f64>)> for Amount {
+		fn from(item: (f64, Option<f64>)) -> Self {
+			Amount {
+				min: Duration::try_from_secs_f64(item.0).unwrap(),
+				max: item.1.map(|x| Duration::try_from_secs_f64(x).unwrap()),
 			}
 		}
 	}
 
 	impl FlexItem for Amount {
-		fn max_size(&self) -> Duration {
+		fn max_size(&self) -> Option<Duration> {
 			self.max
 		}
 		fn min_size(&self) -> Duration {
@@ -89,7 +111,7 @@ mod tests {
 		}
 	}
 
-	impl Flex for List {
+	impl Flex<Amount> for List {
 		fn get_items(&self) -> &Vec<Amount> {
 			&self.items
 		}
@@ -107,6 +129,19 @@ mod tests {
 		let result = list.flex(Duration::try_from_secs_f64(9999.0).unwrap());
 
 		let target = to_durations(vec![10.4, 5.3, 8.4]);
+		assert_eq!(Ok(target), result);
+	}
+
+	#[test]
+	fn plenty_of_space_growing() {
+		// TODO write test
+		let mut list: List = vec![(0.0, 10.0), (4.3, 6.0)].into();
+		list.items.push((0.3, None).into());
+		list.items.push((0.0, 4.0).into());
+
+		let result = list.flex(Duration::try_from_secs_f64(100.0).unwrap());
+
+		let target = to_durations(vec![10.0, 6.0, 80.0, 4.0]);
 		assert_eq!(Ok(target), result);
 	}
 

@@ -11,13 +11,15 @@ use reactive_stores::Store;
 use serde::Deserialize;
 use serde::Serialize;
 
+use super::task::FlexDuration;
+
 #[cfg_attr(
 	feature = "web",
 	derive(Store, Clone, Serialize, Deserialize, PartialEq, Eq)
 )]
 pub struct TaskTemplate {
 	pub name: String,
-	pub duration: u64,
+	pub duration: FlexDuration,
 	pub id: usize,
 }
 
@@ -46,7 +48,7 @@ impl TaskTemplate {
 		Task::new(&self.name, self.duration, self.id)
 	}
 
-	pub fn new(name: &str, duration: u64, id: usize) -> Self {
+	pub fn new(name: &str, duration: FlexDuration, id: usize) -> Self {
 		Self {
 			name: name.to_string(),
 			duration,
@@ -93,7 +95,7 @@ impl RoutineTemplate {
 		self.tasks.iter().for_each(|task| {
 			wrtr.write_record(&[
 				task.name.clone(),
-				format_duration(Duration::from_secs(task.duration)),
+				format_duration(&task.duration.init_duration()),
 			])
 			.unwrap();
 		});
@@ -155,8 +157,8 @@ impl RoutineTemplate {
 		}
 	}
 
-	pub fn total_duration(&self) -> u64 {
-		self.tasks.iter().map(|t| t.duration).sum()
+	pub fn total_duration(&self) -> Duration {
+		self.tasks.iter().map(|t| t.duration.init_duration()).sum()
 	}
 }
 

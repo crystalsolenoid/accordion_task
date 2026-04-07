@@ -28,7 +28,9 @@ pub fn RoutinePlayer(
 ) -> impl IntoView {
 	let active = RwSignal::new(initial_active.to_string());
 	view! {
-		<a id="test-focus" href="/">test</a>
+		<a id="test-focus" href="/">
+			test
+		</a>
 		<div id="task-actions">
 			<button on:click=move |_| {
 				focus_by_id("label-3");
@@ -40,10 +42,7 @@ pub fn RoutinePlayer(
 				if let Some(i) = i {
 					active.set(i.to_string());
 				}
-				let _ = SessionStorage::set(
-					"in-progress-session",
-					session.get(),
-				);
+				let _ = SessionStorage::set("in-progress-session", session.get());
 				let task_id = session.read().get_selected_task().unwrap().id;
 				focus_by_id(&format!("label-{}", task_id));
 			}>Complete Current</button>
@@ -53,10 +52,7 @@ pub fn RoutinePlayer(
 				if let Some(i) = i {
 					active.set(i.to_string());
 				}
-				let _ = SessionStorage::set(
-					"in-progress-session",
-					session.get(),
-				);
+				let _ = SessionStorage::set("in-progress-session", session.get());
 				let task_id = session.read().get_selected_task().unwrap().id;
 				focus_by_id(&format!("label-{}", task_id));
 			}>Skip Current</button>

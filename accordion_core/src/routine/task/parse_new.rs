@@ -7,10 +7,14 @@
 //
 // ambiguity: should tasks created with a specified time have that as their original
 // time, or should they compress as necessary for the current time budget?
-use std::num::ParseIntError;
 use std::str::FromStr;
+use std::time::Duration;
+
+use color_eyre::{Result, eyre::eyre};
 
 use crate::routine::Task;
+
+use super::FlexDuration;
 
 const DEFAULT_DURATION_SECS: u64 = 5 * 60;
 
@@ -28,13 +32,13 @@ pub fn parse_new(raw: &str, id: usize) -> Task {
 	// -- if it fails, assume the full unsplit chunk is the name and set the duration to
 	// the default.
 	// - create and return the task
-	let default_duration = DEFAULT_DURATION_SECS;
+	let default_duration = FlexDuration::Shrinking(Duration::from_secs(DEFAULT_DURATION_SECS));
 	let (name, duration) = match raw.rsplit_once(' ') {
 		None => (raw.to_owned(), default_duration),
 		Some((name, possible_duration)) => {
 			let name = name.to_owned();
 			match parse_duration(possible_duration) {
-				Ok(secs) => (name, secs),
+				Ok(duration) => (name, duration),
 				Err(_) => (name + " " + possible_duration, default_duration),
 			}
 			// TODO remove unwrap
@@ -45,13 +49,14 @@ pub fn parse_new(raw: &str, id: usize) -> Task {
 }
 
 /// Returns the number of seconds.
-pub fn parse_duration(raw: &str) -> Result<u64, ParseIntError> {
+pub fn parse_duration(raw: &str) -> Result<FlexDuration> {
 	// TODO this code is so old and weird. I surely know how to do it more idiomatically now.
 	let mut number_accum = String::new();
 	let mut hours = 0;
 	let mut minutes = 0;
 	let mut seconds = 0;
 	let mut seen_hms = false;
+	let mut seen_plus = false;
 	for g in raw.chars() {
 		match g {
 			'h' => {
@@ -69,16 +74,28 @@ pub fn parse_duration(raw: &str) -> Result<u64, ParseIntError> {
 				number_accum = String::new();
 				seen_hms = true;
 			}
+			'+' => {
+				seen_plus = true;
+				// TODO for testing purposes, you can
+				// now put a plus anywhere
+				// I need to add constraints for position
+			}
 			' ' => (),
 			_ => number_accum.push(g),
 		}
 	}
 	if seen_hms {
-		Ok(hours * 60 * 60 + minutes * 60 + seconds)
+		if seen_plus {
+			Ok(FlexDuration::Growing(Duration::from_secs(
+				hours * 60 * 60 + minutes * 60 + seconds,
+			)))
+		} else {
+			Ok(FlexDuration::Shrinking(Duration::from_secs(
+				hours * 60 * 60 + minutes * 60 + seconds,
+			)))
+		}
 	} else {
-		// TODO this is an ugly, ugly hack because I don't want to come up with
-		// a new result type right now.
-		Ok(u64::from_str("")?)
+		Err(eyre!("Failed to parse duration."))
 	}
 }
 
@@ -92,17 +109,20 @@ mod tests {
 	fn parse_task_with_duration() {
 		let input = "wash clothes 5m30s";
 
-		let task = parse_new(input);
+		let task = parse_new(input, 1);
 
 		assert_eq!(task.name, "wash clothes");
-		assert_eq!(task.original_duration, Duration::from_secs(5 * 60 + 30));
+		assert_eq!(
+			task.duration_spec,
+			FlexDuration::Shrinking(Duration::from_secs(5 * 60 + 30))
+		);
 	}
 
 	#[test]
 	fn no_duration() {
 		let input = "shower";
 
-		let task = parse_new(input);
+		let task = parse_new(input, 1);
 
 		assert_eq!(task.name, "shower");
 	}
@@ -111,9 +131,12 @@ mod tests {
 	fn default_time() {
 		let input = "shower";
 
-		let task = parse_new(input);
+		let task = parse_new(input, 1);
 
-		assert_eq!(task.original_duration, Duration::from_secs(5 * 60));
+		assert_eq!(
+			task.duration_spec,
+			FlexDuration::Shrinking(Duration::from_secs(5 * 60))
+		);
 		// TODO: how will i decide a default?
 	}
 
@@ -121,7 +144,7 @@ mod tests {
 	fn no_duration_with_space() {
 		let input = "wash clothes";
 
-		let task = parse_new(input);
+		let task = parse_new(input, 1);
 
 		assert_eq!(task.name, "wash clothes");
 	}
@@ -130,7 +153,7 @@ mod tests {
 	fn no_hms_task() {
 		let input = "dishes away";
 
-		let task = parse_new(input);
+		let task = parse_new(input, 1);
 
 		assert_eq!(task.name, "dishes away");
 	}

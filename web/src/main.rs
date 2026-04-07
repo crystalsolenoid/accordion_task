@@ -3,6 +3,7 @@
 // which has state for the current session
 // like the active task and the start/end times
 
+use accordion_core::routine::task::FlexDuration;
 use accordion_core::routine::template::{RoutineTemplate, TaskTemplate};
 use chrono::Local;
 use std::time::Duration;
@@ -26,9 +27,21 @@ fn App() -> impl IntoView {
 		Store::new(session)
 	} else {
 		let mut list = RoutineTemplate::default();
-		list.push(TaskTemplate::new("shower", 120, 0));
-		list.push(TaskTemplate::new("eat dinner", 60, 1));
-		list.push(TaskTemplate::new("program", 9990, 2));
+		list.push(TaskTemplate::new(
+			"shower",
+			FlexDuration::Shrinking(Duration::from_secs(120)),
+			0,
+		));
+		list.push(TaskTemplate::new(
+			"eat dinner",
+			FlexDuration::Shrinking(Duration::from_secs(60)),
+			1,
+		));
+		list.push(TaskTemplate::new(
+			"program",
+			FlexDuration::Shrinking(Duration::from_secs(9990)),
+			2,
+		));
 		let session = Session::new(list);
 		initial_active = session.selected.selected().unwrap_or_default();
 		Store::new(session)

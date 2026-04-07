@@ -3,6 +3,7 @@ pub use router::AppRouter;
 
 mod duration;
 pub use duration::DurationCmp;
+pub use duration::FlexDurationCmp;
 
 mod preview_routine;
 pub use preview_routine::PreviewRoutine;

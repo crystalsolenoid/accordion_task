@@ -28,16 +28,19 @@ impl FlexItem for Task {
 	fn min_size(&self) -> Duration {
 		self.elapsed
 	}
-	fn max_size(&self) -> Duration {
+	fn max_size(&self) -> Option<Duration> {
 		match self.status {
-			CompletionStatus::NotYet => max(self.elapsed, self.original_duration),
-			_ => self.elapsed,
+			CompletionStatus::NotYet => match self.duration_spec {
+				task::FlexDuration::Shrinking(duration) => Some(max(self.elapsed, duration)),
+				task::FlexDuration::Growing(_duration) => None,
+			},
+			_ => Some(self.elapsed),
 		}
 	}
 }
 
-impl Flex for Routine {
-	fn get_items(&self) -> &Vec<impl FlexItem> {
+impl Flex<Task> for Routine {
+	fn get_items(&self) -> &Vec<Task> {
 		&self.tasks
 	}
 }
@@ -76,7 +79,7 @@ impl Routine {
 		let counter = tasks.len();
 		let original_max = tasks
 			.iter()
-			.fold(Duration::ZERO, |acc, t| acc + t.original_duration);
+			.fold(Duration::ZERO, |acc, t| acc + t.init_duration());
 		Self {
 			tasks,
 			//            active: match len {
@@ -129,7 +132,7 @@ impl Routine {
 
 	fn increase_time_for_new_task(&mut self, task: &Task) {
 		match self.mode {
-			TimeMode::ExpectedEnd => self.flex_goal += task.original_duration,
+			TimeMode::ExpectedEnd => self.flex_goal += task.init_duration(),
 			// want to take people's deadlines seriously and not accidentally
 			// extend them
 			TimeMode::FixedEnd(_) => (),
@@ -184,7 +187,7 @@ impl Routine {
 			.iter()
 			.zip(self.tasks.iter_mut())
 			.for_each(|(&time, task)| {
-				task.duration = time;
+				task.current_duration = time;
 			});
 	}
 
@@ -233,7 +236,7 @@ impl Routine {
 	}
 
 	pub fn duration(&self) -> Duration {
-		self.tasks.iter().map(|task| task.duration).sum()
+		self.tasks.iter().map(|task| task.current_duration).sum()
 	}
 
 	pub fn elapsed(&self) -> Duration {
@@ -241,7 +244,7 @@ impl Routine {
 	}
 
 	pub fn total_originals(&self) -> Duration {
-		self.tasks.iter().map(|task| task.original_duration).sum()
+		self.tasks.iter().map(|task| task.init_duration()).sum()
 	}
 
 	pub fn completed_originals(&self) -> Duration {
@@ -256,7 +259,7 @@ impl Routine {
 				// false is gamification to discourage skipping. TODO
 				CompletionStatus::Done | CompletionStatus::Skipped => true,
 			})
-			.map(|task| task.original_duration)
+			.map(|task| task.init_duration())
 			.sum()
 	}
 
