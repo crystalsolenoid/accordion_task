@@ -150,6 +150,8 @@ input[type="text"] {
 	position: sticky;
 	top: 0;
 	background-color: inherit;
+	display: flex;
+	width: 100%;
 
 	button {
 		padding-block: 1rem;
