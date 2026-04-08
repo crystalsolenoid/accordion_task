@@ -43,7 +43,6 @@ pub fn TaskListItem(#[prop(into)] task: Field<Task>) -> impl IntoView {
 				<span class="duration right">
 					<DurationCmp value=task.current_duration() />
 				</span>
-				{{ move || format!("label-{}", task.id().get()) }}
 			</div>
 		</label>
 	}

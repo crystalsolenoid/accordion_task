@@ -28,13 +28,7 @@ pub fn RoutinePlayer(
 ) -> impl IntoView {
 	let active = RwSignal::new(initial_active.to_string());
 	view! {
-		<a id="test-focus" href="/">
-			test
-		</a>
 		<div id="task-actions">
-			<button on:click=move |_| {
-				focus_by_id("label-3");
-			}>Focus test</button>
 			<RoutineTimer session=session />
 			<button on:click=move |_| {
 				let _ = session.write().toggle_advance();
