@@ -17,6 +17,7 @@ pub fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl Int
 	let new_task_form: NodeRef<html::Form> = NodeRef::new();
 	let new_task_name: NodeRef<html::Input> = NodeRef::new();
 	let new_task_duration: NodeRef<html::Input> = NodeRef::new();
+	let reorder_selection = RwSignal::<Option<usize>>::new(None);
 	Effect::new(move |_| {
 		debug_log!("routine updated {}", routine.get().tasks.len());
 	});
@@ -83,6 +84,20 @@ pub fn PreviewRoutine(#[prop(into)] routine: Field<RoutineTemplate>) -> impl Int
 									<button on:click=move |_| {
 										routine.write().move_task_sooner(i.get());
 									}>"^"</button>
+									<button on:click=move |_| {
+										if let Some(j) = reorder_selection.get() {
+											routine.write().insert_task_before(j, i.get());
+											reorder_selection.set(None);
+										} else {
+											reorder_selection.set(Some(i.get()));
+										}
+									}>
+										{move || match reorder_selection.get() {
+											Some(j) if j == i.get() => "o",
+											Some(j) => "x",
+											None => "o",
+										}}
+									</button>
 									<button on:click=move |_| {
 										routine.write().move_task_later(i.get());
 									}>"v"</button>

@@ -151,6 +151,13 @@ impl RoutineTemplate {
 		}
 	}
 
+	pub fn insert_task_before(&mut self, task: usize, destination: usize) {
+		if self.tasks.get(task).is_some() {
+			let moved = self.tasks.remove(task);
+			self.tasks.insert(destination, moved);
+		}
+	}
+
 	pub fn remove_task(&mut self, i: usize) {
 		if self.tasks.get(i).is_some() {
 			self.tasks.remove(i);
