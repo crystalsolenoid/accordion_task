@@ -62,6 +62,10 @@ impl ListPointer {
 		self.paused = true;
 	}
 
+	pub fn is_paused(&self) -> bool {
+		self.paused
+	}
+
 	pub fn unpause(&mut self) {
 		self.paused = false;
 	}

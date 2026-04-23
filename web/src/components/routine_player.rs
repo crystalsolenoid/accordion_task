@@ -1,5 +1,6 @@
 use accordion_core::{
 	routine::{RoutineStoreFields, task::TaskStoreFields},
+	session::selection::ListPointerStoreFields,
 	session::{Session, SessionStoreFields},
 };
 use gloo_storage::{SessionStorage, Storage};
@@ -27,6 +28,7 @@ pub fn RoutinePlayer(
 	initial_active: usize,
 ) -> impl IntoView {
 	let active = RwSignal::new(initial_active.to_string());
+	let paused = Signal::derive(move || session.selected().read().is_paused());
 	view! {
 		<div id="task-actions">
 			<RoutineTimer session=session />
@@ -50,6 +52,22 @@ pub fn RoutinePlayer(
 				let task_id = session.read().get_selected_task().unwrap().id;
 				focus_by_id(&format!("label-{}", task_id));
 			}>Skip Current</button>
+			{move || if paused.get() {
+				view!{
+								<button on:click=move |_| {
+				session.write().selected.unpause();
+			}
+			>Unpause</button>
+				}.into_any()
+			} else {
+					view!{
+						<button on:click=move |_| {
+							session.write().selected.pause();
+						}
+						>Pause</button>
+					}.into_any()
+				}
+			}
 		</div>
 		<ol class="routine">
 			<For
@@ -58,7 +76,10 @@ pub fn RoutinePlayer(
 				children=move |(i, child)| {
 					view! {
 						<li class="task">
-							<TaskListItem task=child />
+							<TaskListItem task=child
+							active=Signal::derive(move || session.selected().selected().get().map(|x| x == i).unwrap_or(false))
+							paused=paused
+							/>
 							// <a href="/" id=i>{i}</a>
 							// <input id=i/>
 							<input

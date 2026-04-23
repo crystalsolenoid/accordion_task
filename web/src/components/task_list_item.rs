@@ -5,7 +5,11 @@ use reactive_stores::Field;
 use crate::components::DurationCmp;
 
 #[component]
-pub fn TaskListItem(#[prop(into)] task: Field<Task>) -> impl IntoView {
+pub fn TaskListItem(
+	#[prop(into)] task: Field<Task>,
+	#[prop(into)] active: Signal<bool>,
+	#[prop(into)] paused: Signal<bool>,
+) -> impl IntoView {
 	let plain_text_status = move || match task.status().get() {
 		CompletionStatus::NotYet => "incomplete",
 		CompletionStatus::Done => "done",
@@ -32,7 +36,9 @@ pub fn TaskListItem(#[prop(into)] task: Field<Task>) -> impl IntoView {
 				{{ move || task.name().get() }}
 			</h2>
 			<div class="progress-values">
-				<span class="duration left">
+				<span class="duration left"
+				class:paused-flash=move || active.get() && paused.get()
+				>
 					<DurationCmp value=task.elapsed() />
 				</span>
 				<progress value=move || {

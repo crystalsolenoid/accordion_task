@@ -158,3 +158,19 @@ input[type="text"] {
 		font-size: 1.5rem;
 	}
 }
+
+.paused-flash {
+	animation: blinker 2s infinite;
+}
+
+@keyframes blinker {
+  89% {
+    opacity: 100;
+  }
+  90% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}

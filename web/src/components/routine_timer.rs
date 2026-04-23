@@ -17,7 +17,10 @@ pub fn RoutineTimer(#[prop(into)] session: Field<Session>) -> impl IntoView {
 	};
 	view! {
 		<p>Remaining: <DurationCmp value=remaining /></p>
-		<p>Elapsed: <DurationCmp value=elapsed /></p>
+		<p>Elapsed: <span
+				class:paused-flash=move || session.selected().read().is_paused()
+		><DurationCmp
+		value=elapsed /></span></p>
 		<p>Expected End: {{ move || eta() }}</p>
 	}
 }
